@@ -28,3 +28,18 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         dockerfile: Dockerfile-prod
         tags: latest
+    - name: Deploy package to digitalocean
+      uses: appleboy/ssh-action@master
+      env:
+        GITHUB_USERNAME: ${{ secrets.GITBUH_USERNAME }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        host: ${{ secrets.DO_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.SSH_ID_RSA }}
+        envs: GITBUH_USERNAME, GITHUB_TOKEN
+        script: |
+          docker stop $(docker ps -a -q)
+          docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
+          docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
+          docker run -dit -p 3000:3000 docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
