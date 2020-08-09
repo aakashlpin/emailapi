@@ -24,7 +24,7 @@ jobs:
       with:
         name: aakashlpin/emailapi/emailapi
         registry: docker.pkg.github.com
-        username: ${{ secrets.GITHUB_USERNAME }}
+        username: ${{ secrets.GITBUH_USERNAME }}
         password: ${{ secrets.GITHUB_TOKEN }}
         dockerfile: Dockerfile-prod
         tags: latest
