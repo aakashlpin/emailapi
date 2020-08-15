@@ -42,4 +42,4 @@ jobs:
           docker stop $(docker ps -a -q)
           docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
           docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
-          docker run -dit -p 3000:3000 docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
+          docker run -dit --env-file ~/apps/emailapi-pipeline/.env -p 3000:3000 docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
