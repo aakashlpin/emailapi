@@ -8,8 +8,38 @@
     "start": "next start"
   },
   "dependencies": {
+    "@popperjs/core": "^2.4.4",
+    "@zeit/next-css": "^1.0.1",
+    "autoprefixer": "^9.8.6",
+    "axios": "^0.19.2",
+    "cookie-session": "^1.4.0",
+    "dotenv": "^8.2.0",
+    "firebase": "^7.18.0",
+    "isomorphic-unfetch": "^3.0.0",
+    "json-formatter-js": "^2.3.4",
+    "lodash": "^4.17.20",
     "next": "9.5.1",
+    "postcss-import": "^12.0.1",
+    "prop-types": "^15.7.2",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-copy-to-clipboard": "^5.0.2",
+    "react-dom": "16.13.1",
+    "react-feather": "^2.0.8",
+    "react-google-login": "^5.1.21",
+    "styled-components": "^5.1.1",
+    "tailwindcss": "^1.6.2"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-styled-components": "^1.11.1",
+    "eslint": "^7.7.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-webpack": "^0.12.2",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-react": "^7.20.6",
+    "prettier": "^2.0.5"
   }
 }
