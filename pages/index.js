@@ -11,8 +11,6 @@ import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 import CreateMailbox from '~/components/common/create-mailbox';
 
-const { GOOGLE_CLIENT_ID } = process.env;
-
 const BRAND_COLOR = '#ffc107';
 const Container = styled.div`
   width: 100%;
@@ -125,7 +123,7 @@ function HomePage(props) {
               </Button>
             ) : (
               <FirebaseAuth
-                GOOGLE_CLIENT_ID={GOOGLE_CLIENT_ID}
+                GOOGLE_CLIENT_ID={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
                 // eslint-disable-next-line consistent-return
                 callback={(error, uid) => {
                   if (error) {
