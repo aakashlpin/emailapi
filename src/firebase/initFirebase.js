@@ -10,6 +10,8 @@ const config = {
 
 export default () => {
   if (!firebase.apps.length) {
+    console.log('checking if environment variables are getting set');
+    console.log(config);
     firebase.initializeApp(config);
   }
 };
