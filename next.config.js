@@ -16,6 +16,7 @@ module.exports = withCSS({
     SESSION_SECRET_PREVIOUS: process.env.SESSION_SECRET_PREVIOUS,
     FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
     FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+    MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN,
   },
   webpack: (config) => {
     const { alias } = config.resolve;
