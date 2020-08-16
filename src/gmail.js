@@ -44,6 +44,8 @@ async function fetchEmails(
     const reqParams = {
       userId: 'me',
       q: query,
+      // keep per page size low
+      maxResults: 10,
       ...gmailSearchProps, // https://developers.google.com/gmail/api/v1/reference/users/messages/list
     };
 
