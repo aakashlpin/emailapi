@@ -176,6 +176,12 @@ async function processJob(jobData, done) {
 
   await axios.put(serviceEndpoint, contentAtServiceEndpoint);
 
+  /**
+   * [TODO]
+   * Make the function below fire and forget;
+   * any damage happending inside a atomic execution should fail standalone
+   * and not impact rest of the workflow
+   */
   const postedDataCount = await searchExtractSync({
     uid,
     token,
@@ -215,7 +221,7 @@ async function processJob(jobData, done) {
   const emailOpts = {
     from: 'emailapi.io <notifications@m.emailapi.io>',
     to: user.email,
-    subject: '👋🏽 Your emailapi is ready!',
+    subject: `👋🏽 Your emailapi for "${searchQuery}" is ready!`,
     'h:Reply-To': 'aakash@emailapi.io',
     html: `
       Hello ${user.given_name || user.name},<br/><br/>
