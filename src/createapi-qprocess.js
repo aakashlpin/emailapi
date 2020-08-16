@@ -243,7 +243,7 @@ async function processJob(jobData, done) {
     if (body) {
       console.log('mailgun res', body);
     }
-    console.log('[DONE] populate-service');
+    console.log('[DONE] populate-service', error, body);
     return done();
   });
 }
