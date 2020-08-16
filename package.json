@@ -21,6 +21,7 @@
     "firebase-admin": "^9.1.0",
     "googleapis": "^59.0.0",
     "isomorphic-unfetch": "^3.0.0",
+    "jsdom": "^16.4.0",
     "json-formatter-js": "^2.3.4",
     "lodash": "^4.17.20",
     "next": "9.5.1",
