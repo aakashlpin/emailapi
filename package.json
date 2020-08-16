@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build_start": "next build && next start"
   },
   "dependencies": {
     "@popperjs/core": "^2.4.4",
@@ -13,7 +14,6 @@
     "autoprefixer": "^9.8.6",
     "axios": "^0.19.2",
     "cookie-session": "^1.4.0",
-    "dotenv": "^8.2.0",
     "firebase": "^7.18.0",
     "isomorphic-unfetch": "^3.0.0",
     "json-formatter-js": "^2.3.4",

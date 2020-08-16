@@ -1,8 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import axios from 'axios';
 
-require('../../env');
-
 export default (handler) => (req, res) => {
   const {
     token,

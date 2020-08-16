@@ -1,5 +1,4 @@
 const withCSS = require('@zeit/next-css');
-require('./env');
 const aliases = require('./alias-config');
 
 module.exports = withCSS({
