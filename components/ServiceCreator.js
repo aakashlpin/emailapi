@@ -232,12 +232,14 @@ const ServiceCreator = ({ router, ...props }) => {
   }
 
   async function handleClickAttachmentFilename({ messageId, attachmentId }) {
-    const remoteCall = await axios.post(`/api/email-attachment`, {
+    const { data } = await axios.post(`/api/fetch/attachment`, {
       messageId,
       attachmentId,
       token,
       uid,
     });
+
+    window.open(`data:application/pdf;base64,${data.base64}`);
   }
 
   function processConfigOnSearchResults(config) {

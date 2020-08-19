@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import axios from 'axios';
 import styled from 'styled-components';
 import { Trash2 } from 'react-feather';
 import { createPopper } from '@popperjs/core';

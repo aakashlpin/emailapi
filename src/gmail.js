@@ -61,6 +61,26 @@ async function fetchEmails(
   }
 }
 
+const fetchAttachment = async ({ attachmentId, messageId, refreshToken }) => {
+  const auth = await authHandler(refreshToken);
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  const pdfRemoteResponse = await gmail.users.messages.attachments.get({
+    id: attachmentId,
+    messageId,
+    userId: 'me',
+  });
+
+  const { data } = pdfRemoteResponse;
+  if (data.size) {
+    // decode data.data
+    // and store in a attachment
+    return data.data.replace(/-/g, '+').replace(/_/g, '/');
+  }
+
+  return pdfRemoteResponse;
+};
+
 const fetchAttachments = async (attachmentParams) => {
   const auth = await authHandler();
   const gmail = google.gmail({ version: 'v1', auth });
@@ -97,6 +117,7 @@ const attachAfterDatePropToQuery = (q, afterDateInMilliseconds) =>
 
 module.exports = {
   fetchEmails,
+  fetchAttachment,
   fetchAttachments,
   attachAfterDatePropToQuery,
 };

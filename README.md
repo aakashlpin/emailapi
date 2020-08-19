@@ -1,30 +1,33 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# emailapi.io
 
-## Getting Started
+## Overview
+EmailAPI enables powerful actions on top of your Gmail account with features like:
+- Extract data in email body or attached PDFs into a HTTP endpoint
+- Receive a copy of unlocked PDFs
+- Aggregate similar data (e.g. several credit card bills) from several senders into an endpoint.
 
-First, run the development server:
+## How to run locally
 
-```bash
-npm run dev
-# or
+Fork this repo and then clone it:
+
+```
+git clone https://github.com/<your_name>/emailapi.git
+```
+
+`cd` into directory where the repo was cloned and install the dependencies:
+
+```
+yarn
+```
+
+Then just run
+
+```
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+to start the development server on port `3000`. Your jsonbox instance will be running on `http://localhost:3000`. Alternatively you can run the application using docker with `docker-compose up`.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+### LICENSE
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/import?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+MIT
