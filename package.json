@@ -14,6 +14,7 @@
     "autoprefixer": "^9.8.6",
     "axios": "^0.19.2",
     "base-64": "^0.1.0",
+    "base64topdf": "^1.1.8",
     "bull": "^3.18.0",
     "classnames": "^2.2.6",
     "cookie-session": "^1.4.0",
@@ -36,6 +37,7 @@
     "react-dom": "16.13.1",
     "react-feather": "^2.0.8",
     "react-google-login": "^5.1.21",
+    "remove-pdf-password": "^0.1.0",
     "styled-components": "^5.1.1",
     "tailwindcss": "^1.6.2"
   },

@@ -8,10 +8,11 @@ import queue from './redis-queue';
 const findLastIndex = require('lodash/findLastIndex');
 const mailgun = require('mailgun-js');
 
-const GOOGLE_OAUTH_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
-const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+const GOOGLE_OAUTH_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
-const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
+const { MAILGUN_API_KEY } = process.env;
+const { MAILGUN_DOMAIN } = process.env;
 
 const mg = mailgun({ apiKey: MAILGUN_API_KEY, domain: MAILGUN_DOMAIN });
 

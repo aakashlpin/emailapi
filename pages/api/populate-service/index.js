@@ -4,7 +4,8 @@ import queue from '~/src/redis-queue';
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
-const GOOGLE_OAUTH_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
+const GOOGLE_OAUTH_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 require('~/src/createapi-qprocess');
 

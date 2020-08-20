@@ -1,4 +1,6 @@
 FROM node:12.18.2
+RUN apt-get update -y
+RUN apt-get install -y qpdf
 
 WORKDIR /codebase
 COPY package.json ./

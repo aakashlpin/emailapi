@@ -54,6 +54,9 @@ const ConfigOutputBar = ({
   doPreviewParsedData,
   handleChangeSearchInput,
   setTriggerSearch,
+  pdfPasswordInput,
+  setPdfPasswordInput,
+  handleCreateUnlockJob,
 }) => {
   let sampleData;
   if (
@@ -114,6 +117,29 @@ const ConfigOutputBar = ({
         </AsideContainer>
       ) : (
         <div className="p-8 bg-yellow-100">
+          <div className="mb-16">
+            <h2 className="text-xl mb-4">
+              Auto unlock attachment with password:
+            </h2>
+            <form action="">
+              <input
+                type="text"
+                value={pdfPasswordInput}
+                onChange={(e) => setPdfPasswordInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className={cx('border-b-2', {})}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCreateUnlockJob();
+                }}
+              >
+                Test unlock email
+              </button>{' '}
+            </form>
+          </div>
+
           <h2 className="text-xl mb-4">Tips</h2>
           <ol className="list-disc">
             {flatten(parsedData).length ? (

@@ -37,7 +37,9 @@ export default (handler) => (req, res) => {
       let userRefreshToken;
       if (uid) {
         try {
-          const userRes = await axios(`${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`);
+          const userRes = await axios(
+            `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`,
+          );
           userCreds = userRes.data;
           userRefreshToken = userCreds.refreshToken;
         } catch (e) {
