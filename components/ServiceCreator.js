@@ -104,6 +104,29 @@ const ServiceCreator = ({ router, ...props }) => {
 
   const [localFieldNames, setLocalFieldName] = useState({});
 
+  const [pdfPasswordInput, setPdfPasswordInput] = useState('');
+  const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
+
+  async function handleCreateUnlockJob() {
+    // send attachment id, user id etc
+    // test unlock on server and send back an attachment
+    try {
+      await axios.post(`/api/email-search/attachment-unlock`, {
+        ...unlockJobAPIProps,
+        token,
+        uid,
+        pdfPasswordInput,
+      });
+
+      new Noty({
+        theme: 'relax',
+        text: `✅ Please wait while we unlock and send you an email!`,
+      }).show();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   function resetData() {
     setSearchResults([]);
     setSelectedSearchResultIndex(null);
@@ -231,7 +254,18 @@ const ServiceCreator = ({ router, ...props }) => {
     );
   }
 
-  async function handleClickAttachmentFilename({ messageId, attachmentId }) {
+  async function handleClickAttachmentFilename({
+    messageId,
+    attachmentId,
+    filename,
+  }) {
+    // set filename in state and pass it to config-output-bar component where user can input password and submit request
+    setUnlockJobAPIProps({
+      messageId,
+      attachmentId,
+      filename,
+    });
+
     const { data } = await axios.post(`/api/fetch/attachment`, {
       messageId,
       attachmentId,
@@ -239,7 +273,11 @@ const ServiceCreator = ({ router, ...props }) => {
       uid,
     });
 
+    // preview the file in new tab
     window.open(`data:application/pdf;base64,${data.base64}`);
+    /* when the user now returns back to primary tab after closing this new tab,
+      she can be shown a popup to "enter your password to receive automaticly unlock pds in future" prompt
+    */
   }
 
   function processConfigOnSearchResults(config) {
@@ -598,6 +636,9 @@ const ServiceCreator = ({ router, ...props }) => {
               doPreviewParsedData={doPreviewParsedData}
               handleChangeSearchInput={handleChangeSearchInput}
               setTriggerSearch={setTriggerSearch}
+              pdfPasswordInput={pdfPasswordInput}
+              setPdfPasswordInput={setPdfPasswordInput}
+              handleCreateUnlockJob={handleCreateUnlockJob}
             />
           </Aside>
         </ContainerBody>

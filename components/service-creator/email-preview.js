@@ -80,9 +80,8 @@ const EmailPreview = ({
     handleClickEmailContent({ selector: clickedElemSelector, name: null });
   }
 
-  async function onClickFilename({ messageId, attachmentId }) {
-    console.log({ messageId, attachmentId });
-    handleClickAttachmentFilename({ messageId, attachmentId });
+  async function onClickFilename({ messageId, attachmentId, filename }) {
+    handleClickAttachmentFilename({ messageId, attachmentId, filename });
   }
 
   useEffect(() => {
@@ -132,6 +131,7 @@ const EmailPreview = ({
                   onClickFilename({
                     messageId: messageItem.messageId,
                     attachmentId: attachment.id,
+                    filename: attachment.filename,
                   })
                 }
               >

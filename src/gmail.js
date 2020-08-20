@@ -1,9 +1,90 @@
+/* eslint-disable import/prefer-default-export */
 /* eslint-disable no-await-in-loop */
 const { google } = require('googleapis');
 const format = require('date-fns/format');
+const b64Decode = require('base-64').decode;
 
 const authHandler = require('./auth');
 const { log } = require('./integrations/utils');
+
+function getHeaderValueFromEmail(headers = [], name) {
+  try {
+    return headers.find((header) => header.name === name).value;
+  } catch (e) {
+    return '';
+  }
+}
+
+function processMessageBody(message) {
+  const {
+    id: messageId,
+    payload: { body, parts, headers },
+  } = message;
+  try {
+    const getHtmlPart = (partsArr) =>
+      Array.isArray(partsArr) && partsArr.length
+        ? partsArr.find((part) => part.mimeType === 'text/html')
+        : null;
+
+    let htmlPart = getHtmlPart(parts);
+    if (
+      !htmlPart &&
+      Array.isArray(parts) &&
+      parts.length &&
+      parts[0].parts &&
+      getHtmlPart(parts[0].parts[0].parts)
+    ) {
+      htmlPart = getHtmlPart(parts[0].parts[0].parts);
+    }
+    const isHtmlContent = !!htmlPart;
+    const bodyData = htmlPart ? htmlPart.body.data : body.data;
+
+    if (!bodyData) {
+      return null;
+    }
+    const messageBody = decodeURIComponent(
+      escape(b64Decode(bodyData.replace(/-/g, '+').replace(/_/g, '/'))),
+    );
+    const subject = getHeaderValueFromEmail(headers, 'Subject');
+    const date = getHeaderValueFromEmail(headers, 'Date');
+    const from = getHeaderValueFromEmail(headers, 'From');
+
+    const parsedData = {
+      messageId,
+      message: messageBody,
+      subject,
+      date,
+      from,
+      isHtmlContent,
+    };
+
+    const pdfProps =
+      parts &&
+      parts.find(
+        (part) =>
+          part.mimeType === 'application/pdf' ||
+          part.mimeType === 'application/octet-stream',
+      );
+
+    if (pdfProps) {
+      const {
+        filename,
+        body: { attachmentId },
+      } = pdfProps;
+      parsedData.attachments = [
+        {
+          id: attachmentId,
+          filename,
+        },
+      ];
+    }
+
+    return parsedData;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
 
 async function getEmailsFromRemote(gmail, reqParams) {
   const res = await gmail.users.messages.list(reqParams);
@@ -29,6 +110,18 @@ async function getEmailsFromRemote(gmail, reqParams) {
     nextPageToken: res.data.nextPageToken,
     messages,
   };
+}
+
+async function fetchEmailByMessageId({ messageId, refreshToken }) {
+  const auth = await authHandler(refreshToken);
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  const { data } = await gmail.users.messages.get({
+    id: messageId,
+    userId: 'me',
+  });
+
+  return data;
 }
 
 async function fetchEmails(
@@ -117,7 +210,9 @@ const attachAfterDatePropToQuery = (q, afterDateInMilliseconds) =>
 
 module.exports = {
   fetchEmails,
+  fetchEmailByMessageId,
   fetchAttachment,
   fetchAttachments,
   attachAfterDatePropToQuery,
+  processMessageBody,
 };
