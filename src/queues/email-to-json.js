@@ -1,16 +1,3 @@
-/**
- *
- *
- * [TODO]
- *
- * split the dual role this queue is playing
- *
- * Queue 1:
- *
- *
- *
- */
-
 import axios from 'axios';
 import flatten from 'lodash/flatten';
 

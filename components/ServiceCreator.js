@@ -392,7 +392,7 @@ const ServiceCreator = ({ router, ...props }) => {
     }
     const newServiceId = await doCreateConfigAndServiceOnRemote();
     const { data: apiEndpointResponse } = await axios.post(
-      '/api/populate-service',
+      '/api/apps/email-to-json',
       {
         uid,
         token,
