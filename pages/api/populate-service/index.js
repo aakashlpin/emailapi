@@ -1,13 +1,15 @@
+import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
-import queue from '~/src/redis-queue';
+import { mailFetchQueue } from '~/src/redis-queue';
+
+const findLastIndex = require('lodash/findLastIndex');
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
-const GOOGLE_OAUTH_REDIRECT_URI =
-  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
-require('~/src/createapi-qprocess');
+require('~/src/queues/mail-fetch');
+require('~/src/queues/email-to-json');
 
 async function handle(req, res, resolve) {
   const { refresh_token: refreshToken } = req;
@@ -19,7 +21,7 @@ async function handle(req, res, resolve) {
     new_only: newOnly = false,
     api_only: apiOnly = false,
   } = req.body;
-  const origin = GOOGLE_OAUTH_REDIRECT_URI;
+
   try {
     const uniqueDataEndpoint = generateUniqueId();
     const endpoint = `${EMAILAPI_DOMAIN}/${uid}/${uniqueDataEndpoint}`;
@@ -30,19 +32,82 @@ async function handle(req, res, resolve) {
       isMailbox ? 'mailbox' : 'services'
     }/${serviceId}`;
 
-    queue.add({
+    const { data: serviceData } = await axios(serviceEndpoint);
+    const { email, data } = serviceData;
+    let { search_query: searchQuery } = serviceData;
+    if (isMailbox) {
+      searchQuery = `to: ${email}`;
+    }
+    if (newOnly) {
+      const hasData = Array.isArray(data) && data.length;
+
+      if (hasData) {
+        const lastSuccessfulDataEntry = findLastIndex(
+          data,
+          (item) => item.is_successful,
+        );
+
+        if (lastSuccessfulDataEntry >= 0) {
+          const lastProcessingTimestamp = parseInt(
+            new Date(data[lastSuccessfulDataEntry]._createdOn).getTime() / 1000,
+            10,
+          );
+
+          if (lastProcessingTimestamp) {
+            searchQuery = `${searchQuery} after:${lastProcessingTimestamp}`;
+          }
+        }
+      }
+    }
+
+    const { user } = req;
+    const userProps = {
       uid,
-      user: req.user,
+      user,
       token,
-      origin,
-      apiOnly,
-      newOnly,
-      endpoint,
-      isMailbox,
       refreshToken,
-      serviceEndpoint,
-      uniqueDataEndpoint,
+    };
+
+    /**
+     * [TODO]
+     *
+     * send a taskId here
+     * which should keep track of subtasks through Ids
+     * each subtask should be able to attach itself to the parent task Id
+     * this subTask Id should be sent to the queue below which should mark status on success/failure
+     *
+     *  */
+
+    // const taskTrackingId = generateUniqueId();
+    // const taskCompletionNotif =
+    mailFetchQueue.add({
+      apiOnly,
+      userProps,
+      searchQuery,
+      _nextQueue: 'emailToJsonQueue',
+      _nextQueueData: {
+        endpoint,
+        userProps,
+        isMailbox,
+        serviceEndpoint,
+      },
     });
+
+    const dataEntry = {
+      _createdOn: new Date().toISOString(),
+      id: uniqueDataEndpoint,
+      is_pending: 'PENDING_IMPL',
+    };
+
+    const contentAtServiceEndpoint = {
+      ...serviceData,
+      data: Array.isArray(serviceData.data)
+        ? [...serviceData.data, dataEntry]
+        : [dataEntry],
+    };
+
+    await axios.put(serviceEndpoint, contentAtServiceEndpoint);
+
     return resolve();
   } catch (e) {
     console.log(e);

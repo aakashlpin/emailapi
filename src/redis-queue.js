@@ -19,5 +19,6 @@ const opts = {
   },
 };
 
-const createApiQueue = new Queue('create-api', opts);
-export default createApiQueue;
+export const mailFetchQueue = new Queue('mail-fetch', opts);
+export const emailToJsonQueue = new Queue('email-to-json', opts);
+export const autoUnlockQueue = new Queue('auto-unlock', opts);
