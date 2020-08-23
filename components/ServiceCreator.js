@@ -111,12 +111,27 @@ const ServiceCreator = ({ router, ...props }) => {
     // send attachment id, user id etc
     // test unlock on server and send back an attachment
     try {
-      await axios.post(`/api/email-search/attachment-unlock`, {
-        ...unlockJobAPIProps,
+      const { data: serviceResponse } = await axios.post(
+        `${baseUri(uid)}/services`,
+        {
+          app: 'AUTO_UNLOCK',
+          search_query: searchInput,
+          unlock_password: pdfPasswordInput,
+        },
+      );
+
+      await axios.post(`/api/apps/auto-unlock`, {
         token,
         uid,
-        pdfPasswordInput,
+        service_id: serviceResponse._id,
       });
+      // await axios.post(`/api/email-search/attachment-unlock`, {
+      //   // await axios.post(`/api/apps/auto-unlocker`, {
+      //   ...unlockJobAPIProps,
+      //   token,
+      //   uid,
+      //   pdfPasswordInput,
+      // });
 
       new Noty({
         theme: 'relax',
@@ -338,6 +353,20 @@ const ServiceCreator = ({ router, ...props }) => {
       return serviceId;
     }
 
+    /**
+     * REFACTOR:
+     * each service can contain a prop called `app` whose value will be ENUM
+     * basis ENUM value, further props will be expected
+     *
+     * switch (SERVICE.INSTALLED_APP) {
+     *    case APPS.EMAIL_TO_JSON: {
+     *      // consider .configurations property in the service object
+     *    }
+     *    case APPS.AUTO_UNLOCK: {
+     *      // consider .unlockPassword property in the service object
+     *    }
+     * }
+     */
     const { data: serviceResponse } = await axios.post(
       `${baseUri(uid)}/services`,
       {
