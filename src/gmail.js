@@ -15,30 +15,40 @@ function getHeaderValueFromEmail(headers = [], name) {
   }
 }
 
+const isLengthyArray = (arr) => Array.isArray(arr) && arr.length;
+
+function findPartOfType(parts, type) {
+  if (!isLengthyArray(parts)) {
+    return null;
+  }
+
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < parts.length; i++) {
+    const childHtmlPart = parts.find((part) => part.mimeType === type);
+    if (childHtmlPart) {
+      return childHtmlPart;
+    }
+    if (isLengthyArray(parts[i].parts)) {
+      const grandChildHtmlPart = findPartOfType(parts[i].parts, type);
+      if (grandChildHtmlPart) {
+        return grandChildHtmlPart;
+      }
+    }
+  }
+
+  return null;
+}
+
 function processMessageBody(message) {
   const {
     id: messageId,
     payload: { body, parts, headers },
   } = message;
   try {
-    const getHtmlPart = (partsArr) =>
-      Array.isArray(partsArr) && partsArr.length
-        ? partsArr.find((part) => part.mimeType === 'text/html')
-        : null;
-
-    let htmlPart = getHtmlPart(parts);
-    if (
-      !htmlPart &&
-      Array.isArray(parts) &&
-      parts.length &&
-      parts[0].parts &&
-      getHtmlPart(parts[0].parts[0].parts)
-    ) {
-      htmlPart = getHtmlPart(parts[0].parts[0].parts);
-    }
+    const htmlPart = findPartOfType(parts, 'text/html');
     const isHtmlContent = !!htmlPart;
-    const bodyData = htmlPart ? htmlPart.body.data : body.data;
 
+    const bodyData = isHtmlContent ? htmlPart.body.data : body.data;
     if (!bodyData) {
       return null;
     }
@@ -59,18 +69,15 @@ function processMessageBody(message) {
     };
 
     const pdfProps =
-      parts &&
-      parts.find(
-        (part) =>
-          part.mimeType === 'application/pdf' ||
-          part.mimeType === 'application/octet-stream',
-      );
+      findPartOfType(parts, 'application/pdf') ||
+      findPartOfType(parts, 'application/octet-stream');
 
     if (pdfProps) {
       const {
         filename,
         body: { attachmentId },
       } = pdfProps;
+
       parsedData.attachments = [
         {
           id: attachmentId,
