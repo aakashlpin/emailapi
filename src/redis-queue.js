@@ -19,6 +19,27 @@ const opts = {
   },
 };
 
-export const mailFetchQueue = new Queue('mail-fetch', opts);
-export const emailToJsonQueue = new Queue('email-to-json', opts);
-export const autoUnlockQueue = new Queue('auto-unlock', opts);
+export const redis = opts.createClient();
+
+const queues = [
+  { exportName: 'mailFetchQueue', bullName: 'mail-fetch' },
+  { exportName: 'emailToJsonQueue', bullName: 'email-to-json' },
+  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock' },
+  { exportName: 'taskStatusQueue', bullName: 'task-status' },
+];
+
+const exportQueues = {};
+queues.forEach(({ exportName, bullName }) => {
+  exportQueues[exportName] = new Queue(bullName, opts);
+
+  exportQueues[exportName].on('completed', (job) => {
+    console.log(`Job ${job.id} from ${exportName} completed!`);
+    redis.sadd(
+      `spawnedBy:${job.data.parentJobId}:completed`,
+      `${exportName}${job.id}`,
+    );
+    job.remove();
+  });
+});
+
+export default exportQueues;

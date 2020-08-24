@@ -1,7 +1,7 @@
 import axios from 'axios';
 // import flatten from 'lodash/flatten';
 
-import { autoUnlockQueue } from '../redis-queue';
+import queues from '../redis-queue';
 
 // const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 const GOOGLE_OAUTH_REDIRECT_URI =
@@ -47,8 +47,8 @@ async function processJob(jobData, done) {
 }
 
 (() => {
-  autoUnlockQueue.process((job, done) => {
-    console.log('processing autoUnlockQueue job#', job._id);
+  queues.autoUnlockQueue.process((job, done) => {
+    console.log('processing autoUnlockQueue job#', job.id);
     processJob(job.data, done);
   });
 })();

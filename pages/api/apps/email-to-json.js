@@ -1,6 +1,6 @@
 import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
-import { mailFetchQueue } from '~/src/redis-queue';
+import queues from '~/src/redis-queue';
 
 const findLastIndex = require('lodash/findLastIndex');
 
@@ -10,6 +10,7 @@ const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 
 require('~/src/queues/mail-fetch');
 require('~/src/queues/email-to-json');
+require('~/src/queues/task-status');
 
 async function handle(req, res, resolve) {
   const { refresh_token: refreshToken } = req;
@@ -80,7 +81,7 @@ async function handle(req, res, resolve) {
 
     // const taskTrackingId = generateUniqueId();
     // const taskCompletionNotif =
-    mailFetchQueue.add({
+    queues.mailFetchQueue.add({
       apiOnly,
       userProps,
       searchQuery,

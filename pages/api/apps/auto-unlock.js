@@ -1,6 +1,6 @@
 import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
-import { mailFetchQueue } from '~/src/redis-queue';
+import queues from '~/src/redis-queue';
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
@@ -41,7 +41,7 @@ async function handle(req, res, resolve) {
     refreshToken,
   };
 
-  mailFetchQueue.add({
+  queues.mailFetchQueue.add({
     apiOnly,
     userProps,
     searchQuery,

@@ -12,3 +12,17 @@
   - If unlocked pdf mail from m.emailapi.io arrives, show options to
     - unlock all previous emails and receive "unlocked" emails for all of them
     - or, unlock all emails going forward
+
+## Tracking task completion between parent-child queue jobs
+
+  - ### 1-many jobs
+    mailFetch will always be the parent job
+    mailFetch queue will spawn n jobs in child queue
+    once all jobs have been spawned
+
+  - ### Parent job completion user notifications
+
+
+mailFetch
+
+parentJobId

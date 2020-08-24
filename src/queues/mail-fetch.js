@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as queues from '~/src/redis-queue';
+import queues, { redis } from '~/src/redis-queue';
 
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
@@ -36,6 +36,7 @@ async function iterable({
   searchQuery,
   _nextQueue,
   _nextQueueData,
+  parentJobId,
 }) {
   const { uid, token, refreshToken } = userProps;
   const { emails, nextPageToken } = await fetchEmails({
@@ -52,11 +53,23 @@ async function iterable({
    * as it contains html body of email
    * so the method below is heavy on redis memory
    */
-  emails.forEach((email) =>
+  const prs = emails.map((email) =>
     queues[_nextQueue].add({
       email,
       queueData: _nextQueueData,
+      parentJobId,
     }),
+  );
+
+  const jobs = await Promise.all(prs);
+
+  console.log('-----mail-fetch new jobs');
+  console.log(jobs);
+  console.log('-----mail-fetch new jobs');
+
+  redis.sadd(
+    `spawnedBy:${parentJobId}:pending`,
+    jobs.map((job) => `${_nextQueue}${job.id}`),
   );
 
   if (nextPageToken) {
@@ -67,13 +80,15 @@ async function iterable({
       _nextQueue,
       _nextQueueData,
       pageToken: nextPageToken,
+      parentJobId,
     });
   }
 
   return null;
 }
 
-async function processJob(jobData, done) {
+async function processJob(job, done) {
+  const { data: jobData, id } = job;
   const {
     userProps,
     apiOnly,
@@ -88,7 +103,21 @@ async function processJob(jobData, done) {
     searchQuery,
     _nextQueue,
     _nextQueueData,
+    parentJobId: id,
   });
+
+  queues.taskStatusQueue.add(
+    {
+      taskId: id,
+    },
+    {
+      attempts: 30,
+      backoff: {
+        type: 'fixed',
+        delay: 30 * 1000,
+      },
+    },
+  );
 
   done();
 }
@@ -96,6 +125,6 @@ async function processJob(jobData, done) {
 (() => {
   queues.mailFetchQueue.process((job, done) => {
     console.log('mailFetchQueue job data', job.data);
-    processJob(job.data, done);
+    processJob(job, done);
   });
 })();

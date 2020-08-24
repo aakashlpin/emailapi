@@ -3,7 +3,7 @@ import flatten from 'lodash/flatten';
 
 import applyConfigOnEmail from '../isomorphic/applyConfigOnEmail';
 import ensureConfiguration from '../isomorphic/ensureConfiguration';
-import { emailToJsonQueue } from '../redis-queue';
+import queues from '../redis-queue';
 
 // const mailgun = require('mailgun-js');
 
@@ -131,7 +131,7 @@ async function processJob(jobData, done) {
 }
 
 (() => {
-  emailToJsonQueue.process((job, done) => {
+  queues.emailToJsonQueue.process((job, done) => {
     console.log('emailToJsonQueue job data', job.data);
     processJob(job.data, done);
   });
