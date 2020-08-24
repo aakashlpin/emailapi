@@ -52,10 +52,12 @@ async function iterable({
    * as it contains html body of email
    * so the method below is heavy on redis memory
    */
-  queues[_nextQueue].add({
-    emails,
-    queueData: _nextQueueData,
-  });
+  emails.forEach((email) =>
+    queues[_nextQueue].add({
+      email,
+      queueData: _nextQueueData,
+    }),
+  );
 
   if (nextPageToken) {
     return iterable({

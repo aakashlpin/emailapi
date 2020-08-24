@@ -8,7 +8,7 @@ const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function processJob(jobData, done) {
-  const { emails, queueData } = jobData;
+  const { email, queueData } = jobData;
   const {
     unlockPassword,
     userProps: { uid, token },
@@ -19,12 +19,12 @@ async function processJob(jobData, done) {
    * the code below sends 1 unique request per attachment per email
    * ideally assuming that there would be max 1-2 attachments/email
    */
-  const unlockRequests = emails
-    .reduce((accum, email) => {
+  const unlockRequests = [email]
+    .reduce((accum, _email) => {
       return [
         ...accum,
-        ...email.attachments.map((attachment) => ({
-          messageId: email.messageId,
+        ..._email.attachments.map((attachment) => ({
+          messageId: _email.messageId,
           attachmentId: attachment.id,
           filename: attachment.filename,
         })),

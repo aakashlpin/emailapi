@@ -16,7 +16,7 @@ const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 // const mg = mailgun({ apiKey: MAILGUN_API_KEY, domain: MAILGUN_DOMAIN });
 
 async function processJob(jobData, done) {
-  const { emails, queueData } = jobData;
+  const { email, queueData } = jobData;
 
   const {
     endpoint,
@@ -38,10 +38,10 @@ async function processJob(jobData, done) {
 
   const emailapi = flatten(
     remoteConfigurations.map((config) =>
-      emails
-        .map((email) => ({
-          ...applyConfigOnEmail(email.message, config),
-          email_date: email.date,
+      [email]
+        .map((_email) => ({
+          ...applyConfigOnEmail(_email.message, config),
+          email_date: _email.date,
         }))
         .filter((extactedData) => ensureConfiguration(extactedData, config)),
     ),
