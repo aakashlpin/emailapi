@@ -4,6 +4,8 @@ import queues, { redis } from '~/src/redis-queue';
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
+const isLengthyArray = (arr) => Array.isArray(arr) && arr.length;
+
 async function fetchEmails({
   uid,
   token,
@@ -91,6 +93,7 @@ async function processJob(job, done) {
     searchQuery,
     _nextQueue,
     _nextQueueData,
+    initNotifications,
     completionNotifications,
   } = jobData;
 
@@ -103,6 +106,12 @@ async function processJob(job, done) {
     parentJobId: id,
   });
 
+  if (isLengthyArray(initNotifications)) {
+    initNotifications.forEach((notif) => {
+      queues.notificationsQueue.add(notif);
+    });
+  }
+
   queues.taskStatusQueue.add(
     {
       taskId: id,
@@ -110,6 +119,8 @@ async function processJob(job, done) {
     },
     {
       attempts: 30,
+      // run it first time after a 15s delay
+      delay: 15 * 1000,
       backoff: {
         type: 'exponential',
         delay: 30 * 1000,

@@ -1,25 +1,37 @@
 import axios from 'axios';
 
 async function handle(req, res) {
-  const { apiId, serviceEndpoint, success } = req.body;
+  const { apiId, serviceEndpoint, success, pending } = req.body;
   const { data: serviceData } = await axios(serviceEndpoint);
-  const { data } = serviceData;
+  const { data = [] } = serviceData;
 
-  const updatedServiceData = {
-    ...serviceData,
-    data: data.map((dataItem) =>
-      dataItem.id === apiId
+  let updatedServiceData;
+  const dataEntry = {
+    _createdOn: new Date().toISOString(),
+    id: apiId,
+    is_pending: true,
+  };
+
+  if (pending) {
+    updatedServiceData = [...data, dataEntry];
+  } else {
+    updatedServiceData = data.map((item) =>
+      item.id === apiId
         ? {
-            ...dataItem,
+            ...item,
             is_pending: false,
             is_successful: success,
             _isReadyOn: new Date().toISOString(),
           }
-        : dataItem,
-    ),
-  };
+        : item,
+    );
+  }
 
-  await axios.put(serviceEndpoint, updatedServiceData);
+  await axios.put(serviceEndpoint, {
+    ...serviceData,
+    data: updatedServiceData,
+  });
+
   res.json({});
 }
 

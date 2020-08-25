@@ -10,7 +10,6 @@ import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 import logout from '~/src/firebase/logout';
 import { Button, Label } from '~/components/common/Atoms';
-import CreateMailbox from '~/components/common/create-mailbox';
 
 const Container = styled.div`
   display: grid;
@@ -28,11 +27,10 @@ const Dashboard = ({ router, ...props }) => {
   } = router;
 
   const {
-    AuthUserInfo: { token, AuthUser },
+    AuthUserInfo: { token },
   } = props;
 
   const [userServices, setUserServices] = useState([]);
-  const [userMailboxes, setUserMailboxes] = useState([]);
 
   async function fetchServices() {
     const services = await axios.post('/api/dashboard/get-services', {
@@ -42,23 +40,11 @@ const Dashboard = ({ router, ...props }) => {
     return services.data;
   }
 
-  async function fetchMailboxes() {
-    const mailboxes = await axios.post('/api/dashboard/get-mailboxes', {
-      token,
-      uid,
-    });
-    return mailboxes.data;
-  }
-
   useEffect(() => {
     async function perform() {
       try {
-        const [services, mailboxes] = await Promise.all([
-          fetchServices(),
-          fetchMailboxes(),
-        ]);
+        const [services] = await Promise.all([fetchServices()]);
         setUserServices(services);
-        setUserMailboxes(mailboxes);
       } catch (e) {
         console.log(e);
       }
@@ -99,52 +85,6 @@ const Dashboard = ({ router, ...props }) => {
                 <div>
                   {Array.isArray(service.data)
                     ? service.data.map((dataItem) => {
-                        return (
-                          <div key={`data_${dataItem.id}`}>
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${dataItem.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="border-b-4"
-                            >
-                              View Extracted Data from{' '}
-                              {new Date(dataItem._createdOn).toLocaleString()}
-                            </a>
-                          </div>
-                        );
-                      })
-                    : null}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h1 className="text-2xl mb-4">Your Mailboxes</h1>
-          <div style={{ width: '600px' }}>
-            <CreateMailbox
-              invitationText="Create a new mailbox"
-              token={token}
-              AuthUser={AuthUser}
-            />
-          </div>
-          <div>
-            {userMailboxes.map((mailbox, idx) => (
-              <div key={`mailbox${idx}`} className="px-2 py-4">
-                <Label>
-                  <span className="inline-block mr-2">Mailbox</span>
-                  <a
-                    href={`/${uid}/mailbox/${mailbox._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
-                    <ExternalLink size={16} />
-                  </a>
-                </Label>
-                <div>&ldquo;{mailbox.email}&rdquo;</div>
-                <div>
-                  {Array.isArray(mailbox.data)
-                    ? mailbox.data.map((dataItem) => {
                         return (
                           <div key={`data_${dataItem.id}`}>
                             <a

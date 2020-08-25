@@ -4,6 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
 import Head from 'next/head';
+import 'react-responsive-modal/styles.css';
+import '~/css/react-responsive-modal-override.css';
+import { Modal } from 'react-responsive-modal';
 import Noty from 'noty';
 import flatten from 'lodash/flatten';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -71,7 +74,6 @@ const ServiceCreator = ({ router, ...props }) => {
     AuthUserInfo: { token },
   } = props;
 
-  const [isMailbox, setIsMailbox] = useState(false);
   const [isServiceIdLoading, setIsServiceIdLoading] = useState(!!serviceId);
   const [isServiceIdFetched, setIsServiceIdFetched] = useState(!!serviceId);
   const [serviceIdData, setServiceIdData] = useState(null);
@@ -106,6 +108,8 @@ const ServiceCreator = ({ router, ...props }) => {
 
   const [pdfPasswordInput, setPdfPasswordInput] = useState('');
   const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
+  const [attachmentBase64, setAttachmentBase64] = useState('');
+  const [open, setOpen] = useState(false);
 
   async function handleCreateUnlockJob() {
     // send attachment id, user id etc
@@ -117,6 +121,7 @@ const ServiceCreator = ({ router, ...props }) => {
           app: 'AUTO_UNLOCK',
           search_query: searchInput,
           unlock_password: pdfPasswordInput,
+          cron: true,
         },
       );
 
@@ -174,9 +179,6 @@ const ServiceCreator = ({ router, ...props }) => {
       if (nextPageToken) {
         reqParams.nextPageToken = nextPageToken;
       }
-      if (isMailbox) {
-        reqParams.isMailbox = true;
-      }
       try {
         const response = await axios({
           method: 'post',
@@ -215,13 +217,13 @@ const ServiceCreator = ({ router, ...props }) => {
   }
 
   function handleFilterEmailsBySender(fromEmail) {
-    handleChangeSearchInput(`from: ${getEmailFromHeader(fromEmail)}`);
+    handleChangeSearchInput(`from:${getEmailFromHeader(fromEmail)}`);
     setTriggerSearch(true);
   }
 
   function handleFilterEmailsBySubject({ fromEmail, subject }) {
     handleChangeSearchInput(
-      `from: ${getEmailFromHeader(fromEmail)} subject: (${subject})`,
+      `from:${getEmailFromHeader(fromEmail)} subject:(${subject})`,
     );
     setTriggerSearch(true);
   }
@@ -288,11 +290,8 @@ const ServiceCreator = ({ router, ...props }) => {
       uid,
     });
 
-    // preview the file in new tab
-    window.open(`data:application/pdf;base64,${data.base64}`);
-    /* when the user now returns back to primary tab after closing this new tab,
-      she can be shown a popup to "enter your password to receive automaticly unlock pds in future" prompt
-    */
+    setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setOpen(true);
   }
 
   function processConfigOnSearchResults(config) {
@@ -347,7 +346,7 @@ const ServiceCreator = ({ router, ...props }) => {
         ...serviceIdData,
         configurations: newConfigIds,
       };
-      const endpointType = isMailbox ? 'mailbox' : 'services';
+      const endpointType = 'services';
       const endpoint = `${baseUri(uid)}/${endpointType}/${updatedConfig._id}`;
       await axios.put(endpoint, updatedConfig);
       return serviceId;
@@ -370,8 +369,10 @@ const ServiceCreator = ({ router, ...props }) => {
     const { data: serviceResponse } = await axios.post(
       `${baseUri(uid)}/services`,
       {
+        app: 'EMAIL_TO_JSON',
         search_query: searchInput,
         configurations: newConfigIds,
+        cron: true,
       },
     );
 
@@ -426,7 +427,6 @@ const ServiceCreator = ({ router, ...props }) => {
         uid,
         token,
         service_id: newServiceId,
-        isMailbox,
       },
     );
 
@@ -536,13 +536,9 @@ const ServiceCreator = ({ router, ...props }) => {
 
   useEffect(() => {
     if (!isServiceIdLoading && isServiceIdFetched) {
-      const { search_query: argSearchQuery = '', email = '' } = serviceIdData;
+      const { search_query: argSearchQuery = '' } = serviceIdData;
       if (argSearchQuery) {
         handleChangeSearchInput(argSearchQuery);
-      } else if (!argSearchQuery && email) {
-        // mailbox flow
-        setIsMailbox(true);
-        handleChangeSearchInput(`to: ${email}`);
       }
       setConfiguration(
         serviceIdConfigurations.map(({ fields }) => ({
@@ -672,6 +668,15 @@ const ServiceCreator = ({ router, ...props }) => {
           </Aside>
         </ContainerBody>
       </Container>
+      <>
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <iframe
+            src={attachmentBase64}
+            title="preview attachment"
+            style={{ height: '100vh', width: '1024px' }}
+          />
+        </Modal>
+      </>
     </>
   );
 };

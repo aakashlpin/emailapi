@@ -15,7 +15,7 @@ async function handle(req, res, resolve) {
     uid,
     service_id: serviceId,
     api_only: apiOnly,
-    unlock_going_forward: unlockGoingForward = false,
+    unlock_going_forward: unlockGoingForward = true,
     unlock_historic: unlockHistoric = false,
   } = req.body;
 

@@ -9,7 +9,6 @@ import EmailPreview from '~/components/service-creator/email-preview';
 import { Anchor, Button } from '~/components/common/Atoms';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
-import CreateMailbox from '~/components/common/create-mailbox';
 
 const BRAND_COLOR = '#ffc107';
 const Container = styled.div`
@@ -28,10 +27,6 @@ const Header = styled.header`
   height: 64px;
   display: grid;
   place-items: center;
-`;
-
-const Highlight = styled.em`
-  border-bottom: 5px solid ${BRAND_COLOR};
 `;
 
 const DemoContainer = styled.div`
@@ -69,10 +64,8 @@ const Footer = styled.div`
 
 function HomePage(props) {
   const {
-    AuthUserInfo: { token, AuthUser, uid: authUserUid },
+    AuthUserInfo: { AuthUser, uid: authUserUid },
   } = props;
-
-  // console.log(props);
 
   const router = useRouter();
   useEffect(() => {
@@ -134,14 +127,6 @@ function HomePage(props) {
               />
             )}
           </div>
-
-          {AuthUser && AuthUser.uid ? null : (
-            <CreateMailbox
-              invitationText="or, start by forwarding an email to:"
-              token={token}
-              AuthUser={AuthUser}
-            />
-          )}
         </Content>
       </Container>
       <DemoContainer>
