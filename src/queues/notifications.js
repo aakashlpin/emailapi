@@ -51,7 +51,7 @@ async function processJob(job) {
           notifyConditions.hasDataAtEndpoint,
         );
         if (!dataAtEndpoint.length) {
-          return;
+          return Promise.resolve();
         }
       }
       await sendEmail(emailData);
@@ -69,6 +69,8 @@ async function processJob(job) {
       break;
     }
   }
+
+  return Promise.resolve();
 }
 
 (() => {
