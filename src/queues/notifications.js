@@ -43,7 +43,17 @@ async function processJob(job) {
 
   switch (type) {
     case 'email': {
-      const { data: emailData } = jobData;
+      const { notifyConditions, data: emailData } = jobData;
+      if (notifyConditions.hasDataAtEndpoint) {
+        // only possible for cron jobs when search didn't yeild any results
+        // skip sending email in this case as it would be useless
+        const { data: dataAtEndpoint = [] } = await axios(
+          notifyConditions.hasDataAtEndpoint,
+        );
+        if (!dataAtEndpoint.length) {
+          return;
+        }
+      }
       await sendEmail(emailData);
       break;
     }

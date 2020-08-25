@@ -73,24 +73,14 @@ async function handle(req, res, resolve) {
         userProps,
         serviceEndpoint,
       },
-      initNotifications: [
-        {
-          type: 'webhook',
-          data: {
-            method: 'POST',
-            url: `${APP_HOST}/api/apps/email-to-json/webhook`,
-            data: {
-              apiId,
-              serviceEndpoint,
-              pending: true,
-            },
-          },
-        },
-      ],
+      initNotifications: [],
       completionNotifications: {
         success: [
           {
             type: 'email',
+            notifyConditions: {
+              hasDataAtEndpoint: endpoint,
+            },
             data: {
               to: user.email,
               subject: !cron
