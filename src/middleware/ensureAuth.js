@@ -11,7 +11,7 @@ export default (handler) => (req, res) => {
     api_only: apiOnly = false,
   } = req.body;
 
-  console.log(req.body);
+  // console.log(req.body);
 
   return new Promise((resolve) => {
     async function perform() {

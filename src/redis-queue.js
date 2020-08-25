@@ -19,5 +19,35 @@ const opts = {
   },
 };
 
-const createApiQueue = new Queue('create-api', opts);
-export default createApiQueue;
+export const redis = opts.createClient();
+
+const queues = [
+  { exportName: 'mailFetchQueue', bullName: 'mail-fetch' },
+  { exportName: 'taskStatusQueue', bullName: 'task-status' },
+  { exportName: 'notificationsQueue', bullName: 'notifications' },
+  {
+    exportName: 'emailToJsonQueue',
+    bullName: 'email-to-json',
+    childQueue: true,
+  },
+  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock', childQueue: true },
+];
+
+const exportQueues = {};
+queues.forEach(({ exportName, bullName, childQueue }) => {
+  exportQueues[exportName] = new Queue(bullName, opts);
+
+  exportQueues[exportName].on('completed', (job) => {
+    const { id, data: jobData } = job;
+    console.log(`[State change] queue:${exportName}:${id}: ✅ Completed!`);
+    if (childQueue) {
+      redis.sadd(
+        `spawnedBy:${jobData.parentJobId}:completed`,
+        `${exportName}${id}`,
+      );
+    }
+    job.remove();
+  });
+});
+
+export default exportQueues;

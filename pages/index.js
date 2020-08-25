@@ -72,7 +72,7 @@ function HomePage(props) {
     AuthUserInfo: { token, AuthUser, uid: authUserUid },
   } = props;
 
-  console.log(props);
+  // console.log(props);
 
   const router = useRouter();
   useEffect(() => {
