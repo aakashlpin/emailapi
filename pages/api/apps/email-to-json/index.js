@@ -43,7 +43,7 @@ async function handle(req, res, resolve) {
 
         if (lastSuccessfulDataEntry >= 0) {
           const lastProcessingTimestamp = parseInt(
-            new Date(data[lastSuccessfulDataEntry]._createdOn).getTime() / 1000,
+            new Date(data[lastSuccessfulDataEntry]._isReadyOn).getTime() / 1000,
             10,
           );
 
