@@ -220,13 +220,13 @@ const ServiceCreator = ({ router, ...props }) => {
   }
 
   function handleFilterEmailsBySender(fromEmail) {
-    handleChangeSearchInput(`from: ${getEmailFromHeader(fromEmail)}`);
+    handleChangeSearchInput(`from:${getEmailFromHeader(fromEmail)}`);
     setTriggerSearch(true);
   }
 
   function handleFilterEmailsBySubject({ fromEmail, subject }) {
     handleChangeSearchInput(
-      `from: ${getEmailFromHeader(fromEmail)} subject: (${subject})`,
+      `from:${getEmailFromHeader(fromEmail)} subject:(${subject})`,
     );
     setTriggerSearch(true);
   }
