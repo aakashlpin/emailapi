@@ -5,13 +5,10 @@ export default (handler) => (req, res) => {
   const {
     token,
     uid,
-    isMailbox,
     refresh_token: reqRefreshToken,
     skip_auth: skipAuth = false,
     api_only: apiOnly = false,
   } = req.body;
-
-  // console.log(req.body);
 
   return new Promise((resolve) => {
     async function perform() {
@@ -23,10 +20,6 @@ export default (handler) => (req, res) => {
 
       if (reqRefreshToken) {
         req.refresh_token = reqRefreshToken;
-      }
-
-      if (isMailbox) {
-        req.refresh_token = process.env.FORWARD_EMAILID_REFRESH_TOKEN;
       }
 
       if (skipAuth) {

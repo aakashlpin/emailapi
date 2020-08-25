@@ -74,7 +74,6 @@ const ServiceCreator = ({ router, ...props }) => {
     AuthUserInfo: { token },
   } = props;
 
-  const [isMailbox, setIsMailbox] = useState(false);
   const [isServiceIdLoading, setIsServiceIdLoading] = useState(!!serviceId);
   const [isServiceIdFetched, setIsServiceIdFetched] = useState(!!serviceId);
   const [serviceIdData, setServiceIdData] = useState(null);
@@ -178,9 +177,6 @@ const ServiceCreator = ({ router, ...props }) => {
       };
       if (nextPageToken) {
         reqParams.nextPageToken = nextPageToken;
-      }
-      if (isMailbox) {
-        reqParams.isMailbox = true;
       }
       try {
         const response = await axios({
@@ -349,7 +345,7 @@ const ServiceCreator = ({ router, ...props }) => {
         ...serviceIdData,
         configurations: newConfigIds,
       };
-      const endpointType = isMailbox ? 'mailbox' : 'services';
+      const endpointType = 'services';
       const endpoint = `${baseUri(uid)}/${endpointType}/${updatedConfig._id}`;
       await axios.put(endpoint, updatedConfig);
       return serviceId;
@@ -372,8 +368,10 @@ const ServiceCreator = ({ router, ...props }) => {
     const { data: serviceResponse } = await axios.post(
       `${baseUri(uid)}/services`,
       {
+        app: 'EMAIL_TO_JSON',
         search_query: searchInput,
         configurations: newConfigIds,
+        upcoming_emails: true,
       },
     );
 
@@ -428,7 +426,6 @@ const ServiceCreator = ({ router, ...props }) => {
         uid,
         token,
         service_id: newServiceId,
-        isMailbox,
       },
     );
 
@@ -538,13 +535,9 @@ const ServiceCreator = ({ router, ...props }) => {
 
   useEffect(() => {
     if (!isServiceIdLoading && isServiceIdFetched) {
-      const { search_query: argSearchQuery = '', email = '' } = serviceIdData;
+      const { search_query: argSearchQuery = '' } = serviceIdData;
       if (argSearchQuery) {
         handleChangeSearchInput(argSearchQuery);
-      } else if (!argSearchQuery && email) {
-        // mailbox flow
-        setIsMailbox(true);
-        handleChangeSearchInput(`to: ${email}`);
       }
       setConfiguration(
         serviceIdConfigurations.map(({ fields }) => ({
