@@ -73,6 +73,20 @@ async function handle(req, res, resolve) {
         userProps,
         serviceEndpoint,
       },
+      initNotifications: [
+        {
+          type: 'webhook',
+          data: {
+            method: 'POST',
+            url: `${APP_HOST}/api/apps/email-to-json/webhook`,
+            data: {
+              apiId,
+              serviceEndpoint,
+              pending: true,
+            },
+          },
+        },
+      ],
       completionNotifications: {
         success: [
           {
@@ -107,21 +121,6 @@ async function handle(req, res, resolve) {
         ],
       },
     });
-
-    const dataEntry = {
-      _createdOn: new Date().toISOString(),
-      id: apiId,
-      is_pending: true,
-    };
-
-    const contentAtServiceEndpoint = {
-      ...serviceData,
-      data: Array.isArray(serviceData.data)
-        ? [...serviceData.data, dataEntry]
-        : [dataEntry],
-    };
-
-    await axios.put(serviceEndpoint, contentAtServiceEndpoint);
 
     return resolve();
   } catch (e) {

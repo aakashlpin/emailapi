@@ -121,6 +121,7 @@ const ServiceCreator = ({ router, ...props }) => {
           app: 'AUTO_UNLOCK',
           search_query: searchInput,
           unlock_password: pdfPasswordInput,
+          cron: true,
         },
       );
 
