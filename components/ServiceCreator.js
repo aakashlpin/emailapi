@@ -371,7 +371,7 @@ const ServiceCreator = ({ router, ...props }) => {
         app: 'EMAIL_TO_JSON',
         search_query: searchInput,
         configurations: newConfigIds,
-        upcoming_emails: true,
+        cron: true,
       },
     );
 

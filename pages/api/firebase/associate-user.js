@@ -8,7 +8,9 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 async function migrateMailboxToUser({ fromUser, fromUid, toUid }) {
-  const fromUidMailboxes = await axios(`${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${fromUid}/mailbox`);
+  const fromUidMailboxes = await axios(
+    `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${fromUid}/mailbox`,
+  );
   const toUidMailboxes = await axios.post(
     `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${toUid}/mailbox`,
     fromUidMailboxes.data.map((item) => ({
@@ -30,7 +32,9 @@ export default async function AssociateUser(req, res) {
   if (!refreshToken) {
     try {
       const userByEmailRes = await axios(
-        `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI}/users?q=email:${encodeURIComponent(email)}`,
+        `${
+          process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI
+        }/users?q=email:${encodeURIComponent(email)}`,
       );
       if (Array.isArray(userByEmailRes.data) && userByEmailRes.data.length) {
         try {
@@ -82,7 +86,9 @@ export default async function AssociateUser(req, res) {
 
       let currentUserInDb;
       try {
-        const userRes = await axios.get(`${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI}/users/${uid}`);
+        const userRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI}/users/${uid}`,
+        );
         currentUserInDb = userRes.data;
       } catch (e) {
         res.status(500).json({ error: e });
@@ -97,7 +103,10 @@ export default async function AssociateUser(req, res) {
       };
 
       try {
-        await axios.put(`${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI}/users/${uid}`, updatedUser);
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URI}/users/${uid}`,
+          updatedUser,
+        );
         res.json(updatedUser);
       } catch (e) {
         res.status(500).json({ error: e });

@@ -19,6 +19,7 @@ async function handle(req, res, resolve) {
     service_id: serviceId,
     new_only: newOnly = false,
     api_only: apiOnly = false,
+    cron = false,
   } = req.body;
 
   try {
@@ -78,7 +79,9 @@ async function handle(req, res, resolve) {
             type: 'email',
             data: {
               to: user.email,
-              subject: `👋🏽 emailapi for "${searchQuery}" is ready!`,
+              subject: !cron
+                ? `👋🏽 emailapi for "${searchQuery}" is ready!`
+                : `🔁 cron succeeded for "${searchQuery}"`,
               body: `
                 Hello ${user.given_name || user.name},<br/><br/>
                 Here's the <a href="${endpoint}">data endpoint</a> for emails belonging to search query ${searchQuery}.<br/><br/>
