@@ -119,6 +119,8 @@ async function processJob(job, done) {
     },
     {
       attempts: 30,
+      // run it first time after a 15s delay
+      delay: 15 * 1000,
       backoff: {
         type: 'exponential',
         delay: 30 * 1000,
