@@ -23,21 +23,29 @@ export const redis = opts.createClient();
 
 const queues = [
   { exportName: 'mailFetchQueue', bullName: 'mail-fetch' },
-  { exportName: 'emailToJsonQueue', bullName: 'email-to-json' },
-  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock' },
   { exportName: 'taskStatusQueue', bullName: 'task-status' },
+  { exportName: 'notificationsQueue', bullName: 'notifications' },
+  {
+    exportName: 'emailToJsonQueue',
+    bullName: 'email-to-json',
+    childQueue: true,
+  },
+  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock', childQueue: true },
 ];
 
 const exportQueues = {};
-queues.forEach(({ exportName, bullName }) => {
+queues.forEach(({ exportName, bullName, childQueue }) => {
   exportQueues[exportName] = new Queue(bullName, opts);
 
   exportQueues[exportName].on('completed', (job) => {
-    console.log(`Job ${job.id} from ${exportName} completed!`);
-    redis.sadd(
-      `spawnedBy:${job.data.parentJobId}:completed`,
-      `${exportName}${job.id}`,
-    );
+    const { id, data: jobData } = job;
+    console.log(`[State change] queue:${exportName}:${id}: ✅ Completed!`);
+    if (childQueue) {
+      redis.sadd(
+        `spawnedBy:${jobData.parentJobId}:completed`,
+        `${exportName}${id}`,
+      );
+    }
     job.remove();
   });
 });

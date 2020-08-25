@@ -63,10 +63,6 @@ async function iterable({
 
   const jobs = await Promise.all(prs);
 
-  console.log('-----mail-fetch new jobs');
-  console.log(jobs);
-  console.log('-----mail-fetch new jobs');
-
   redis.sadd(
     `spawnedBy:${parentJobId}:pending`,
     jobs.map((job) => `${_nextQueue}${job.id}`),
@@ -95,6 +91,7 @@ async function processJob(job, done) {
     searchQuery,
     _nextQueue,
     _nextQueueData,
+    completionNotifications,
   } = jobData;
 
   await iterable({
@@ -109,11 +106,12 @@ async function processJob(job, done) {
   queues.taskStatusQueue.add(
     {
       taskId: id,
+      completionNotifications,
     },
     {
       attempts: 30,
       backoff: {
-        type: 'fixed',
+        type: 'exponential',
         delay: 30 * 1000,
       },
     },

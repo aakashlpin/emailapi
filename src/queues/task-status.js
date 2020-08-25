@@ -1,7 +1,7 @@
 import queues, { redis } from '~/src/redis-queue';
 
-async function processJob(job, done) {
-  const { taskId } = job.data;
+async function processJob(job) {
+  const { taskId, completionNotifications } = job.data;
   const pendingJobIds = new Set(
     await redis.smembers(`spawnedBy:${taskId}:pending`),
   );
@@ -10,15 +10,21 @@ async function processJob(job, done) {
   );
   if (pendingJobIds.size === completedJobIds.size) {
     console.log('✅ taskStatusQueue completed!');
-    return done();
+    if (completionNotifications.success) {
+      console.log('taskStatusQueue running success notifications...');
+      completionNotifications.success.forEach((notif) =>
+        queues.notificationsQueue.add(notif),
+      );
+    }
+    return Promise.resolve();
   }
   console.log('🔁 taskStatusQueue pending!');
-  return done(new Error('PENDING!'));
+  return Promise.reject(new Error('PENDING!'));
 }
 
 (() => {
-  queues.taskStatusQueue.process((job, done) => {
+  queues.taskStatusQueue.process(async (job) => {
     console.log('taskStatusQueue job data', job.data);
-    processJob(job, done);
+    await processJob(job);
   });
 })();

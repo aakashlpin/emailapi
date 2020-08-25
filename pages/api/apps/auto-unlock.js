@@ -6,8 +6,7 @@ const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId'
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 
-require('~/src/queues/mail-fetch');
-require('~/src/queues/auto-unlock');
+require('~/src/queues');
 
 async function handle(req, res, resolve) {
   const { refresh_token: refreshToken } = req;
@@ -20,8 +19,8 @@ async function handle(req, res, resolve) {
     unlock_historic: unlockHistoric = false,
   } = req.body;
 
-  const uniqueDataEndpoint = generateUniqueId();
-  const endpoint = `${EMAILAPI_DOMAIN}/${uid}/${uniqueDataEndpoint}`;
+  const apiId = generateUniqueId();
+  const endpoint = `${EMAILAPI_DOMAIN}/${uid}/${apiId}`;
 
   res.json({ endpoint });
 

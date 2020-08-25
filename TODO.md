@@ -18,11 +18,11 @@
   - ### 1-many jobs
     mailFetch will always be the parent job
     mailFetch queue will spawn n jobs in child queue
-    once all jobs have been spawned
 
   - ### Parent job completion user notifications
 
 
-mailFetch
-
-parentJobId
+### TODOs
+- Remove `done` based callbacks from queue and move to Promise.resolve()s
+- Enable job success/failure notification system
+- Include all queues from filesystem instead of `require`ing them individually
