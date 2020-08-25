@@ -94,7 +94,7 @@ const Dashboard = ({ router, ...props }) => {
                               className="border-b-4"
                             >
                               View Extracted Data from{' '}
-                              {new Date(dataItem._createdOn).toLocaleString()}
+                              {new Date(dataItem._isReadyOn).toLocaleString()}
                             </a>
                           </div>
                         );
