@@ -4,6 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
 import Head from 'next/head';
+import 'react-responsive-modal/styles.css';
+import '~/css/react-responsive-modal-override.css';
+import { Modal } from 'react-responsive-modal';
 import Noty from 'noty';
 import flatten from 'lodash/flatten';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -106,6 +109,8 @@ const ServiceCreator = ({ router, ...props }) => {
 
   const [pdfPasswordInput, setPdfPasswordInput] = useState('');
   const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
+  const [attachmentBase64, setAttachmentBase64] = useState('');
+  const [open, setOpen] = useState(false);
 
   async function handleCreateUnlockJob() {
     // send attachment id, user id etc
@@ -288,11 +293,8 @@ const ServiceCreator = ({ router, ...props }) => {
       uid,
     });
 
-    // preview the file in new tab
-    window.open(`data:application/pdf;base64,${data.base64}`);
-    /* when the user now returns back to primary tab after closing this new tab,
-      she can be shown a popup to "enter your password to receive automaticly unlock pds in future" prompt
-    */
+    setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setOpen(true);
   }
 
   function processConfigOnSearchResults(config) {
@@ -672,6 +674,15 @@ const ServiceCreator = ({ router, ...props }) => {
           </Aside>
         </ContainerBody>
       </Container>
+      <>
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <iframe
+            src={attachmentBase64}
+            title="preview attachment"
+            style={{ height: '100vh', width: '1024px' }}
+          />
+        </Modal>
+      </>
     </>
   );
 };

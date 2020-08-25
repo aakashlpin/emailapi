@@ -6068,6 +6068,11 @@ next@9.5.1:
     webpack "4.44.0"
     webpack-sources "1.4.3"
 
+no-scroll@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/no-scroll/-/no-scroll-2.1.1.tgz#f37e08cb159b75a5bdbfc0a87cd9223e120e6e27"
+  integrity sha512-YTzGAJOo/B6hkodeT5SKKHpOhAzjMfkUCCXjLJwjWk2F4/InIg+HbdH9kmT7bKpleDuqLZDTRy2OdNtAj0IVyQ==
+
 node-emoji@^1.8.1:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/node-emoji/-/node-emoji-1.10.0.tgz#8886abd25d9c7bb61802a658523d1f8d2a89b2da"
@@ -7360,6 +7365,14 @@ react-refresh@0.8.3:
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.8.3.tgz#721d4657672d400c5e3c75d063c4a85fb2d5d68f"
   integrity sha512-X8jZHc7nCMjaCqoU+V2I0cOhNW+QMBwSUkeXnTi8IPe6zaRWfn60ZzvFDZqWPfmSJfjub7dDW1SP0jaHWLu/hg==
+
+react-responsive-modal@^5.0.3:
+  version "5.0.3"
+  resolved "https://registry.yarnpkg.com/react-responsive-modal/-/react-responsive-modal-5.0.3.tgz#74d6938d4255ed3514af8b394f44c3aabfa2643d"
+  integrity sha512-iLEkCv/wJZ/zvCEh9eirxdA4hKj7fVAsiaR408XLmEKSKAsQLScSAF3neJN3ZRiGzvyhk4cYTflJfjE9eqLiIQ==
+  dependencies:
+    classnames "^2.2.6"
+    no-scroll "^2.1.1"
 
 react@16.13.1:
   version "16.13.1"

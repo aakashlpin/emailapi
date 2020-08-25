@@ -1,0 +1,8 @@
+.react-responsive-modal-overlay {
+  padding: 0;
+}
+
+.react-responsive-modal-modal {
+  max-width: 1024px;
+  padding: 0;
+}
