@@ -5,6 +5,8 @@ import { createPopper } from '@popperjs/core';
 import fullPath from '~/components/admin/email/fns/fullPath';
 import { Button } from '~/components/common/Atoms';
 
+const normalizeHtmlWhitespace = require('normalize-html-whitespace');
+
 const MailMessageContainer = styled.div.attrs({
   className: 'border-r border-l',
 })`
@@ -145,13 +147,15 @@ const EmailPreview = ({
         id="mailContainer"
         dangerouslySetInnerHTML={{ //eslint-disable-line
           __html: isHtmlContent
-            ? message
-                .replace(
-                  /<style[\s\S]*?<\/style>/g, // remove global styles sent in email. styles are always inlined anyways
-                  '',
-                )
-                .replace(/<title[\s\S]*?<\/title>/g, '')
-                .replace(/<link[\s\S]*?>/g, '')
+            ? normalizeHtmlWhitespace(
+                message
+                  .replace(
+                    /<style[\s\S]*?<\/style>/g, // remove global styles sent in email. styles are always inlined anyways
+                    '',
+                  )
+                  .replace(/<title[\s\S]*?<\/title>/g, '')
+                  .replace(/<link[\s\S]*?>/g, ''),
+              )
             : `<pre>${message}</pre>`,
         }}
         onClick={interactions ? onClickEmailContent : (e) => e.preventDefault()}
