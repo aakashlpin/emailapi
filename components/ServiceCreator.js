@@ -111,6 +111,17 @@ const ServiceCreator = ({ router, ...props }) => {
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
   const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
+  const [autoUnlockSettings, setAutoUnlockSettings] = useState({
+    past: false,
+    future: true,
+  });
+
+  function handleChangeAutoUnlockSettings(key, value) {
+    setAutoUnlockSettings({
+      ...autoUnlockSettings,
+      [key]: value,
+    });
+  }
 
   async function handleCreateUnlockService() {
     const { data: serviceResponse } = await axios.post(
@@ -119,21 +130,24 @@ const ServiceCreator = ({ router, ...props }) => {
         app: 'AUTO_UNLOCK',
         search_query: searchInput,
         unlock_password: pdfPasswordInput,
-        cron: true,
+        cron: autoUnlockSettings.future,
       },
     );
 
-    await axios.post(`/api/apps/auto-unlock`, {
-      token,
-      uid,
-      service_id: serviceResponse._id,
-    });
+    if (autoUnlockSettings.past) {
+      await axios.post(`/api/apps/auto-unlock`, {
+        token,
+        uid,
+        service_id: serviceResponse._id,
+      });
+    }
   }
 
   async function handleCreateUnlockJob() {
     // send attachment id, user id etc
     // test unlock on server and send back an attachment
     try {
+      // Step 1: unlockResponse containing `pollQuery` guarantees that email was sent
       const { data: unlockResponse } = await axios.post(
         `/api/email-search/attachment-unlock`,
         {
@@ -144,6 +158,8 @@ const ServiceCreator = ({ router, ...props }) => {
         },
       );
 
+      // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
+      // guarantees that mail sending service (e.g. mailgun) is working as well
       const timer = setInterval(() => {
         async function handle() {
           if (!unlockResponse.pollQuery) {
@@ -699,6 +715,10 @@ const ServiceCreator = ({ router, ...props }) => {
               pdfPasswordInput={pdfPasswordInput}
               setPdfPasswordInput={setPdfPasswordInput}
               handleCreateUnlockJob={handleCreateUnlockJob}
+              handleCreateUnlockService={handleCreateUnlockService}
+              testUnlockSuccess={testUnlockSuccess}
+              autoUnlockSettings={autoUnlockSettings}
+              handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
             />
           </Aside>
         </ContainerBody>
