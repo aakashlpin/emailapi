@@ -39,21 +39,22 @@ async function sendWebhook({ url, data, method }) {
 
 async function processJob(job) {
   const { data: jobData } = job;
-  const { type } = jobData;
+  const { type, notifyConditions } = jobData;
+
+  if (notifyConditions.hasDataAtEndpoint) {
+    // only possible for cron jobs when search didn't yeild any results
+    // skip sending email in this case as it would be useless
+    const { data: dataAtEndpoint = [] } = await axios(
+      notifyConditions.hasDataAtEndpoint,
+    );
+    if (!dataAtEndpoint.length) {
+      return Promise.resolve();
+    }
+  }
 
   switch (type) {
     case 'email': {
-      const { notifyConditions, data: emailData } = jobData;
-      if (notifyConditions.hasDataAtEndpoint) {
-        // only possible for cron jobs when search didn't yeild any results
-        // skip sending email in this case as it would be useless
-        const { data: dataAtEndpoint = [] } = await axios(
-          notifyConditions.hasDataAtEndpoint,
-        );
-        if (!dataAtEndpoint.length) {
-          return Promise.resolve();
-        }
-      }
+      const { data: emailData } = jobData;
       await sendEmail(emailData);
       break;
     }
