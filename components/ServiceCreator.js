@@ -110,33 +110,68 @@ const ServiceCreator = ({ router, ...props }) => {
   const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
+  const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
+
+  async function handleCreateUnlockService() {
+    const { data: serviceResponse } = await axios.post(
+      `${baseUri(uid)}/services`,
+      {
+        app: 'AUTO_UNLOCK',
+        search_query: searchInput,
+        unlock_password: pdfPasswordInput,
+        cron: true,
+      },
+    );
+
+    await axios.post(`/api/apps/auto-unlock`, {
+      token,
+      uid,
+      service_id: serviceResponse._id,
+    });
+  }
 
   async function handleCreateUnlockJob() {
     // send attachment id, user id etc
     // test unlock on server and send back an attachment
     try {
-      const { data: serviceResponse } = await axios.post(
-        `${baseUri(uid)}/services`,
+      const { data: unlockResponse } = await axios.post(
+        `/api/email-search/attachment-unlock`,
         {
-          app: 'AUTO_UNLOCK',
-          search_query: searchInput,
-          unlock_password: pdfPasswordInput,
-          cron: true,
+          ...unlockJobAPIProps,
+          token,
+          uid,
+          pdfPasswordInput,
         },
       );
 
-      await axios.post(`/api/apps/auto-unlock`, {
-        token,
-        uid,
-        service_id: serviceResponse._id,
-      });
-      // await axios.post(`/api/email-search/attachment-unlock`, {
-      //   // await axios.post(`/api/apps/auto-unlocker`, {
-      //   ...unlockJobAPIProps,
-      //   token,
-      //   uid,
-      //   pdfPasswordInput,
-      // });
+      const timer = setInterval(() => {
+        async function handle() {
+          if (!unlockResponse.pollQuery) {
+            clearInterval(timer);
+            throw new Error('pollQuery not found!');
+          }
+
+          const { data: pollResponse } = await axios({
+            method: 'post',
+            url: `/api/email-search`,
+            data: {
+              uid,
+              token,
+              query: unlockResponse.pollQuery,
+            },
+          });
+
+          if (
+            Array.isArray(pollResponse.emails) &&
+            pollResponse.emails.length
+          ) {
+            setTestUnlockSuccess(true);
+            clearInterval(timer);
+          }
+        }
+
+        handle();
+      }, 7000);
 
       new Noty({
         theme: 'relax',
@@ -217,13 +252,13 @@ const ServiceCreator = ({ router, ...props }) => {
   }
 
   function handleFilterEmailsBySender(fromEmail) {
-    handleChangeSearchInput(`from:${getEmailFromHeader(fromEmail)}`);
+    handleChangeSearchInput(`from:(${getEmailFromHeader(fromEmail)})`);
     setTriggerSearch(true);
   }
 
   function handleFilterEmailsBySubject({ fromEmail, subject }) {
     handleChangeSearchInput(
-      `from:${getEmailFromHeader(fromEmail)} subject:(${subject})`,
+      `from:(${getEmailFromHeader(fromEmail)}) subject:(${subject})`,
     );
     setTriggerSearch(true);
   }

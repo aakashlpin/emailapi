@@ -79,7 +79,10 @@ async function handle(req, res, resolve) {
           console.log('[DONE] attachment-unlock');
           console.log('mailgun res', body);
         }
-        res.json({ status: 'ok' });
+        res.json({
+          status: 'ok',
+          pollQuery: `from:(${emailOpts.from}) subject:(${emailOpts.subject})`,
+        });
         return resolve();
       });
     } catch (e) {
@@ -90,6 +93,7 @@ async function handle(req, res, resolve) {
     res.status(500).send(e);
     console.log(e);
   }
+  return resolve();
 }
 
 export default ensureAuth(handle);
