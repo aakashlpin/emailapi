@@ -1,10 +1,12 @@
 import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
+import { getSearchQuery } from '~/src/apps/utils';
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
+const APP_HOST = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 require('~/src/queues');
 
@@ -15,8 +17,7 @@ async function handle(req, res, resolve) {
     uid,
     service_id: serviceId,
     api_only: apiOnly,
-    unlock_going_forward: unlockGoingForward = true,
-    unlock_historic: unlockHistoric = false,
+    new_only: newOnly = false,
   } = req.body;
 
   const apiId = generateUniqueId();
@@ -25,12 +26,14 @@ async function handle(req, res, resolve) {
   res.json({ endpoint });
 
   const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
+  const searchQuery = await getSearchQuery({
+    serviceEndpoint,
+    newOnly,
+  });
 
-  const { data: serviceData } = await axios(serviceEndpoint);
   const {
-    search_query: searchQuery,
-    unlock_password: unlockPassword,
-  } = serviceData;
+    data: { unlock_password: unlockPassword },
+  } = await axios(serviceEndpoint);
 
   const { user } = req;
   const userProps = {
@@ -50,6 +53,27 @@ async function handle(req, res, resolve) {
       userProps,
       unlockPassword,
       serviceEndpoint,
+    },
+    completionNotifications: {
+      success: {
+        notifyConditions: {
+          childJobsGotCreated: true,
+        },
+        notifications: [
+          {
+            type: 'webhook',
+            data: {
+              method: 'POST',
+              url: `${APP_HOST}/api/apps/auto-unlock/webhook`,
+              data: {
+                apiId,
+                serviceEndpoint,
+                success: true,
+              },
+            },
+          },
+        ],
+      },
     },
   });
 

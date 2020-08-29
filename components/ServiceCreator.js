@@ -110,33 +110,84 @@ const ServiceCreator = ({ router, ...props }) => {
   const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
+  const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
+  const [autoUnlockSettings, setAutoUnlockSettings] = useState({
+    past: false,
+    future: true,
+  });
 
-  async function handleCreateUnlockJob() {
-    // send attachment id, user id etc
-    // test unlock on server and send back an attachment
-    try {
-      const { data: serviceResponse } = await axios.post(
-        `${baseUri(uid)}/services`,
-        {
-          app: 'AUTO_UNLOCK',
-          search_query: searchInput,
-          unlock_password: pdfPasswordInput,
-          cron: true,
-        },
-      );
+  function handleChangeAutoUnlockSettings(key, value) {
+    setAutoUnlockSettings({
+      ...autoUnlockSettings,
+      [key]: value,
+    });
+  }
 
+  async function handleCreateUnlockService() {
+    const { data: serviceResponse } = await axios.post(
+      `${baseUri(uid)}/services`,
+      {
+        app: 'AUTO_UNLOCK',
+        search_query: searchInput,
+        unlock_password: pdfPasswordInput,
+        cron: autoUnlockSettings.future,
+      },
+    );
+
+    if (autoUnlockSettings.past) {
       await axios.post(`/api/apps/auto-unlock`, {
         token,
         uid,
         service_id: serviceResponse._id,
       });
-      // await axios.post(`/api/email-search/attachment-unlock`, {
-      //   // await axios.post(`/api/apps/auto-unlocker`, {
-      //   ...unlockJobAPIProps,
-      //   token,
-      //   uid,
-      //   pdfPasswordInput,
-      // });
+    }
+  }
+
+  async function handleCreateUnlockJob() {
+    // send attachment id, user id etc
+    // test unlock on server and send back an attachment
+    try {
+      // Step 1: unlockResponse containing `pollQuery` guarantees that email was sent
+      const { data: unlockResponse } = await axios.post(
+        `/api/email-search/attachment-unlock`,
+        {
+          ...unlockJobAPIProps,
+          token,
+          uid,
+          pdfPasswordInput,
+        },
+      );
+
+      // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
+      // guarantees that mail sending service (e.g. mailgun) is working as well
+      const timer = setInterval(() => {
+        async function handle() {
+          if (!unlockResponse.pollQuery) {
+            clearInterval(timer);
+            throw new Error('pollQuery not found!');
+          }
+
+          const { data: pollResponse } = await axios({
+            method: 'post',
+            url: `/api/email-search`,
+            data: {
+              uid,
+              token,
+              query: unlockResponse.pollQuery,
+            },
+          });
+
+          if (
+            Array.isArray(pollResponse.emails) &&
+            pollResponse.emails.length
+          ) {
+            setTestUnlockSuccess(true);
+            clearInterval(timer);
+          }
+        }
+
+        handle();
+      }, 7000);
 
       new Noty({
         theme: 'relax',
@@ -217,13 +268,13 @@ const ServiceCreator = ({ router, ...props }) => {
   }
 
   function handleFilterEmailsBySender(fromEmail) {
-    handleChangeSearchInput(`from:${getEmailFromHeader(fromEmail)}`);
+    handleChangeSearchInput(`from:(${getEmailFromHeader(fromEmail)})`);
     setTriggerSearch(true);
   }
 
   function handleFilterEmailsBySubject({ fromEmail, subject }) {
     handleChangeSearchInput(
-      `from:${getEmailFromHeader(fromEmail)} subject:(${subject})`,
+      `from:(${getEmailFromHeader(fromEmail)}) subject:(${subject})`,
     );
     setTriggerSearch(true);
   }
@@ -664,6 +715,10 @@ const ServiceCreator = ({ router, ...props }) => {
               pdfPasswordInput={pdfPasswordInput}
               setPdfPasswordInput={setPdfPasswordInput}
               handleCreateUnlockJob={handleCreateUnlockJob}
+              handleCreateUnlockService={handleCreateUnlockService}
+              testUnlockSuccess={testUnlockSuccess}
+              autoUnlockSettings={autoUnlockSettings}
+              handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
             />
           </Aside>
         </ContainerBody>

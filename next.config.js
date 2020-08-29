@@ -18,6 +18,7 @@ module.exports = withCSS({
     FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
     MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN,
     MAILGUN_API_KEY: process.env.MAILGUN_API_KEY,
+    MAILGUN_SENDING_EMAIL_ID: process.env.MAILGUN_SENDING_EMAIL_ID,
   },
   webpack: (config) => {
     const { alias } = config.resolve;

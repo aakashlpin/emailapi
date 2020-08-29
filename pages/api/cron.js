@@ -50,6 +50,16 @@ export default async function handle(req, res) {
           break;
         }
         case 'AUTO_UNLOCK': {
+          await axios.post(
+            `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/apps/auto-unlock`,
+            {
+              uid,
+              refresh_token: refreshToken,
+              new_only: true,
+              service_id: service._id,
+              cron: true,
+            },
+          );
           break;
         }
         default: {

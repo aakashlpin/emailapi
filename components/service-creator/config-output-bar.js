@@ -3,6 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import flatten from 'lodash/flatten';
 import cx from 'classnames';
+import Noty from 'noty';
 
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
 import ConfigurationEditor from '~/components/service-creator/configuration-editor';
@@ -57,6 +58,10 @@ const ConfigOutputBar = ({
   pdfPasswordInput,
   setPdfPasswordInput,
   handleCreateUnlockJob,
+  handleCreateUnlockService,
+  testUnlockSuccess,
+  autoUnlockSettings,
+  handleChangeAutoUnlockSettings,
 }) => {
   let sampleData;
   if (
@@ -138,6 +143,60 @@ const ConfigOutputBar = ({
                 Test unlock email
               </button>{' '}
             </form>
+
+            <>
+              <h3 className="text-l mb-4">Auto unlock settings:</h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!testUnlockSuccess) {
+                    new Noty({
+                      theme: 'relax',
+                      text: `❌ Please use "Test Unlock" feature before creating this service`,
+                    }).show();
+                    return;
+                  }
+                  handleCreateUnlockService();
+                }}
+              >
+                <div>
+                  <label htmlFor="autoUnlockPast">
+                    Auto Unlock Past Emails:
+                    <input
+                      type="checkbox"
+                      id="autoUnlockPast"
+                      name="autoUnlockPast"
+                      checked={autoUnlockSettings.past}
+                      onChange={() =>
+                        handleChangeAutoUnlockSettings(
+                          'past',
+                          !autoUnlockSettings.past,
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label htmlFor="autoUnlockFuture">
+                    Auto Unlock Future Emails:
+                    <input
+                      type="checkbox"
+                      id="autoUnlockFuture"
+                      name="autoUnlockFuture"
+                      checked={autoUnlockSettings.future}
+                      onChange={() =>
+                        handleChangeAutoUnlockSettings(
+                          'future',
+                          !autoUnlockSettings.future,
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+
+                <input type="submit" value="Create Service" />
+              </form>
+            </>
           </div>
 
           <h2 className="text-xl mb-4">Tips</h2>

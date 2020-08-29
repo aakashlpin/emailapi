@@ -1,10 +1,8 @@
-import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
+import { getSearchQuery } from '~/src/apps/utils';
 
 require('~/src/queues');
-
-const findLastIndex = require('lodash/findLastIndex');
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
@@ -29,31 +27,10 @@ async function handle(req, res, resolve) {
     res.json({ endpoint });
 
     const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
-
-    const { data: serviceData } = await axios(serviceEndpoint);
-    const { data } = serviceData;
-    let { search_query: searchQuery } = serviceData;
-    if (newOnly) {
-      const hasData = Array.isArray(data) && data.length;
-
-      if (hasData) {
-        const lastSuccessfulDataEntry = findLastIndex(
-          data,
-          (item) => item.is_successful,
-        );
-
-        if (lastSuccessfulDataEntry >= 0) {
-          const lastProcessingTimestamp = parseInt(
-            new Date(data[lastSuccessfulDataEntry]._isReadyOn).getTime() / 1000,
-            10,
-          );
-
-          if (lastProcessingTimestamp) {
-            searchQuery = `${searchQuery} after:${lastProcessingTimestamp}`;
-          }
-        }
-      }
-    }
+    const searchQuery = await getSearchQuery({
+      serviceEndpoint,
+      newOnly,
+    });
 
     const { user } = req;
     const userProps = {
@@ -75,40 +52,42 @@ async function handle(req, res, resolve) {
       },
       initNotifications: [],
       completionNotifications: {
-        success: [
-          {
-            type: 'email',
-            notifyConditions: {
-              hasDataAtEndpoint: endpoint,
-            },
-            data: {
-              to: user.email,
-              subject: !cron
-                ? `👋🏽 emailapi for "${searchQuery}" is ready!`
-                : `🔁 cron succeeded for "${searchQuery}"`,
-              body: `
-                Hello ${user.given_name || user.name},<br/><br/>
-                Here's the <a href="${endpoint}">data endpoint</a> for emails belonging to search query ${searchQuery}.<br/><br/>
-                emailapi.io uses a hosted version of jsonbox.io as its underlying database. <a href="https://github.com/vasanthv/jsonbox#read">Follow its docs</a> for further instructions on how to use your new data endpoint.<br/><br/>
-                If you've got a question or a comment, or if you'd like to say hi (that's a nice thing to do), hit reply!<br/><br/>
-                Thanks,<br/>
-                Aakash
-              `,
-            },
+        success: {
+          notifyConditions: {
+            hasDataAtEndpoint: endpoint,
           },
-          {
-            type: 'webhook',
-            data: {
-              method: 'POST',
-              url: `${APP_HOST}/api/apps/email-to-json/webhook`,
+          notifications: [
+            {
+              type: 'email',
               data: {
-                apiId,
-                serviceEndpoint,
-                success: true,
+                to: user.email,
+                subject: !cron
+                  ? `👋🏽 emailapi for "${searchQuery}" is ready!`
+                  : `🔁 cron succeeded for "${searchQuery}"`,
+                body: `
+                  Hello ${user.given_name || user.name},<br/><br/>
+                  Here's the <a href="${endpoint}">data endpoint</a> for emails belonging to search query ${searchQuery}.<br/><br/>
+                  emailapi.io uses a hosted version of jsonbox.io as its underlying database. <a href="https://github.com/vasanthv/jsonbox#read">Follow its docs</a> for further instructions on how to use your new data endpoint.<br/><br/>
+                  If you've got a question or a comment, or if you'd like to say hi (that's a nice thing to do), hit reply!<br/><br/>
+                  Thanks,<br/>
+                  Aakash
+                `,
               },
             },
-          },
-        ],
+            {
+              type: 'webhook',
+              data: {
+                method: 'POST',
+                url: `${APP_HOST}/api/apps/email-to-json/webhook`,
+                data: {
+                  apiId,
+                  serviceEndpoint,
+                  success: true,
+                },
+              },
+            },
+          ],
+        },
       },
     });
 

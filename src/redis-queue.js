@@ -25,18 +25,35 @@ const queues = [
   { exportName: 'mailFetchQueue', bullName: 'mail-fetch' },
   { exportName: 'taskStatusQueue', bullName: 'task-status' },
   { exportName: 'notificationsQueue', bullName: 'notifications' },
+  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock', childQueue: true },
   {
     exportName: 'emailToJsonQueue',
     bullName: 'email-to-json',
     childQueue: true,
   },
-  { exportName: 'autoUnlockQueue', bullName: 'auto-unlock', childQueue: true },
+  {
+    exportName: 'sendEmailQueue',
+    bullName: 'send-email',
+    bullOpts: {
+      // limit to sending 100 emails/hour
+      // as supported in free mailgun plan
+      limiter: {
+        max: 100,
+        duration: 60 * 1000,
+      },
+    },
+  },
 ];
 
 const exportQueues = {};
-queues.forEach(({ exportName, bullName, childQueue }) => {
-  exportQueues[exportName] = new Queue(bullName, opts);
+queues.forEach(({ exportName, bullName, childQueue, bullOpts = {} }) => {
+  exportQueues[exportName] = new Queue(bullName, { ...opts, ...bullOpts });
 
+  // NB: https://stackoverflow.com/a/44446859/721084
+  // this line is causing the below warning
+  // (node:50280) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added. Use emitter.setMaxListeners() to increase limit
+  //
+  // it's largely okay because we do want to attach complete events on each queue
   exportQueues[exportName].on('completed', (job) => {
     const { id, data: jobData } = job;
     console.log(`[State change] queue:${exportName}:${id}: ✅ Completed!`);
