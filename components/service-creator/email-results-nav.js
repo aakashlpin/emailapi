@@ -43,7 +43,7 @@ const EmailResultsNav = ({
           {searchResults.map((resultItem, idx) => (
             <div
               className={cx('py-2 px-2', {
-                'bg-yellow-100': matchedSearchResults.includes(idx),
+                // 'bg-yellow-100': matchedSearchResults.includes(idx),
                 'bg-yellow-200': selectedSearchResultIndex === idx,
                 'cursor-pointer': selectedSearchResultIndex !== idx,
                 'border-b border-solid py-2 px-2 rounded':

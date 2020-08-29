@@ -31,3 +31,12 @@ to start the development server on port `3000`. Your jsonbox instance will be ru
 ### LICENSE
 
 MIT
+
+Yet todo to complete the README:
+- dockerize jsonbox
+  - enable IP whitelisting to hosted instance of jsonbox (open a PR)
+- See if you can simplify the process of installing "emailapi" on a VM like DO
+  - nginx with certbot
+  - 2 docker images - `emailapi_app` and `jsonbox`
+- Put up funding info and setup service to accept payments
+- See if you'd like to offer hosted service in exchange for monthly committment??! (Too big an undertaking though)

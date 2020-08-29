@@ -56,7 +56,7 @@ const ActionBar = ({
     </div>
     <div className="text-center">Original Email</div>
     <div className="flex justify-end items-center">
-      <div className="flex flex-col items-start justify-start flex-1 pl-2">
+      {/* <div className="flex flex-col items-start justify-start flex-1 pl-2">
         <Label>Email matches</Label>
         {searchResults.length && matchedSearchResults.length
           ? `${parseInt(
@@ -64,15 +64,15 @@ const ActionBar = ({
               10,
             )}%`
           : '-'}
-      </div>
+      </div> */}
 
-      <Button
+      {/* <Button
         className="mr-4"
         disabled={!flatten(parsedData).length}
         onClick={doPreviewParsedData}
       >
         {!isPreviewMode ? 'Preview API' : '< Go Back'}
-      </Button>
+      </Button> */}
       {token ? (
         <Button
           disabled={!isPreviewMode || isCreateApiPending}
