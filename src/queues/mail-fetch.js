@@ -65,10 +65,12 @@ async function iterable({
 
   const jobs = await Promise.all(prs);
 
-  redis.sadd(
-    `spawnedBy:${parentJobId}:pending`,
-    jobs.map((job) => `${_nextQueue}${job.id}`),
-  );
+  if (jobs.length) {
+    redis.sadd(
+      `spawnedBy:${parentJobId}:pending`,
+      jobs.map((job) => `${_nextQueue}${job.id}`),
+    );
+  }
 
   if (nextPageToken) {
     return iterable({

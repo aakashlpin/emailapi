@@ -1,3 +1,4 @@
+require('~/src/queues/send-email');
 require('~/src/queues/notifications');
 require('~/src/queues/auto-unlock');
 require('~/src/queues/mail-fetch');

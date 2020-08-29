@@ -8,10 +8,8 @@ const config = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 };
 
-export default () => {
+export default function initFirebase() {
   if (!firebase.apps.length) {
-    console.log('checking if environment variables are getting set');
-    console.log(config);
     firebase.initializeApp(config);
   }
-};
+}

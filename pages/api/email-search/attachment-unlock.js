@@ -1,15 +1,14 @@
 import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
+import queues from '~/src/redis-queue';
 
 const base64 = require('base64topdf');
 const removePdfPassword = require('remove-pdf-password');
-const mailgun = require('mailgun-js');
+
 const { fetchEmailByMessageId, processMessageBody } = require('~/src/gmail');
+const { getAfterTs } = require('~/src/apps/utils');
 
-const { MAILGUN_API_KEY } = process.env;
-const { MAILGUN_DOMAIN } = process.env;
-
-const mg = mailgun({ apiKey: MAILGUN_API_KEY, domain: MAILGUN_DOMAIN });
+require('~/src/queues');
 
 async function handle(req, res, resolve) {
   const {
@@ -61,7 +60,7 @@ async function handle(req, res, resolve) {
       const messageProps = processMessageBody(messageBody);
 
       const emailOpts = {
-        from: `${messageProps.from} <notifications@m.emailapi.io>`,
+        from: `${messageProps.from} <${process.env.MAILGUN_SENDING_EMAIL_ID}>`,
         to: req.user.email,
         subject: `[UNLOCKED] ${messageProps.subject}`,
         'h:Reply-To': 'aakash@emailapi.io',
@@ -69,31 +68,24 @@ async function handle(req, res, resolve) {
         attachment: params.outputFilePath,
       };
 
-      mg.messages().send(emailOpts, (error, body) => {
-        if (error) {
-          console.log('error', error);
-          res.status(500).send(error);
-          return resolve();
-        }
-        if (body) {
-          console.log('[DONE] attachment-unlock');
-          console.log('mailgun res', body);
-        }
-        res.json({
-          status: 'ok',
-          pollQuery: `from:(${emailOpts.from}) subject:(${emailOpts.subject})`,
-        });
-        return resolve();
+      queues.sendEmailQueue.add(emailOpts);
+
+      res.json({
+        pollQuery: `from:(${emailOpts.from}) subject:(${
+          emailOpts.subject
+        }) after:${getAfterTs(new Date())}`,
       });
+      return resolve();
     } catch (e) {
       res.status(500).send(e);
       console.log(e);
+      return resolve();
     }
   } catch (e) {
     res.status(500).send(e);
     console.log(e);
+    return resolve();
   }
-  return resolve();
 }
 
 export default ensureAuth(handle);
