@@ -8,6 +8,8 @@ import ActionBar from '~/components/service-creator/action-bar';
 
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 
+const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
+
 const GlobalStyle = createGlobalStyle`
   body {
     overflow: hidden;
@@ -38,7 +40,7 @@ const ContainerBody = styled.div`
 
 function AppWrapper({ children, router, ...props }) {
   const {
-    query: { uid },
+    query: { uid, serviceId, q },
   } = router;
 
   const {
@@ -54,6 +56,9 @@ function AppWrapper({ children, router, ...props }) {
   const [selectedSearchResultIndex, setSelectedSearchResultIndex] = useState(
     null,
   );
+  const [isServiceIdLoading, setIsServiceIdLoading] = useState(!!serviceId);
+  const [isServiceIdFetched, setIsServiceIdFetched] = useState(!!serviceId);
+  const [serviceIdData, setServiceIdData] = useState(null);
 
   function resetData() {
     setSearchResults([]);
@@ -67,6 +72,7 @@ function AppWrapper({ children, router, ...props }) {
   }
 
   async function handleSearchAction() {
+    // [TODO] this piece of code is causing page to refresh with `?q=` once we click on "Create API"
     window.history.pushState(
       '',
       '',
@@ -137,10 +143,43 @@ function AppWrapper({ children, router, ...props }) {
   }
 
   useEffect(() => {
+    console.log('qew');
     if (triggerSearch) {
       handleSearchAction();
     }
   }, [triggerSearch]);
+
+  useEffect(() => {
+    console.log('jty');
+    async function perform() {
+      if (serviceId) {
+        setIsLoading(true);
+        const { data: serviceData } = await axios.get(
+          `${baseUri(uid)}/services/${serviceId}`,
+        );
+        setServiceIdData(serviceData);
+        setIsServiceIdFetched(true);
+        setIsLoading(false);
+        setIsServiceIdLoading(false);
+      }
+    }
+
+    perform();
+  }, []);
+
+  useEffect(() => {
+    console.log('bcv');
+    if (
+      !token ||
+      typeof q === 'undefined' ||
+      (searchInput && searchInput === q)
+    ) {
+      return;
+    }
+    console.log({ searchInput, q });
+    setSearchInput(q);
+    setTriggerSearch(true);
+  }, [q, token]);
 
   return (
     <>
@@ -177,7 +216,15 @@ function AppWrapper({ children, router, ...props }) {
             handleFilterEmailsBySubject={handleFilterEmailsBySubject}
           />
           {children({
-            selectedEmail: searchResults[selectedSearchResultIndex] || {},
+            isLoading,
+            searchInput,
+            searchResults,
+            serviceIdData,
+            isServiceIdLoading,
+            isServiceIdFetched,
+            selectedSearchResultIndex,
+            setIsLoading,
+            setSelectedSearchResultIndex,
           })}
         </ContainerBody>
       </Container>

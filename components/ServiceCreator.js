@@ -562,7 +562,6 @@ const ServiceCreator = ({ router, ...props }) => {
   }, [triggerSearch]);
 
   useEffect(() => {
-    console.log(configurations);
     doExtractDataForConfig();
   }, [configurations]);
 

@@ -33,6 +33,7 @@
     "noty": "^3.2.0-beta",
     "postcss-import": "^12.0.1",
     "prop-types": "^15.7.2",
+    "qs": "^6.9.4",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-feather": "^2.0.8",
