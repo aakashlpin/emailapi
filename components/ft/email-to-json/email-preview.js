@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { Trash2 } from 'react-feather';
 import { createPopper } from '@popperjs/core';
-import fullPath from '~/components/admin/email/fns/fullPath';
+import fullPath from '~/src/ft/email-to-json/fullPath';
 import { Button } from '~/components/common/Atoms';
 
 const normalizeHtmlWhitespace = require('normalize-html-whitespace');

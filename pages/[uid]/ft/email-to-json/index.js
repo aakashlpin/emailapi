@@ -10,14 +10,11 @@ import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 
 import FeatureApp from '~/components/pageWrappers/AppWrapper';
-import EmailPreview from '~/components/service-creator/email-preview';
-import ConfigOutputBar from '~/components/service-creator/config-output-bar';
-import generateKeyFromName from '~/components/admin/email/fns/generateKeyFromName';
-import applyConfigOnEmail from '~/src/isomorphic/applyConfigOnEmail';
-import ensureConfiguration from '~/src/isomorphic/ensureConfiguration';
-
-require('noty/lib/noty.css');
-require('noty/lib/themes/relax.css');
+import EmailPreview from '~/components/ft/email-to-json/email-preview';
+import ConfigOutputBar from '~/components/ft/email-to-json/config-output-bar';
+import generateKeyFromName from '~/src/ft/email-to-json/generateKeyFromName';
+import applyConfigOnEmail from '~/src/ft/email-to-json/applyConfigOnEmail';
+import ensureConfiguration from '~/src/ft/email-to-json/ensureConfiguration';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 

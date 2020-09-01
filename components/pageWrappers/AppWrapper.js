@@ -3,12 +3,14 @@ import axios from 'axios';
 import { withRouter } from 'next/router';
 import Head from 'next/head';
 import styled, { createGlobalStyle } from 'styled-components';
-import Header from '~/components/service-creator/header';
-import ActionBar from '~/components/service-creator/action-bar';
-
-import EmailResultsNav from '~/components/service-creator/email-results-nav';
+import Header from '~/components/ft/header';
+import ActionBar from '~/components/ft/action-bar';
+import EmailResultsNav from '~/components/ft/email-results-nav';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
+
+require('noty/lib/noty.css');
+require('noty/lib/themes/relax.css');
 
 const GlobalStyle = createGlobalStyle`
   body {

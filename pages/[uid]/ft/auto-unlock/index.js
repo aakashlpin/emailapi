@@ -11,11 +11,8 @@ import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 
 import FeatureApp from '~/components/pageWrappers/AppWrapper';
-import EmailPreview from '~/components/service-creator/email-preview';
+import EmailPreview from '~/components/ft/auto-unlock/email-preview';
 import ConfigOutputBar from '~/components/ft/auto-unlock/config-output-bar';
-
-require('noty/lib/noty.css');
-require('noty/lib/themes/relax.css');
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -192,6 +189,7 @@ function FeatureAutoUnlockApp(props) {
               ? searchResults[selectedSearchResultIndex].isHtmlContent
               : null
           }
+          isNotClickable
           selectedSearchResultIndex={selectedSearchResultIndex}
           handleClickAttachmentFilename={handleClickAttachmentFilename}
         />
