@@ -223,7 +223,12 @@ function FeatureAutoUnlockApp(props) {
 
 function AutoUnlockApp({ AuthUserInfo, router }) {
   return (
-    <FeatureApp AuthUserInfo={AuthUserInfo}>
+    <FeatureApp
+      AuthUserInfo={AuthUserInfo}
+      emailSearchReqParams={{
+        has_attachment: true,
+      }}
+    >
       {({
         isLoading,
         setIsLoading,

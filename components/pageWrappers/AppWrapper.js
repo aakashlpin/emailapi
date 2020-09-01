@@ -46,6 +46,7 @@ function AppWrapper({ children, router, ...props }) {
   } = router;
 
   const {
+    emailSearchReqParams = {},
     AuthUserInfo: { token },
   } = props;
 
@@ -74,7 +75,6 @@ function AppWrapper({ children, router, ...props }) {
   }
 
   async function handleSearchAction() {
-    // [TODO] this piece of code is causing page to refresh with `?q=` once we click on "Create API"
     window.history.pushState(
       '',
       '',
@@ -87,6 +87,7 @@ function AppWrapper({ children, router, ...props }) {
         uid,
         token,
         query: searchInput,
+        ...emailSearchReqParams,
       };
       if (nextPageToken) {
         reqParams.nextPageToken = nextPageToken;

@@ -8,7 +8,7 @@ import { Button } from '~/components/common/Atoms';
 const normalizeHtmlWhitespace = require('normalize-html-whitespace');
 
 const MailMessageContainer = styled.div.attrs({
-  className: 'border-r border-l',
+  className: 'border-r border-l p-4',
 })`
   overflow-y: scroll;
 `;
