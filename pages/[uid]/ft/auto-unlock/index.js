@@ -3,18 +3,16 @@ import { withRouter } from 'next/router';
 import styled from 'styled-components';
 import axios from 'axios';
 import Noty from 'noty';
-import flatten from 'lodash/flatten';
-import qs from 'qs';
+import 'react-responsive-modal/styles.css';
+import '~/css/react-responsive-modal-override.css';
+import { Modal } from 'react-responsive-modal';
 
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 
 import FeatureApp from '~/components/pageWrappers/AppWrapper';
 import EmailPreview from '~/components/service-creator/email-preview';
-import ConfigOutputBar from '~/components/service-creator/config-output-bar';
-import generateKeyFromName from '~/components/admin/email/fns/generateKeyFromName';
-import applyConfigOnEmail from '~/src/isomorphic/applyConfigOnEmail';
-import ensureConfiguration from '~/src/isomorphic/ensureConfiguration';
+import ConfigOutputBar from '~/components/ft/auto-unlock/config-output-bar';
 
 require('noty/lib/noty.css');
 require('noty/lib/themes/relax.css');
@@ -35,7 +33,6 @@ function FeatureAutoUnlockApp(props) {
     searchInput,
     searchResults,
     selectedSearchResultIndex,
-    setSelectedSearchResultIndex,
     router,
     serviceIdData,
     isServiceIdFetched,
@@ -59,322 +56,121 @@ function FeatureAutoUnlockApp(props) {
     false,
   );
 
-  const defaultConfiguration = {
-    fields: [],
-  };
-  const [configurations, setConfiguration] = useState([defaultConfiguration]);
-
-  const [parsedData, setParsedData] = useState([]);
-
-  const [localFieldNames, setLocalFieldName] = useState({});
-
   const [isCreateApiPending, setIsCreateApiPending] = useState(false);
+  const [pdfPasswordInput, setPdfPasswordInput] = useState('');
+  const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
+  const [attachmentBase64, setAttachmentBase64] = useState('');
+  const [open, setOpen] = useState(false);
+  const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
+  const [autoUnlockSettings, setAutoUnlockSettings] = useState({
+    past: false,
+    future: true,
+  });
 
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [serviceIdConfigurations, setServiceIdConfigurations] = useState([]);
-  const [
-    isServiceIdConfigurationsFetched,
-    setIsServiceIdConfigurationsFetched,
-  ] = useState(false);
-  const [
-    isServiceIdConfigurationsLoading,
-    setIsServiceIdConfigurationsLoading,
-  ] = useState(false);
-
-  function handleAddAnotherConfiguration(configuration) {
-    setConfiguration([...configurations, configuration]);
-  }
-
-  function handleClickEmailContent({ selector, name }) {
-    if (
-      matchedSearchResults.length &&
-      !matchedSearchResults.includes(selectedSearchResultIndex)
-    ) {
-      const fieldName = name || `Field 1`;
-      handleAddAnotherConfiguration({
-        ...defaultConfiguration,
-        fields: [
-          {
-            selector,
-            fieldName,
-            fieldKey: generateKeyFromName(fieldName),
-            formatter: null,
-          },
-        ],
-      });
-      return;
-    }
-    setConfiguration(
-      configurations.map((config, index) => {
-        const fieldName = name || `Field ${config.fields.length + 1}`;
-        return index === configurations.length - 1
-          ? {
-              ...config,
-              fields: [
-                ...config.fields,
-                {
-                  selector,
-                  fieldName,
-                  fieldKey: generateKeyFromName(fieldName),
-                },
-              ],
-            }
-          : config;
-      }),
-    );
-  }
-
-  function handleChangeConfiguration({ configIndex, updatedConfig }) {
-    setConfiguration(
-      configurations.map((config, mapIdx) =>
-        mapIdx === configIndex ? updatedConfig : config,
-      ),
-    );
-  }
-
-  function handleDeleteFieldFromConfiguration({ configIndex, fieldKey }) {
-    const config = configurations[configIndex];
-    handleChangeConfiguration({
-      configIndex,
-      updatedConfig: {
-        ...config,
-        fields: config.fields.map((field) =>
-          field && field.fieldKey !== fieldKey ? field : null,
-        ),
-      },
+  function handleChangeAutoUnlockSettings(key, value) {
+    setAutoUnlockSettings({
+      ...autoUnlockSettings,
+      [key]: value,
     });
   }
 
-  const selectedEmailsConfigIdx = parsedData.findIndex(
-    (byConfigIdxParsedData) =>
-      !!byConfigIdxParsedData.find(
-        (item) => item.resultId === selectedSearchResultIndex,
-      ),
-  );
-
-  const selectedConfigurationIndex =
-    selectedEmailsConfigIdx === -1 ? null : selectedEmailsConfigIdx;
-
-  function doDeleteCurrentConfiguration() {
-    if (configurations.length === 1) {
-      return setConfiguration([defaultConfiguration]);
-    }
-    return setConfiguration(
-      configurations.filter(
-        (_config, configIdx) => selectedConfigurationIndex !== configIdx,
-      ),
-    );
-  }
-
-  function processConfigOnSearchResults(config) {
-    const dataFromSearchResults = searchResults.map(
-      ({ message }, resultId) => ({
-        ...applyConfigOnEmail(message, config),
-        resultId,
-      }),
-    );
-
-    return dataFromSearchResults.filter((item) =>
-      ensureConfiguration(item, config),
-    );
-  }
-
-  function doExtractDataForConfig() {
-    const extractedData = configurations.map(processConfigOnSearchResults);
-    setMatchedSearchResults(
-      extractedData
-        .map((extractedConfigData) =>
-          extractedConfigData.map(({ resultId }) => resultId),
-        )
-        .flat(Infinity),
-    );
-
-    setParsedData(extractedData);
-    console.log({ extractedData });
-    if (!isFirstMatchSelectedOnLoad) {
-      setSelectedSearchResultIndex(
-        extractedData.length && extractedData[0].length
-          ? extractedData[0][0].resultId
-          : 0,
-      );
-      setIsFirstMatchSelectedOnLoad(true);
-    }
-  }
-
-  async function doCreateConfigAndServiceOnRemote() {
-    const configCreatePromises = Promise.all(
-      configurations.map((config) => {
-        const { fields } = config;
-        return axios.post(`${baseUri(uid)}/configurations`, {
-          fields: fields.filter((field) => field),
-        });
-      }),
-    );
-
-    const configResponses = await configCreatePromises;
-    const newConfigIds = configResponses.map((response) => response.data._id);
-
-    // if (serviceId) {
-    //   const updatedConfig = {
-    //     ...serviceIdData,
-    //     configurations: newConfigIds,
-    //   };
-    //   const endpointType = 'services';
-    //   const endpoint = `${baseUri(uid)}/${endpointType}/${updatedConfig._id}`;
-    //   await axios.put(endpoint, updatedConfig);
-    //   return serviceId;
-    // }
-
-    /**
-     * REFACTOR:
-     * each service can contain a prop called `app` whose value will be ENUM
-     * basis ENUM value, further props will be expected
-     *
-     * switch (SERVICE.INSTALLED_APP) {
-     *    case APPS.EMAIL_TO_JSON: {
-     *      // consider .configurations property in the service object
-     *    }
-     *    case APPS.AUTO_UNLOCK: {
-     *      // consider .unlockPassword property in the service object
-     *    }
-     * }
-     */
+  async function handleCreateUnlockService() {
     const { data: serviceResponse } = await axios.post(
       `${baseUri(uid)}/services`,
       {
-        app: 'EMAIL_TO_JSON',
+        app: 'AUTO_UNLOCK',
         search_query: searchInput,
-        configurations: newConfigIds,
-        cron: true,
+        unlock_password: pdfPasswordInput,
+        cron: autoUnlockSettings.future,
       },
     );
 
-    return serviceResponse._id;
-  }
-
-  async function handleCreateAPI() {
-    /**
-     * 1. POST a Service
-     * 2. PUT Configuration on Service
-     * 3. POST /populate-service and return API endpoint immediately. Task in Background.
-     * 4. GET on API endpoint to return 404 until ready, and send the user an email when it's ready
-     */
-
-    //  [TODO]: proxy all API calls through NextJS server
-    if (!searchInput) {
-      new Noty({
-        theme: 'relax',
-        text: `Cannot create service without any search query!`,
-      }).show();
-      return null;
-    }
-    const newServiceId = await doCreateConfigAndServiceOnRemote();
-    const { data: apiEndpointResponse } = await axios.post(
-      '/api/apps/email-to-json',
-      {
-        uid,
+    if (autoUnlockSettings.past) {
+      await axios.post(`/api/apps/auto-unlock`, {
         token,
-        service_id: newServiceId,
-      },
-    );
-
-    return { serviceId: newServiceId, endpoint: apiEndpointResponse.endpoint };
+        uid,
+        service_id: serviceResponse._id,
+      });
+    }
   }
 
-  async function onClickCreateAPI() {
-    if (
-      !flatten(parsedData).every((item) =>
-        Object.keys(item).every((key) => item[key] !== 'COULD_NOT_DETERMINE'),
-      )
-    ) {
-      new Noty({
-        theme: 'relax',
-        text:
-          'Extracted data contains fields that could not be determined. Please remove them!',
-      }).show();
-      return;
-    }
-    setIsCreateApiPending(true);
-    const apiResponse = await handleCreateAPI();
-    if (!apiResponse) {
-      // eslint-disable-next-line consistent-return
-      return;
-    }
-    const { serviceId: newServiceId, endpoint } = apiResponse;
-    new Noty({
-      theme: 'relax',
-      text: `Fantastic! Your data when ready will be available <a class="underline" href="${endpoint}" target="_blank">here</a>. We'll send you an email when it's ready!`,
-    }).show();
-
-    setIsCreateApiPending(false);
-    if (!serviceId) {
-      router.push(
-        '/[uid]/ft/auto-unlock',
-        `/${uid}/ft/auto-unlock?serviceId=${newServiceId}&q=${encodeURIComponent(
-          qs.parse(window.location.search.split('?')[1]).q,
-        )}`,
+  async function handleCreateUnlockJob() {
+    // send attachment id, user id etc
+    // test unlock on server and send back an attachment
+    try {
+      // Step 1: unlockResponse containing `pollQuery` guarantees that email was sent
+      const { data: unlockResponse } = await axios.post(
+        `/api/email-search/attachment-unlock`,
+        {
+          ...unlockJobAPIProps,
+          token,
+          uid,
+          pdfPasswordInput,
+        },
       );
-    }
-  }
 
-  function doPreviewParsedData() {
-    setIsPreviewMode(!isPreviewMode);
-  }
+      // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
+      // guarantees that mail sending service (e.g. mailgun) is working as well
+      const timer = setInterval(() => {
+        async function handle() {
+          if (!unlockResponse.pollQuery) {
+            clearInterval(timer);
+            throw new Error('pollQuery not found!');
+          }
 
-  useEffect(() => {
-    async function perform() {
-      if (
-        isServiceIdFetched &&
-        serviceIdData &&
-        !isServiceIdConfigurationsFetched &&
-        !isServiceIdConfigurationsLoading
-      ) {
-        console.log('qre');
+          const { data: pollResponse } = await axios({
+            method: 'post',
+            url: `/api/email-search`,
+            data: {
+              uid,
+              token,
+              query: unlockResponse.pollQuery,
+            },
+          });
 
-        if (Array.isArray(serviceIdData.configurations)) {
-          const remoteConfigUris = Promise.all(
-            serviceIdData.configurations.map((configId) =>
-              axios.get(`${baseUri(uid)}/configurations/${configId}`),
-            ),
-          );
-
-          const remoteConfigResponses = await remoteConfigUris;
-          const configurationsData = remoteConfigResponses.map(
-            ({ data }) => data,
-          );
-          setServiceIdConfigurations(configurationsData);
-        } else {
-          setServiceIdConfigurations([defaultConfiguration]);
+          if (
+            Array.isArray(pollResponse.emails) &&
+            pollResponse.emails.length
+          ) {
+            setTestUnlockSuccess(true);
+            clearInterval(timer);
+          }
         }
 
-        setIsServiceIdConfigurationsFetched(true);
-        setIsServiceIdConfigurationsLoading(false);
-      }
-    }
+        handle();
+      }, 7000);
 
-    perform();
-  }, [serviceIdData, isServiceIdFetched]);
-
-  useEffect(() => {
-    if (
-      Array.isArray(serviceIdConfigurations) &&
-      serviceIdConfigurations.length
-    ) {
-      console.log('gfs');
-      setConfiguration(
-        serviceIdConfigurations.map(({ fields }) => ({
-          fields,
-        })),
-      );
+      new Noty({
+        theme: 'relax',
+        text: `✅ Please wait while we unlock and send you an email!`,
+      }).show();
+    } catch (e) {
+      console.log(e);
     }
-  }, [serviceIdConfigurations]);
+  }
 
-  useEffect(() => {
-    if (searchResults.length && configurations.length) {
-      console.log('oip');
-      doExtractDataForConfig();
-    }
-  }, [configurations, searchResults]);
+  async function handleClickAttachmentFilename({
+    messageId,
+    attachmentId,
+    filename,
+  }) {
+    // set filename in state and pass it to config-output-bar component where user can input password and submit request
+    setUnlockJobAPIProps({
+      messageId,
+      attachmentId,
+      filename,
+    });
+
+    const { data } = await axios.post(`/api/fetch/attachment`, {
+      messageId,
+      attachmentId,
+      token,
+      uid,
+    });
+
+    setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setOpen(true);
+  }
 
   return (
     <>
@@ -397,35 +193,32 @@ function FeatureAutoUnlockApp(props) {
               : null
           }
           selectedSearchResultIndex={selectedSearchResultIndex}
-          handleClickEmailContent={handleClickEmailContent}
-          onDeleteFieldFromConfiguration={(fieldKey) =>
-            handleDeleteFieldFromConfiguration({
-              configIndex: selectedConfigurationIndex,
-              fieldKey,
-            })
-          }
-          configuration={configurations[selectedConfigurationIndex]}
+          handleClickAttachmentFilename={handleClickAttachmentFilename}
         />
       </Main>
       <Aside>
         <ConfigOutputBar
           isCreateApiPending={isCreateApiPending}
-          onClickCreateAPI={onClickCreateAPI}
           searchResults={searchResults}
           matchedSearchResults={matchedSearchResults}
-          isPreviewMode={isPreviewMode}
           searchInput={searchInput}
-          parsedData={parsedData}
-          selectedConfigurationIndex={selectedConfigurationIndex}
           selectedSearchResultIndex={selectedSearchResultIndex}
-          configurations={configurations}
-          localFieldNames={localFieldNames}
-          setLocalFieldName={setLocalFieldName}
-          handleChangeConfiguration={handleChangeConfiguration}
-          doDeleteCurrentConfiguration={doDeleteCurrentConfiguration}
-          doPreviewParsedData={doPreviewParsedData}
+          pdfPasswordInput={pdfPasswordInput}
+          setPdfPasswordInput={setPdfPasswordInput}
+          handleCreateUnlockJob={handleCreateUnlockJob}
+          handleCreateUnlockService={handleCreateUnlockService}
+          testUnlockSuccess={testUnlockSuccess}
+          autoUnlockSettings={autoUnlockSettings}
+          handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
         />
       </Aside>
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <iframe
+          src={attachmentBase64}
+          title="preview attachment"
+          style={{ height: '100vh', width: '1024px' }}
+        />
+      </Modal>
     </>
   );
 }
