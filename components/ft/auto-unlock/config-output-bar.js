@@ -1,10 +1,13 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable no-irregular-whitespace */
 import React from 'react';
 import styled from 'styled-components';
 import cx from 'classnames';
 import Noty from 'noty';
-
+import Toggle from 'react-toggle';
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
+
+import 'react-toggle/style.css';
 
 const AsideContainer = styled.div.attrs({
   className: 'bg-yellow-100',
@@ -47,10 +50,22 @@ const ConfigOutputBar = ({
   testUnlockSuccess,
   autoUnlockSettings,
   handleChangeAutoUnlockSettings,
+  ignoreOwnMails,
+  handleChangeIgnoreOwnMails,
 }) => {
   return (
     <div className="p-8 bg-yellow-100">
       <div className="mb-16">
+        <div>
+          <Toggle
+            id="include-own-mails"
+            defaultChecked={ignoreOwnMails}
+            onChange={handleChangeIgnoreOwnMails}
+          />
+          <label htmlFor="include-own-mails">
+            Ignore emails from {process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}
+          </label>
+        </div>
         <h2 className="text-xl mb-4">Auto unlock attachment with password:</h2>
         <form action="">
           <input

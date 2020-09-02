@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { withRouter } from 'next/router';
 import styled from 'styled-components';
 import axios from 'axios';
 import Noty from 'noty';
-import 'react-responsive-modal/styles.css';
-import '~/css/react-responsive-modal-override.css';
 import { Modal } from 'react-responsive-modal';
 
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
@@ -13,6 +11,9 @@ import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 import FeatureApp from '~/components/pageWrappers/AppWrapper';
 import EmailPreview from '~/components/ft/auto-unlock/email-preview';
 import ConfigOutputBar from '~/components/ft/auto-unlock/config-output-bar';
+
+import 'react-responsive-modal/styles.css';
+import '~/css/react-responsive-modal-override.css';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -30,9 +31,10 @@ function FeatureAutoUnlockApp(props) {
     searchInput,
     searchResults,
     selectedSearchResultIndex,
+    fetchEmails,
     router,
-    serviceIdData,
-    isServiceIdFetched,
+    // serviceIdData,
+    // isServiceIdFetched,
   } = props;
 
   const {
@@ -63,6 +65,9 @@ function FeatureAutoUnlockApp(props) {
     past: false,
     future: true,
   });
+
+  const [ignoreOwnMails, setIgnoreOwnMails] = useState(false);
+  const firstUpdate = useRef(true);
 
   function handleChangeAutoUnlockSettings(key, value) {
     setAutoUnlockSettings({
@@ -169,6 +174,34 @@ function FeatureAutoUnlockApp(props) {
     setOpen(true);
   }
 
+  function handleChangeIgnoreOwnMails(e) {
+    const newValue = !!(e.target.value === 'on');
+    console.log({ handleChangeIgnoreOwnMails: newValue });
+    setIgnoreOwnMails(newValue);
+  }
+
+  // [TODO] this is causing a loop
+  // as it toggles `isLoading` from false->true->false
+  // and that causes this component to remount
+  // causing all effects to run once, including this one
+  useEffect(() => {
+    console.log({ ignoreOwnMails });
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    fetchEmails(
+      {
+        ignore_query: ignoreOwnMails
+          ? `from:(${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID})`
+          : null,
+      },
+      {
+        hardReset: true,
+      },
+    );
+  }, [ignoreOwnMails]);
+
   return (
     <>
       <Main>
@@ -208,6 +241,8 @@ function FeatureAutoUnlockApp(props) {
           testUnlockSuccess={testUnlockSuccess}
           autoUnlockSettings={autoUnlockSettings}
           handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
+          ignoreOwnMails={ignoreOwnMails}
+          handleChangeIgnoreOwnMails={handleChangeIgnoreOwnMails}
         />
       </Aside>
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -239,6 +274,7 @@ function AutoUnlockApp({ AuthUserInfo, router }) {
         isServiceIdFetched,
         selectedSearchResultIndex,
         setSelectedSearchResultIndex,
+        fetchEmails,
       }) => {
         return (
           <FeatureAutoUnlockApp
@@ -251,6 +287,7 @@ function AutoUnlockApp({ AuthUserInfo, router }) {
             isServiceIdFetched={isServiceIdFetched}
             selectedSearchResultIndex={selectedSearchResultIndex}
             setSelectedSearchResultIndex={setSelectedSearchResultIndex}
+            fetchEmails={fetchEmails}
             router={router}
             AuthUserInfo={AuthUserInfo}
           />

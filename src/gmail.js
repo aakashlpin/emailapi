@@ -137,6 +137,7 @@ async function fetchEmails(
   pageToken,
   gmailSearchProps = {},
   hasAttachment = false,
+  ignoreQuery = '',
 ) {
   try {
     const auth = await authHandler(refreshToken);
@@ -156,6 +157,10 @@ async function fetchEmails(
 
     if (hasAttachment) {
       reqParams.q = `${reqParams.q} has:attachment`;
+    }
+
+    if (ignoreQuery) {
+      reqParams.q = `${reqParams.q} -${ignoreQuery}`;
     }
 
     const emailsFromRemote = await getEmailsFromRemote(gmail, reqParams);

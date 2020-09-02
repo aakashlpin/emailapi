@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const findLastIndex = require('lodash/findLastIndex');
 // space is intentional
-const excludeFilter = ` -from:${process.env.MAILGUN_SENDING_EMAIL_ID}`;
+const excludeFilter = ` -from:${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}`;
 
 function createUniqueID() {
   let dt = new Date().getTime();

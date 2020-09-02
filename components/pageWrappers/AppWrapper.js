@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { withRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import styled, { createGlobalStyle } from 'styled-components';
 import Header from '~/components/ft/header';
@@ -40,7 +40,8 @@ const ContainerBody = styled.div`
   overflow: hidden;
 `;
 
-function AppWrapper({ children, router, ...props }) {
+function AppWrapper({ children, ...props }) {
+  const router = useRouter();
   const {
     query: { uid, serviceId, q },
   } = router;
@@ -74,6 +75,35 @@ function AppWrapper({ children, router, ...props }) {
     setSearchInput(value);
   }
 
+  async function fetchEmails(
+    overrideReqParams = {},
+    { hardReset = false } = {},
+  ) {
+    const reqParams = {
+      uid,
+      token,
+      query: searchInput,
+      ...emailSearchReqParams,
+    };
+    if (nextPageToken && !hardReset) {
+      reqParams.nextPageToken = nextPageToken;
+    }
+
+    setIsLoading(true);
+    const response = await axios({
+      method: 'post',
+      url: `/api/email-search`,
+      data: { ...reqParams, ...overrideReqParams },
+      timeout: 15000,
+    });
+    const { emails, nextPageToken: resNextPageToken } = response.data;
+    setSearchResults(
+      reqParams.nextPageToken ? [...searchResults, ...emails] : emails,
+    );
+    setNextPageToken(resNextPageToken);
+    setIsLoading(false);
+  }
+
   async function handleSearchAction() {
     window.history.pushState(
       '',
@@ -82,41 +112,16 @@ function AppWrapper({ children, router, ...props }) {
     );
     setTriggerSearch(false);
     try {
-      setIsLoading(true);
-      const reqParams = {
-        uid,
-        token,
-        query: searchInput,
-        ...emailSearchReqParams,
-      };
-      if (nextPageToken) {
-        reqParams.nextPageToken = nextPageToken;
-      }
-      try {
-        const response = await axios({
-          method: 'post',
-          url: `/api/email-search`,
-          data: reqParams,
-          timeout: 15000,
-        });
-        const { emails, nextPageToken: resNextPageToken } = response.data;
-        setSearchResults(
-          reqParams.nextPageToken ? [...searchResults, ...emails] : emails,
-        );
-        setNextPageToken(resNextPageToken);
-        // if (emails.length) setSelectedSearchResultIndex(0);
-        setIsLoading(false);
-      } catch (e) {
-        if (!nextPageToken) {
-          // on first load, it's getting stuck for some reason
-          if (Number(e.statusCode) > 500) {
-            window.location.reload();
-          }
+      await fetchEmails();
+      if (searchResults.length) setSelectedSearchResultIndex(0);
+    } catch (e) {
+      console.log(e);
+      if (!nextPageToken) {
+        // on first load, it's getting stuck for some reason
+        if (Number(e.statusCode) > 500) {
+          window.location.reload();
         }
       }
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
     }
   }
 
@@ -228,6 +233,7 @@ function AppWrapper({ children, router, ...props }) {
             selectedSearchResultIndex,
             setIsLoading,
             setSelectedSearchResultIndex,
+            fetchEmails,
           })}
         </ContainerBody>
       </Container>
@@ -244,4 +250,4 @@ function AppWrapper({ children, router, ...props }) {
   );
 }
 
-export default withRouter(AppWrapper);
+export default AppWrapper;
