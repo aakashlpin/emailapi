@@ -1,11 +1,27 @@
+/* eslint-disable no-bitwise */
 import axios from 'axios';
 
 const findLastIndex = require('lodash/findLastIndex');
-
-export const getAfterTs = (ts) => parseInt(new Date(ts).getTime() / 1000, 10);
-
 // space is intentional
 const excludeFilter = ` -from:${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}`;
+
+function createUniqueID() {
+  let dt = new Date().getTime();
+  const uuid = 'xxyxxxxxxyxxxxxyxxxx'.replace(/[xy]/g, (c) => {
+    const r = (dt + Math.random() * 16) % 16 | 0;
+    dt = Math.floor(dt / 16);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+  return uuid;
+}
+
+export function generateUniqueId(prefix = '') {
+  if (prefix.length > 4)
+    return new Error('prefix length cannot be more than 4');
+  return `${prefix}${createUniqueID()}`;
+}
+
+export const getAfterTs = (ts) => parseInt(new Date(ts).getTime() / 1000, 10);
 
 /* eslint-disable import/prefer-default-export */
 export async function getSearchQuery({ serviceEndpoint, newOnly = false }) {

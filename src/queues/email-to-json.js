@@ -1,8 +1,8 @@
 import axios from 'axios';
 import flatten from 'lodash/flatten';
 
-import applyConfigOnEmail from '../isomorphic/applyConfigOnEmail';
-import ensureConfiguration from '../isomorphic/ensureConfiguration';
+import applyConfigOnEmail from '~/src/ft/email-to-json/applyConfigOnEmail';
+import ensureConfiguration from '~/src/ft/email-to-json/ensureConfiguration';
 import queues from '../redis-queue';
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;

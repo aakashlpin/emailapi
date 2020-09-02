@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import FirebaseAuth from '~/components/FirebaseAuth';
-import EmailPreview from '~/components/service-creator/email-preview';
+import EmailPreview from '~/components/ft/email-to-json/email-preview';
 import { Anchor, Button } from '~/components/common/Atoms';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';

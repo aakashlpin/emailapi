@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import generateKeyFromName from '~/components/admin/email/fns/generateKeyFromName';
+import generateKeyFromName from '~/src/ft/email-to-json/generateKeyFromName';
 import { Label } from '~/components/common/Atoms';
 
 const Container = styled.div``;

@@ -1,10 +1,8 @@
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
-import { getSearchQuery } from '~/src/apps/utils';
+import { getSearchQuery, generateUniqueId } from '~/src/ft/utils';
 
 require('~/src/queues');
-
-const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 const APP_HOST = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;

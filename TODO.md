@@ -26,3 +26,9 @@
 - Remove `done` based callbacks from queue and move to Promise.resolve()s
 - Enable job success/failure notification system
 - Include all queues from filesystem instead of `require`ing them individually
+
+
+### UI Plugin system
+- Allow for email preview and config output bar to be an "app"
+- the app receives the json props of email clicked in left sidebar
+- it also receives some callbacks that allow for setting props (like selection state of email cards) or causing fetch/refresh in left sidebar

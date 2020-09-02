@@ -3,10 +3,9 @@ import React from 'react';
 import styled from 'styled-components';
 import flatten from 'lodash/flatten';
 import cx from 'classnames';
-import Noty from 'noty';
 
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
-import ConfigurationEditor from '~/components/service-creator/configuration-editor';
+import ConfigurationEditor from './configuration-editor';
 
 const AsideContainer = styled.div.attrs({
   className: 'bg-yellow-100',
@@ -43,6 +42,8 @@ const PreviewContainer = styled.div.attrs({
 
 const ConfigOutputBar = ({
   isPreviewMode,
+  isCreateApiPending,
+  onClickCreateAPI,
   searchInput,
   parsedData,
   selectedConfigurationIndex,
@@ -55,13 +56,8 @@ const ConfigOutputBar = ({
   doPreviewParsedData,
   handleChangeSearchInput,
   setTriggerSearch,
-  pdfPasswordInput,
-  setPdfPasswordInput,
-  handleCreateUnlockJob,
-  handleCreateUnlockService,
-  testUnlockSuccess,
-  autoUnlockSettings,
-  handleChangeAutoUnlockSettings,
+  searchResults,
+  matchedSearchResults,
 }) => {
   let sampleData;
   if (
@@ -75,6 +71,31 @@ const ConfigOutputBar = ({
 
   return (
     <>
+      <div className="flex justify-end items-center">
+        <div className="flex flex-col items-start justify-start flex-1 pl-2">
+          <Label>Email matches</Label>
+          {searchResults.length && matchedSearchResults.length
+            ? `${parseInt(
+                (matchedSearchResults.length / searchResults.length) * 100,
+                10,
+              )}%`
+            : '-'}
+        </div>
+        <Button
+          className="mr-4"
+          disabled={!flatten(parsedData).length}
+          onClick={doPreviewParsedData}
+        >
+          {!isPreviewMode ? 'Preview API' : '< Go Back'}
+        </Button>
+        <Button
+          disabled={!isPreviewMode || isCreateApiPending}
+          onClick={onClickCreateAPI}
+        >
+          Create API
+        </Button>
+      </div>
+
       {isPreviewMode ? (
         <PreviewModeContainer>
           <Label>Preview API from locally loaded emails</Label>
@@ -122,83 +143,6 @@ const ConfigOutputBar = ({
         </AsideContainer>
       ) : (
         <div className="p-8 bg-yellow-100">
-          <div className="mb-16">
-            <h2 className="text-xl mb-4">
-              Auto unlock attachment with password:
-            </h2>
-            <form action="">
-              <input
-                type="text"
-                value={pdfPasswordInput}
-                onChange={(e) => setPdfPasswordInput(e.target.value)}
-              />
-              <button
-                type="button"
-                className={cx('border-b-2', {})}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleCreateUnlockJob();
-                }}
-              >
-                Test unlock email
-              </button>{' '}
-            </form>
-
-            <>
-              <h3 className="text-l mb-4">Auto unlock settings:</h3>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!testUnlockSuccess) {
-                    new Noty({
-                      theme: 'relax',
-                      text: `❌ Please use "Test Unlock" feature before creating this service`,
-                    }).show();
-                    return;
-                  }
-                  handleCreateUnlockService();
-                }}
-              >
-                <div>
-                  <label htmlFor="autoUnlockPast">
-                    Auto Unlock Past Emails:
-                    <input
-                      type="checkbox"
-                      id="autoUnlockPast"
-                      name="autoUnlockPast"
-                      checked={autoUnlockSettings.past}
-                      onChange={() =>
-                        handleChangeAutoUnlockSettings(
-                          'past',
-                          !autoUnlockSettings.past,
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-                <div>
-                  <label htmlFor="autoUnlockFuture">
-                    Auto Unlock Future Emails:
-                    <input
-                      type="checkbox"
-                      id="autoUnlockFuture"
-                      name="autoUnlockFuture"
-                      checked={autoUnlockSettings.future}
-                      onChange={() =>
-                        handleChangeAutoUnlockSettings(
-                          'future',
-                          !autoUnlockSettings.future,
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-
-                <input type="submit" value="Create Service" />
-              </form>
-            </>
-          </div>
-
           <h2 className="text-xl mb-4">Tips</h2>
           <ol className="list-disc">
             {flatten(parsedData).length ? (

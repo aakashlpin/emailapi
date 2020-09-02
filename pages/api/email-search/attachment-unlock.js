@@ -60,7 +60,7 @@ async function handle(req, res, resolve) {
       const messageProps = processMessageBody(messageBody);
 
       const emailOpts = {
-        from: `${messageProps.from} <${process.env.MAILGUN_SENDING_EMAIL_ID}>`,
+        from: `${messageProps.from} <${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}>`,
         to: req.user.email,
         subject: `[UNLOCKED] ${messageProps.subject}`,
         'h:Reply-To': 'aakash@emailapi.io',
