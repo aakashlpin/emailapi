@@ -8,6 +8,7 @@ async function handle(req, res, resolve) {
     query,
     nextPageToken = '',
     gmail_search_props: gmailSearchProps = {},
+    has_attachment: hasAttachment = false,
   } = req.body;
   try {
     try {
@@ -16,6 +17,7 @@ async function handle(req, res, resolve) {
         req.refresh_token,
         nextPageToken,
         gmailSearchProps,
+        hasAttachment,
       );
       const items = emails
         .map((response) => processMessageBody(response.data))

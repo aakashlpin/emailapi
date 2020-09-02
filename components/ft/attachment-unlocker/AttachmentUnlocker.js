@@ -1,28 +1,25 @@
+/* eslint-disable jsx-a11y/accessible-emoji */
 /* eslint-disable no-irregular-whitespace */
 /* eslint-disable no-alert */
 /* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
 import Head from 'next/head';
+import { Filter } from 'react-feather';
 import 'react-responsive-modal/styles.css';
 import '~/css/react-responsive-modal-override.css';
 import { Modal } from 'react-responsive-modal';
 import Noty from 'noty';
-import flatten from 'lodash/flatten';
 import styled, { createGlobalStyle } from 'styled-components';
 import axios from 'axios';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
 
-import generateKeyFromName from '~/components/admin/email/fns/generateKeyFromName';
-import applyConfigOnEmail from '~/src/isomorphic/applyConfigOnEmail';
-import ensureConfiguration from '~/src/isomorphic/ensureConfiguration';
-
 import Header from '~/components/service-creator/header';
-import ActionBar from '~/components/service-creator/action-bar';
-import EmailPreview from '~/components/service-creator/email-preview';
+import ActionBar from './action-bar';
+import EmailPreview from './email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
-import ConfigOutputBar from '~/components/service-creator/config-output-bar';
+import ConfigOutputBar from './config-ui';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -57,12 +54,27 @@ const ContainerBody = styled.div`
   overflow: hidden;
 `;
 
-const Main = styled.main`
+const Main = styled.main.attrs({
+  className: 'border-l border-r',
+})`
   overflow-y: scroll;
 `;
 
 const Aside = styled.aside`
   overflow-y: hidden;
+`;
+
+const AsideContainer = styled.div.attrs({
+  className: 'bg-yellow-100 p-4',
+})`
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+
+  & > div {
+    max-width: 100%;
+  }
 `;
 
 const AttachmentUnlockerApp = ({ router, ...props }) => {
@@ -77,40 +89,34 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
   const [isServiceIdLoading, setIsServiceIdLoading] = useState(!!serviceId);
   const [isServiceIdFetched, setIsServiceIdFetched] = useState(!!serviceId);
   const [serviceIdData, setServiceIdData] = useState(null);
-  const [serviceIdConfigurations, setServiceIdConfigurations] = useState([]);
-
-  const [isCreateApiPending, setIsCreateApiPending] = useState(false);
-  const [isFirstMatchSelectedOnLoad, setIsFirstMatchSelectedOnLoad] = useState(
-    false,
-  );
 
   const [searchInput, setSearchInput] = useState('');
 
   const [triggerSearch, setTriggerSearch] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [nextPageToken, setNextPageToken] = useState(null);
   const [selectedSearchResultIndex, setSelectedSearchResultIndex] = useState(
     null,
   );
 
-  const [matchedSearchResults, setMatchedSearchResults] = useState([]);
-
-  const defaultConfiguration = {
-    fields: [],
-  };
-  const [configurations, setConfiguration] = useState([defaultConfiguration]);
-
-  const [parsedData, setParsedData] = useState([]);
-
-  const [localFieldNames, setLocalFieldName] = useState({});
-
+  const [
+    isUnlockJobPendingServerResponse,
+    setIsUnlockJobPendingServerResponse,
+  ] = useState(null);
+  const [
+    isUnlockJobQueuedSuccessfully,
+    setIsUnlockJobQueuedSuccessfully,
+  ] = useState(null);
+  const [unlockEmailBeingQueried, setUnlockEmailBeingQueried] = useState(false);
+  const [unlockEmailReceived, setUnlockEmailReceived] = useState(false);
+  const [
+    isUnlockedAttachmentFetched,
+    setIsUnlockedAttachmentFetched,
+  ] = useState(false);
   const [pdfPasswordInput, setPdfPasswordInput] = useState('');
-  const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
-  const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
   const [autoUnlockSettings, setAutoUnlockSettings] = useState({
     past: false,
     future: true,
@@ -143,23 +149,52 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
     }
   }
 
+  async function handleFetchAttachmentFilename({ messageId, attachmentId }) {
+    // set filename in state and pass it to config-output-bar component where user can input password and submit request
+    const { data } = await axios.post(`/api/fetch/attachment`, {
+      messageId,
+      attachmentId,
+      token,
+      uid,
+    });
+
+    setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setOpen(true);
+  }
+
+  function getFetchAttachmentProps(messageItem) {
+    const { messageId, attachments } = messageItem;
+    const [attachment] = attachments;
+    const { id: attachmentId, filename } = attachment;
+    return { messageId, attachmentId, filename };
+  }
+
   async function handleCreateUnlockJob() {
     // send attachment id, user id etc
     // test unlock on server and send back an attachment
     try {
+      const messageItem = searchResults[selectedSearchResultIndex];
+      setIsUnlockJobPendingServerResponse(true);
       // Step 1: unlockResponse containing `pollQuery` guarantees that email was sent
       const { data: unlockResponse } = await axios.post(
         `/api/email-search/attachment-unlock`,
         {
-          ...unlockJobAPIProps,
           token,
           uid,
           pdfPasswordInput,
+          ...getFetchAttachmentProps(messageItem),
         },
       );
+      setIsUnlockJobPendingServerResponse(false);
+      setIsUnlockJobQueuedSuccessfully(true);
+      new Noty({
+        theme: 'relax',
+        text: `✅ Please wait while we unlock and send you an email!`,
+      }).show();
 
       // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
       // guarantees that mail sending service (e.g. mailgun) is working as well
+      setUnlockEmailBeingQueried(true);
       const timer = setInterval(() => {
         async function handle() {
           if (!unlockResponse.pollQuery) {
@@ -181,28 +216,27 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
             Array.isArray(pollResponse.emails) &&
             pollResponse.emails.length
           ) {
-            setTestUnlockSuccess(true);
             clearInterval(timer);
+            setUnlockEmailReceived(true);
+            setUnlockEmailBeingQueried(false);
+
+            const [email] = pollResponse.emails;
+            await handleFetchAttachmentFilename(getFetchAttachmentProps(email));
+            setIsUnlockedAttachmentFetched(true);
           }
         }
 
         handle();
       }, 7000);
-
-      new Noty({
-        theme: 'relax',
-        text: `✅ Please wait while we unlock and send you an email!`,
-      }).show();
     } catch (e) {
       console.log(e);
+      setIsUnlockJobQueuedSuccessfully(false);
     }
   }
 
   function resetData() {
     setSearchResults([]);
     setSelectedSearchResultIndex(null);
-    setMatchedSearchResults([]);
-    setConfiguration([defaultConfiguration]);
     setNextPageToken(null);
   }
 
@@ -226,6 +260,7 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
         uid,
         token,
         query: searchInput,
+        has_attachment: true,
       };
       if (nextPageToken) {
         reqParams.nextPageToken = nextPageToken;
@@ -279,244 +314,6 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
     setTriggerSearch(true);
   }
 
-  function handleAddAnotherConfiguration(configuration) {
-    setConfiguration([...configurations, configuration]);
-  }
-
-  function handleClickEmailContent({ selector, name }) {
-    if (
-      matchedSearchResults.length &&
-      !matchedSearchResults.includes(selectedSearchResultIndex)
-    ) {
-      const fieldName = name || `Field 1`;
-      handleAddAnotherConfiguration({
-        ...defaultConfiguration,
-        fields: [
-          {
-            selector,
-            fieldName,
-            fieldKey: generateKeyFromName(fieldName),
-            formatter: null,
-          },
-        ],
-      });
-      return;
-    }
-    setConfiguration(
-      configurations.map((config, index) => {
-        const fieldName = name || `Field ${config.fields.length + 1}`;
-        return index === configurations.length - 1
-          ? {
-              ...config,
-              fields: [
-                ...config.fields,
-                {
-                  selector,
-                  fieldName,
-                  fieldKey: generateKeyFromName(fieldName),
-                },
-              ],
-            }
-          : config;
-      }),
-    );
-  }
-
-  async function handleClickAttachmentFilename({
-    messageId,
-    attachmentId,
-    filename,
-  }) {
-    // set filename in state and pass it to config-output-bar component where user can input password and submit request
-    setUnlockJobAPIProps({
-      messageId,
-      attachmentId,
-      filename,
-    });
-
-    const { data } = await axios.post(`/api/fetch/attachment`, {
-      messageId,
-      attachmentId,
-      token,
-      uid,
-    });
-
-    setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
-    setOpen(true);
-  }
-
-  function processConfigOnSearchResults(config) {
-    const dataFromSearchResults = searchResults.map(
-      ({ message }, resultId) => ({
-        ...applyConfigOnEmail(message, config),
-        resultId,
-      }),
-    );
-
-    return dataFromSearchResults.filter((item) =>
-      ensureConfiguration(item, config),
-    );
-  }
-
-  function doExtractDataForConfig() {
-    const extractedData = configurations.map(processConfigOnSearchResults);
-    setMatchedSearchResults(
-      extractedData
-        .map((extractedConfigData) =>
-          extractedConfigData.map(({ resultId }) => resultId),
-        )
-        .flat(Infinity),
-    );
-
-    setParsedData(extractedData);
-    if (!isFirstMatchSelectedOnLoad) {
-      setSelectedSearchResultIndex(
-        extractedData.length && extractedData[0].length
-          ? extractedData[0][0].resultId
-          : 0,
-      );
-      setIsFirstMatchSelectedOnLoad(true);
-    }
-  }
-
-  async function doCreateConfigAndServiceOnRemote() {
-    const configCreatePromises = Promise.all(
-      configurations.map((config) => {
-        const { fields } = config;
-        return axios.post(`${baseUri(uid)}/configurations`, {
-          fields: fields.filter((field) => field),
-        });
-      }),
-    );
-
-    const configResponses = await configCreatePromises;
-    const newConfigIds = configResponses.map((response) => response.data._id);
-
-    if (serviceId) {
-      const updatedConfig = {
-        ...serviceIdData,
-        configurations: newConfigIds,
-      };
-      const endpointType = 'services';
-      const endpoint = `${baseUri(uid)}/${endpointType}/${updatedConfig._id}`;
-      await axios.put(endpoint, updatedConfig);
-      return serviceId;
-    }
-
-    /**
-     * REFACTOR:
-     * each service can contain a prop called `app` whose value will be ENUM
-     * basis ENUM value, further props will be expected
-     *
-     * switch (SERVICE.INSTALLED_APP) {
-     *    case APPS.EMAIL_TO_JSON: {
-     *      // consider .configurations property in the service object
-     *    }
-     *    case APPS.AUTO_UNLOCK: {
-     *      // consider .unlockPassword property in the service object
-     *    }
-     * }
-     */
-    const { data: serviceResponse } = await axios.post(
-      `${baseUri(uid)}/services`,
-      {
-        app: 'EMAIL_TO_JSON',
-        search_query: searchInput,
-        configurations: newConfigIds,
-        cron: true,
-      },
-    );
-
-    return serviceResponse._id;
-  }
-
-  function handleChangeConfiguration({ configIndex, updatedConfig }) {
-    setConfiguration(
-      configurations.map((config, mapIdx) =>
-        mapIdx === configIndex ? updatedConfig : config,
-      ),
-    );
-  }
-
-  function handleDeleteFieldFromConfiguration({ configIndex, fieldKey }) {
-    const config = configurations[configIndex];
-    handleChangeConfiguration({
-      configIndex,
-      updatedConfig: {
-        ...config,
-        fields: config.fields.map((field) =>
-          field && field.fieldKey !== fieldKey ? field : null,
-        ),
-      },
-    });
-  }
-
-  function doPreviewParsedData() {
-    setIsPreviewMode(!isPreviewMode);
-  }
-
-  async function handleCreateAPI() {
-    /**
-     * 1. POST a Service
-     * 2. PUT Configuration on Service
-     * 3. POST /populate-service and return API endpoint immediately. Task in Background.
-     * 4. GET on API endpoint to return 404 until ready, and send the user an email when it's ready
-     */
-
-    //  [TODO]: proxy all API calls through NextJS server
-    if (!searchInput) {
-      new Noty({
-        theme: 'relax',
-        text: `Cannot create service without any search query!`,
-      }).show();
-      return null;
-    }
-    const newServiceId = await doCreateConfigAndServiceOnRemote();
-    const { data: apiEndpointResponse } = await axios.post(
-      '/api/apps/email-to-json',
-      {
-        uid,
-        token,
-        service_id: newServiceId,
-      },
-    );
-
-    return { serviceId: newServiceId, endpoint: apiEndpointResponse.endpoint };
-  }
-
-  async function onClickCreateAPI() {
-    if (
-      !flatten(parsedData).every((item) =>
-        Object.keys(item).every((key) => item[key] !== 'COULD_NOT_DETERMINE'),
-      )
-    ) {
-      new Noty({
-        theme: 'relax',
-        text:
-          'Extracted data contains fields that could not be determined. Please remove them!',
-      }).show();
-      return;
-    }
-    setIsCreateApiPending(true);
-    const apiResponse = await handleCreateAPI();
-    if (!apiResponse) {
-      // eslint-disable-next-line consistent-return
-      return;
-    }
-    const { serviceId: newServiceId, endpoint } = apiResponse;
-    new Noty({
-      theme: 'relax',
-      text: `Fantastic! Your data when ready will be available <a class="underline" href="${endpoint}" target="_blank">here</a>. We'll send you an email when it's ready!`,
-    }).show();
-
-    setIsCreateApiPending(false);
-    if (!serviceId) {
-      router.push('/[uid]/service/[id]', `/${uid}/service/${newServiceId}`, {
-        shallow: true,
-      });
-    }
-  }
-
   function handleFetchMoreMails() {
     setTriggerSearch(true);
   }
@@ -529,23 +326,6 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
           `${baseUri(uid)}/services/${serviceId}`,
         );
         setServiceIdData(serviceData);
-
-        if (Array.isArray(serviceData.configurations)) {
-          const remoteConfigUris = Promise.all(
-            serviceData.configurations.map((configId) =>
-              axios.get(`${baseUri(uid)}/configurations/${configId}`),
-            ),
-          );
-
-          const remoteConfigResponses = await remoteConfigUris;
-          const configurationsData = remoteConfigResponses.map(
-            ({ data }) => data,
-          );
-          setServiceIdConfigurations(configurationsData);
-        } else {
-          setServiceIdConfigurations([defaultConfiguration]);
-        }
-
         setIsServiceIdFetched(true);
         setIsLoading(false);
         setIsServiceIdLoading(false);
@@ -562,22 +342,6 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
   }, [triggerSearch]);
 
   useEffect(() => {
-    console.log(configurations);
-    doExtractDataForConfig();
-  }, [configurations]);
-
-  useEffect(() => {
-    if (
-      isServiceIdFetched &&
-      !isServiceIdLoading &&
-      configurations.length &&
-      searchResults.length
-    ) {
-      doExtractDataForConfig();
-    }
-  }, [configurations, isServiceIdFetched, isServiceIdLoading, searchResults]);
-
-  useEffect(() => {
     if (!token || isServiceIdLoading) {
       return;
     }
@@ -591,35 +355,14 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
       if (argSearchQuery) {
         handleChangeSearchInput(argSearchQuery);
       }
-      setConfiguration(
-        serviceIdConfigurations.map(({ fields }) => ({
-          fields,
-        })),
-      );
       setTriggerSearch(true);
     }
   }, [isServiceIdLoading, isServiceIdFetched]);
 
-  const selectedEmailsConfigIdx = parsedData.findIndex(
-    (byConfigIdxParsedData) =>
-      !!byConfigIdxParsedData.find(
-        (item) => item.resultId === selectedSearchResultIndex,
-      ),
-  );
-
-  const selectedConfigurationIndex =
-    selectedEmailsConfigIdx === -1 ? null : selectedEmailsConfigIdx;
-
-  function doDeleteCurrentConfiguration() {
-    if (configurations.length === 1) {
-      return setConfiguration([defaultConfiguration]);
-    }
-    return setConfiguration(
-      configurations.filter(
-        (_config, configIdx) => selectedConfigurationIndex !== configIdx,
-      ),
-    );
-  }
+  const currentEmail =
+    searchResults.length && selectedSearchResultIndex !== null
+      ? searchResults[selectedSearchResultIndex]
+      : null;
 
   return (
     <>
@@ -641,27 +384,16 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
           handleChangeSearchInput={handleChangeSearchInput}
         />
         <ActionBar
-          uid={uid}
-          token={token}
           isLoading={isLoading}
-          parsedData={parsedData}
-          searchInput={searchInput}
           searchResults={searchResults}
-          isPreviewMode={isPreviewMode}
           nextPageToken={nextPageToken}
-          onClickCreateAPI={onClickCreateAPI}
-          isCreateApiPending={isCreateApiPending}
-          doPreviewParsedData={doPreviewParsedData}
           handleFetchMoreMails={handleFetchMoreMails}
-          matchedSearchResults={matchedSearchResults}
-          GOOGLE_CLIENT_ID={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         />
         <ContainerBody>
           <EmailResultsNav
             isLoading={isLoading}
             isServiceIdFetched={isServiceIdFetched}
             searchResults={searchResults}
-            matchedSearchResults={matchedSearchResults}
             selectedSearchResultIndex={selectedSearchResultIndex}
             handleClickEmailSubject={handleClickEmailSubject}
             handleFilterEmailsBySender={handleFilterEmailsBySender}
@@ -670,56 +402,45 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
           <Main>
             <EmailPreview
               showPreview={searchResults.length}
-              messageItem={
-                searchResults.length && selectedSearchResultIndex !== null
-                  ? searchResults[selectedSearchResultIndex]
-                  : null
-              }
-              message={
-                searchResults.length && selectedSearchResultIndex !== null
-                  ? searchResults[selectedSearchResultIndex].message
-                  : null
-              }
-              isHtmlContent={
-                searchResults.length && selectedSearchResultIndex !== null
-                  ? searchResults[selectedSearchResultIndex].isHtmlContent
-                  : null
-              }
-              selectedSearchResultIndex={selectedSearchResultIndex}
-              handleClickEmailContent={handleClickEmailContent}
-              onDeleteFieldFromConfiguration={(fieldKey) =>
-                handleDeleteFieldFromConfiguration({
-                  configIndex: selectedConfigurationIndex,
-                  fieldKey,
-                })
-              }
-              handleClickAttachmentFilename={handleClickAttachmentFilename}
-              configuration={configurations[selectedConfigurationIndex]}
+              messageItem={currentEmail}
             />
           </Main>
           <Aside>
-            <ConfigOutputBar
-              isPreviewMode={isPreviewMode}
-              searchInput={searchInput}
-              parsedData={parsedData}
-              selectedConfigurationIndex={selectedConfigurationIndex}
-              selectedSearchResultIndex={selectedSearchResultIndex}
-              configurations={configurations}
-              localFieldNames={localFieldNames}
-              setLocalFieldName={setLocalFieldName}
-              handleChangeConfiguration={handleChangeConfiguration}
-              doDeleteCurrentConfiguration={doDeleteCurrentConfiguration}
-              doPreviewParsedData={doPreviewParsedData}
-              handleChangeSearchInput={handleChangeSearchInput}
-              setTriggerSearch={setTriggerSearch}
-              pdfPasswordInput={pdfPasswordInput}
-              setPdfPasswordInput={setPdfPasswordInput}
-              handleCreateUnlockJob={handleCreateUnlockJob}
-              handleCreateUnlockService={handleCreateUnlockService}
-              testUnlockSuccess={testUnlockSuccess}
-              autoUnlockSettings={autoUnlockSettings}
-              handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
-            />
+            <AsideContainer>
+              {searchInput.includes('from:') ? (
+                <ConfigOutputBar
+                  messageItem={currentEmail}
+                  pdfPasswordInput={pdfPasswordInput}
+                  setPdfPasswordInput={setPdfPasswordInput}
+                  handleCreateUnlockJob={handleCreateUnlockJob}
+                  handleCreateUnlockService={handleCreateUnlockService}
+                  autoUnlockSettings={autoUnlockSettings}
+                  handleChangeAutoUnlockSettings={
+                    handleChangeAutoUnlockSettings
+                  }
+                  handleClickAttachmentFilename={handleFetchAttachmentFilename}
+                  isUnlockJobPendingServerResponse={
+                    isUnlockJobPendingServerResponse
+                  }
+                  isUnlockJobQueuedSuccessfully={isUnlockJobQueuedSuccessfully}
+                  unlockEmailBeingQueried={unlockEmailBeingQueried}
+                  unlockEmailReceived={unlockEmailReceived}
+                  isUnlockedAttachmentFetched={isUnlockedAttachmentFetched}
+                />
+              ) : (
+                <div className="justify-start">
+                  <p className="mb-4">
+                    Search with a &quot;from:&quot; query to use this feature.
+                  </p>
+                  <p className="font-medium">
+                    📣 Tip: You can use the Filter Icons on selected email to
+                    automatically filter by sender (search by &quot;from:&quot;)
+                    or both sender and subject (search by &quot;from:&quot; and
+                    &quot;subject:&quot;)
+                  </p>
+                </div>
+              )}
+            </AsideContainer>
           </Aside>
         </ContainerBody>
       </Container>

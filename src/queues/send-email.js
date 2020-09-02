@@ -5,7 +5,7 @@ async function processJob(job) {
   const { data: emailOptions } = job;
 
   await sendEmail({
-    from: `emailapi.io <${process.env.MAILGUN_SENDING_EMAIL_ID}>`,
+    from: `emailapi.io <${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}>`,
     ...emailOptions,
   });
 }
