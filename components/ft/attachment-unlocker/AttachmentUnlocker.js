@@ -65,7 +65,7 @@ const Aside = styled.aside`
   overflow-y: hidden;
 `;
 
-const ServiceCreator = ({ router, ...props }) => {
+const AttachmentUnlockerApp = ({ router, ...props }) => {
   const {
     query: { q, uid, id: serviceId },
   } = router;
@@ -736,4 +736,6 @@ const ServiceCreator = ({ router, ...props }) => {
   );
 };
 
-export default withAuthUser(withAuthUserInfo(withRouter(ServiceCreator)));
+export default withAuthUser(
+  withAuthUserInfo(withRouter(AttachmentUnlockerApp)),
+);
