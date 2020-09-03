@@ -189,8 +189,8 @@ Follow the Mailgun onboarding process to setup your domain and then enter follow
 - ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
 - ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
 
+### Setup Part 6
 ```
-# Setup Part 6
 REDISCLOUD_URL=redis://localhost:6379
 ```
 emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queue for Node.
