@@ -133,7 +133,7 @@ const ConfigOutputBar = ({
                 ) : null}
               </div>
 
-              {!isUnlockedAttachmentFetched ? (
+              {isUnlockedAttachmentFetched ? (
                 <div>
                   <p className="mb-1 font-semibold underline uppercase">
                     Setup job

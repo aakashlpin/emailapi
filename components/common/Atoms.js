@@ -41,7 +41,9 @@ export const StockItemBadge = styled.span`
   border: 1px dashed hsl(0, 0%, 60%);
 `;
 
-export const Anchor = styled.a`
+export const Anchor = styled.a.attrs({
+  className: 'cursor-pointer',
+})`
   border-bottom: 5px solid #ffc107;
 `;
 
