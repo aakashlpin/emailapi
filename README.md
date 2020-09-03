@@ -68,7 +68,7 @@ REDISCLOUD_URL=
 
 ## Steps to setup Environment Variables
 
-### Setup Part 1
+### Setup Step 1/6:
 ```
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -110,7 +110,7 @@ GOOGLE_OAUTH_REDIRECT_URI=
 
 
 
-### Setup Part 2
+### Setup Step 2/6:
 ```
 FIREBASE_PROJECT_ID=
 FIREBASE_AUTH_DOMAIN=
@@ -135,7 +135,7 @@ FIREBASE_PUBLIC_API_KEY=
   - ➡️ `FIREBASE_PUBLIC_API_KEY=<apiKey>`
 12. Click on `Continue to Console`.
 
-### Setup Part 3
+### Setup Step 3/6:
 ```
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
@@ -157,7 +157,7 @@ FIREBASE_PRIVATE_KEY=
   - ➡️ `FIREBASE_PRIVATE_KEY=<private_key>`
 
 
-### Setup Part 4
+### Setup Step 4/6:
 ```
 EMAILAPI_DOMAIN=
 EMAILAPI_BASE_URL=
@@ -176,7 +176,7 @@ e.g. if you're using hosted jsonbox service:
 - ➡️ `EMAILAPI_BASE_URL=https://jsonbox.io/box_<id>`
 
 
-### Setup Part 5
+### Setup Step 5/6:
 ```
 MAILGUN_API_KEY=
 MAILGUN_DOMAIN=
@@ -189,7 +189,7 @@ Follow the Mailgun onboarding process to setup your domain and then enter follow
 - ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
 - ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
 
-### Setup Part 6
+### Setup Step 6/6:
 ```
 REDISCLOUD_URL=redis://localhost:6379
 ```
