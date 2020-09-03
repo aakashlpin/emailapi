@@ -45,9 +45,9 @@ export const Anchor = styled.a`
   border-bottom: 5px solid #ffc107;
 `;
 
-export const Button = styled.button.attrs({
-  type: 'button',
-})`
+export const Button = styled.button.attrs((props) => ({
+  type: props.type || 'button',
+}))`
   border-bottom: 5px solid #ffc107;
   opacity: ${(props) => (props.disabled ? 0.25 : 1)};
   cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};

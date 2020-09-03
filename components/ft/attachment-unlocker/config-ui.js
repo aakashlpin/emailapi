@@ -1,12 +1,10 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 /* eslint-disable no-irregular-whitespace */
 import React from 'react';
-import styled from 'styled-components';
-import cx from 'classnames';
-import Noty from 'noty';
 import { Button } from '~/components/common/Atoms';
 
 const ConfigOutputBar = ({
+  searchInput,
   messageItem,
   pdfPasswordInput,
   setPdfPasswordInput,
@@ -62,10 +60,6 @@ const ConfigOutputBar = ({
               </Button>
 
               <div className="mb-8">
-                <p className="text-sm w-3/4 mb-1">
-                  Check if the app is able to unlock attachment by entering PDF
-                  password below:
-                </p>
                 <form
                   className="mb-2"
                   onSubmit={(e) => {
@@ -74,63 +68,83 @@ const ConfigOutputBar = ({
                   }}
                 >
                   <div>
-                    <input
-                      type="text"
-                      className="border mb-1"
-                      disabled={disableFormSubmit}
-                      value={pdfPasswordInput}
-                      onChange={(e) => setPdfPasswordInput(e.target.value)}
-                    />
+                    <label htmlFor="pdfPasswordInput">
+                      <span className="text-sm">PDF Password:</span>
+                      <br />
+                      <input
+                        type="text"
+                        id="pdfPasswordInput"
+                        className="border mb-1 p-2"
+                        disabled={disableFormSubmit}
+                        value={pdfPasswordInput}
+                        onChange={(e) => setPdfPasswordInput(e.target.value)}
+                      />
+                    </label>
                   </div>
-                  <button
+                  <Button
                     type="submit"
-                    className={cx('border-b-2', {})}
-                    disabled={disableFormSubmit}
+                    className="text-sm"
+                    disabled={disableFormSubmit || !pdfPasswordInput.length}
                   >
-                    Unlock and Get email
-                  </button>
+                    Preview unlock
+                  </Button>
                 </form>
 
+                <p className="w-5/6 text-sm italic text-gray-600 mb-4">
+                  ✨ This will setup a one time attachment unlock task
+                  that&apos;d send you an email with the unlocked attachment.
+                  <br />
+                  <br /> ➡️ Once we receive this email you&apos;d be able to
+                  create a job to unlock all past and upcoming emails for your
+                  search query.
+                </p>
+
                 {isUnlockJobPendingServerResponse ? (
-                  <p className="text-sm">⏫ Sending Request. Please wait...</p>
+                  <p className="text-sm italic text-gray-600">
+                    ⏫ Sending Request. Please wait...
+                  </p>
                 ) : null}
 
                 {isUnlockJobQueuedSuccessfully ? (
-                  <p className="text-sm">✅ Request submitted!</p>
+                  <p className="text-sm italic">✅ Request submitted!</p>
                 ) : null}
 
                 {isUnlockJobQueuedSuccessfully && unlockEmailBeingQueried ? (
-                  <p className="text-sm">🔁 Waiting for unlocked email...</p>
+                  <p className="text-sm italic text-gray-600">
+                    🔁 Waiting for unlocked email...
+                  </p>
                 ) : null}
 
                 {isUnlockJobQueuedSuccessfully && unlockEmailReceived ? (
                   <>
-                    <p className="text-sm">✅ Unlocked email received! </p>
+                    <p className="text-sm italic">
+                      ✅ Unlocked email received!{' '}
+                    </p>
                     {!isUnlockedAttachmentFetched ? (
-                      <p className="w-3/4 text-sm">
+                      <p className="w-3/4 text-sm italic text-gray-600">
                         ⏬ Fetching unlocked attachment. Please wait...
                       </p>
                     ) : (
-                      <p className="text-sm">✅ Unlocked attachment shown!</p>
+                      <p className="text-sm italic">
+                        ✅ Unlocked attachment shown!
+                      </p>
                     )}
                   </>
-                ) : (
-                  <p className="w-3/4 text-sm">
-                    Once you receive this unlocked email you&apos;d be able to
-                    create a job to unlock all past and future emails.
-                  </p>
-                )}
+                ) : null}
               </div>
 
-              {isUnlockedAttachmentFetched ? (
+              {!isUnlockedAttachmentFetched ? (
                 <div>
+                  <p className="mb-1 font-semibold underline uppercase">
+                    Setup job
+                  </p>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
                       handleCreateUnlockService();
                     }}
                   >
-                    <div>
+                    <div className="mb-4">
                       <label
                         htmlFor="autoUnlockPast"
                         className="cursor-pointer"
@@ -147,10 +161,13 @@ const ConfigOutputBar = ({
                             )
                           }
                         />
-                        &nbsp;Unlock all Past Emails
+                        &nbsp;Unlock all Past Emails <br />
+                        <span className="text-sm text-gray-600">
+                          (emails that you see in the left sidebar and more)
+                        </span>
                       </label>
                     </div>
-                    <div className="mb-2">
+                    <div className="mb-4">
                       <label
                         htmlFor="autoUnlockFuture"
                         className="cursor-pointer"
@@ -167,12 +184,22 @@ const ConfigOutputBar = ({
                             )
                           }
                         />
-                        &nbsp;Unlock Future Emails
+                        &nbsp;Unlock Future Emails <br />
+                        <span className="text-sm text-gray-600">
+                          (emails that&apos;ll arrive going forward)
+                        </span>
                       </label>
                     </div>
 
-                    <Button type="submit">Save and Submit</Button>
+                    <Button type="submit" className="mb-1">
+                      Create job
+                    </Button>
                   </form>
+
+                  <p className="text-xs italic text-gray-600">
+                    This will setup selected tasks for search query — <br />{' '}
+                    <span className="text-sm">{searchInput}</span>
+                  </p>
                 </div>
               ) : null}
             </div>

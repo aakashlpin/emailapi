@@ -5,11 +5,9 @@
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
 import Head from 'next/head';
-import { Filter } from 'react-feather';
 import 'react-responsive-modal/styles.css';
 import '~/css/react-responsive-modal-override.css';
 import { Modal } from 'react-responsive-modal';
-import Noty from 'noty';
 import styled, { createGlobalStyle } from 'styled-components';
 import axios from 'axios';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
@@ -22,9 +20,6 @@ import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
-
-require('noty/lib/noty.css');
-require('noty/lib/themes/relax.css');
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -50,7 +45,7 @@ const Container = styled.div`
 
 const ContainerBody = styled.div`
   display: grid;
-  grid-template-columns: 400px 1fr 600px;
+  grid-template-columns: 400px 1fr 480px;
   overflow: hidden;
 `;
 
@@ -187,10 +182,6 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
       );
       setIsUnlockJobPendingServerResponse(false);
       setIsUnlockJobQueuedSuccessfully(true);
-      new Noty({
-        theme: 'relax',
-        text: `✅ Please wait while we unlock and send you an email!`,
-      }).show();
 
       // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
       // guarantees that mail sending service (e.g. mailgun) is working as well
@@ -409,6 +400,7 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
             <AsideContainer>
               {searchInput.includes('from:') ? (
                 <ConfigOutputBar
+                  searchInput={searchInput}
                   messageItem={currentEmail}
                   pdfPasswordInput={pdfPasswordInput}
                   setPdfPasswordInput={setPdfPasswordInput}
