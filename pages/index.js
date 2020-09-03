@@ -116,7 +116,7 @@ function HomePage(props) {
                   if (error) {
                     return <div>Oops! Something went wrong there!</div>;
                   }
-                  window.location.pathname = `/${uid}/service`;
+                  window.location.pathname = `/${uid}/home`;
                 }}
               />
             )}
