@@ -5,7 +5,7 @@ const findLastIndex = require('lodash/findLastIndex');
 export const getAfterTs = (ts) => parseInt(new Date(ts).getTime() / 1000, 10);
 
 // space is intentional
-const excludeFilter = ` -from:${process.env.MAILGUN_SENDING_EMAIL_ID}`;
+const excludeFilter = ` -from:${process.env.NEXT_PUBLIC_SENDING_EMAIL_ID}`;
 
 /* eslint-disable import/prefer-default-export */
 export async function getSearchQuery({ serviceEndpoint, newOnly = false }) {

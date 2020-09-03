@@ -61,7 +61,7 @@ const Dashboard = ({ router, ...props }) => {
       <Container>
         <CommonHeader>
           <div className="text-center">
-            <a href={`/${uid}/service`}>Create New Service</a>
+            <a href={`/${uid}/home`}>Setup new job</a>
           </div>
         </CommonHeader>
 

@@ -27,7 +27,7 @@ const EmailResultsNav = ({
   isLoading,
   isServiceIdFetched,
   searchResults,
-  matchedSearchResults,
+  matchedSearchResults = [],
   selectedSearchResultIndex,
   handleClickEmailSubject,
   handleFilterEmailsBySender,

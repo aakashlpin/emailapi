@@ -22,7 +22,7 @@ import Header from '~/components/service-creator/header';
 import ActionBar from '~/components/service-creator/action-bar';
 import EmailPreview from '~/components/service-creator/email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
-import ConfigOutputBar from '~/components/service-creator/config-output-bar';
+import ConfigOutputBar from './config-ui';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -65,7 +65,7 @@ const Aside = styled.aside`
   overflow-y: hidden;
 `;
 
-const ServiceCreator = ({ router, ...props }) => {
+const EmailJsonApp = ({ router, ...props }) => {
   const {
     query: { q, uid, id: serviceId },
   } = router;
@@ -106,97 +106,8 @@ const ServiceCreator = ({ router, ...props }) => {
 
   const [localFieldNames, setLocalFieldName] = useState({});
 
-  const [pdfPasswordInput, setPdfPasswordInput] = useState('');
-  const [unlockJobAPIProps, setUnlockJobAPIProps] = useState({});
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
-  const [testUnlockSuccess, setTestUnlockSuccess] = useState(false);
-  const [autoUnlockSettings, setAutoUnlockSettings] = useState({
-    past: false,
-    future: true,
-  });
-
-  function handleChangeAutoUnlockSettings(key, value) {
-    setAutoUnlockSettings({
-      ...autoUnlockSettings,
-      [key]: value,
-    });
-  }
-
-  async function handleCreateUnlockService() {
-    const { data: serviceResponse } = await axios.post(
-      `${baseUri(uid)}/services`,
-      {
-        app: 'AUTO_UNLOCK',
-        search_query: searchInput,
-        unlock_password: pdfPasswordInput,
-        cron: autoUnlockSettings.future,
-      },
-    );
-
-    if (autoUnlockSettings.past) {
-      await axios.post(`/api/apps/auto-unlock`, {
-        token,
-        uid,
-        service_id: serviceResponse._id,
-      });
-    }
-  }
-
-  async function handleCreateUnlockJob() {
-    // send attachment id, user id etc
-    // test unlock on server and send back an attachment
-    try {
-      // Step 1: unlockResponse containing `pollQuery` guarantees that email was sent
-      const { data: unlockResponse } = await axios.post(
-        `/api/email-search/attachment-unlock`,
-        {
-          ...unlockJobAPIProps,
-          token,
-          uid,
-          pdfPasswordInput,
-        },
-      );
-
-      // Step 2: email arriving for `from:() subject:()` params matching the ones sent from our backend
-      // guarantees that mail sending service (e.g. mailgun) is working as well
-      const timer = setInterval(() => {
-        async function handle() {
-          if (!unlockResponse.pollQuery) {
-            clearInterval(timer);
-            throw new Error('pollQuery not found!');
-          }
-
-          const { data: pollResponse } = await axios({
-            method: 'post',
-            url: `/api/email-search`,
-            data: {
-              uid,
-              token,
-              query: unlockResponse.pollQuery,
-            },
-          });
-
-          if (
-            Array.isArray(pollResponse.emails) &&
-            pollResponse.emails.length
-          ) {
-            setTestUnlockSuccess(true);
-            clearInterval(timer);
-          }
-        }
-
-        handle();
-      }, 7000);
-
-      new Noty({
-        theme: 'relax',
-        text: `✅ Please wait while we unlock and send you an email!`,
-      }).show();
-    } catch (e) {
-      console.log(e);
-    }
-  }
 
   function resetData() {
     setSearchResults([]);
@@ -322,18 +233,7 @@ const ServiceCreator = ({ router, ...props }) => {
     );
   }
 
-  async function handleClickAttachmentFilename({
-    messageId,
-    attachmentId,
-    filename,
-  }) {
-    // set filename in state and pass it to config-output-bar component where user can input password and submit request
-    setUnlockJobAPIProps({
-      messageId,
-      attachmentId,
-      filename,
-    });
-
+  async function handleClickAttachmentFilename({ messageId, attachmentId }) {
     const { data } = await axios.post(`/api/fetch/attachment`, {
       messageId,
       attachmentId,
@@ -511,9 +411,13 @@ const ServiceCreator = ({ router, ...props }) => {
 
     setIsCreateApiPending(false);
     if (!serviceId) {
-      router.push('/[uid]/service/[id]', `/${uid}/service/${newServiceId}`, {
-        shallow: true,
-      });
+      router.push(
+        '/[uid]/ft/email-json/[id]',
+        `/${uid}/ft/email-json/${newServiceId}`,
+        {
+          shallow: true,
+        },
+      );
     }
   }
 
@@ -712,13 +616,6 @@ const ServiceCreator = ({ router, ...props }) => {
               doPreviewParsedData={doPreviewParsedData}
               handleChangeSearchInput={handleChangeSearchInput}
               setTriggerSearch={setTriggerSearch}
-              pdfPasswordInput={pdfPasswordInput}
-              setPdfPasswordInput={setPdfPasswordInput}
-              handleCreateUnlockJob={handleCreateUnlockJob}
-              handleCreateUnlockService={handleCreateUnlockService}
-              testUnlockSuccess={testUnlockSuccess}
-              autoUnlockSettings={autoUnlockSettings}
-              handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
             />
           </Aside>
         </ContainerBody>
@@ -736,4 +633,4 @@ const ServiceCreator = ({ router, ...props }) => {
   );
 };
 
-export default withAuthUser(withAuthUserInfo(withRouter(ServiceCreator)));
+export default withAuthUser(withAuthUserInfo(withRouter(EmailJsonApp)));
