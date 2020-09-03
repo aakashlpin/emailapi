@@ -92,22 +92,26 @@ const ConfigOutputBar = ({
                 </form>
 
                 {isUnlockJobPendingServerResponse ? (
-                  <p>Please wait...</p>
+                  <p className="text-sm">⏫ Sending Request. Please wait...</p>
+                ) : null}
+
+                {isUnlockJobQueuedSuccessfully ? (
+                  <p className="text-sm">✅ Request submitted!</p>
                 ) : null}
 
                 {isUnlockJobQueuedSuccessfully && unlockEmailBeingQueried ? (
-                  <p>Checking for unlocked email...</p>
+                  <p className="text-sm">🔁 Waiting for unlocked email...</p>
                 ) : null}
 
                 {isUnlockJobQueuedSuccessfully && unlockEmailReceived ? (
                   <>
-                    <p className="text-sm">✅ Email received! </p>
+                    <p className="text-sm">✅ Unlocked email received! </p>
                     {!isUnlockedAttachmentFetched ? (
                       <p className="w-3/4 text-sm">
-                        ⏬ Fetching unlocked attachment. Please wait...{' '}
+                        ⏬ Fetching unlocked attachment. Please wait...
                       </p>
                     ) : (
-                      <p className="text-sm">✅ Attachment seen! </p>
+                      <p className="text-sm">✅ Unlocked attachment shown!</p>
                     )}
                   </>
                 ) : (
@@ -127,8 +131,10 @@ const ConfigOutputBar = ({
                     }}
                   >
                     <div>
-                      <label htmlFor="autoUnlockPast">
-                        Auto Unlock Past Emails:
+                      <label
+                        htmlFor="autoUnlockPast"
+                        className="cursor-pointer"
+                      >
                         <input
                           type="checkbox"
                           id="autoUnlockPast"
@@ -141,11 +147,14 @@ const ConfigOutputBar = ({
                             )
                           }
                         />
+                        &nbsp;Unlock all Past Emails
                       </label>
                     </div>
-                    <div>
-                      <label htmlFor="autoUnlockFuture">
-                        Auto Unlock Future Emails:
+                    <div className="mb-2">
+                      <label
+                        htmlFor="autoUnlockFuture"
+                        className="cursor-pointer"
+                      >
                         <input
                           type="checkbox"
                           id="autoUnlockFuture"
@@ -158,10 +167,11 @@ const ConfigOutputBar = ({
                             )
                           }
                         />
+                        &nbsp;Unlock Future Emails
                       </label>
                     </div>
 
-                    <Button type="submit">Create Service</Button>
+                    <Button type="submit">Save and Submit</Button>
                   </form>
                 </div>
               ) : null}
