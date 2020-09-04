@@ -33,7 +33,7 @@ Any data that you create on emailapi.io (including `accessToken` to your Gmail a
 __Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account.__
 
 ---
-**⏬ Follow the steps below to setup emailapi for yourself! ⏬**
+**⏬ Follow the steps below to setup EmailAPI for yourself! ⏬**
 
 ---
 
