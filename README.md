@@ -11,7 +11,7 @@ EmaiAPI comes with the following features out of the box:
 
 1. **Email to JSON**
 
-    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox).
+    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox)!
 
     [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
