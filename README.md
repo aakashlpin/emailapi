@@ -36,7 +36,7 @@ yarn
 
 ### Environment Variables
 
-Create a file named `.env.local` and supply the following environment variables
+Create a file named `.env.local` and supply the following environment variables. Refer to the section below for instructions on getting these variables.
 ```
 # Setup Part 1
 GOOGLE_CLIENT_ID=
@@ -66,9 +66,9 @@ MAILGUN_SENDING_EMAIL_ID=
 REDISCLOUD_URL=
 ```
 
-## Steps to setup Environment Variables
+### Steps to setup Environment Variables
 
-### Setup Step 1/6:
+##### Setup Step 1/6:
 ```
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -110,7 +110,7 @@ GOOGLE_OAUTH_REDIRECT_URI=
 
 
 
-### Setup Step 2/6:
+#### Setup Step 2/6:
 ```
 FIREBASE_PROJECT_ID=
 FIREBASE_AUTH_DOMAIN=
@@ -135,7 +135,7 @@ FIREBASE_PUBLIC_API_KEY=
   - ➡️ `FIREBASE_PUBLIC_API_KEY=<apiKey>`
 12. Click on `Continue to Console`.
 
-### Setup Step 3/6:
+#### Setup Step 3/6:
 ```
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
@@ -157,7 +157,7 @@ FIREBASE_PRIVATE_KEY=
   - ➡️ `FIREBASE_PRIVATE_KEY=<private_key>`
 
 
-### Setup Step 4/6:
+#### Setup Step 4/6:
 ```
 EMAILAPI_DOMAIN=
 EMAILAPI_BASE_URL=
@@ -176,7 +176,7 @@ e.g. if you're using hosted jsonbox service:
 - ➡️ `EMAILAPI_BASE_URL=https://jsonbox.io/box_<id>`
 
 
-### Setup Step 5/6:
+#### Setup Step 5/6:
 ```
 MAILGUN_API_KEY=
 MAILGUN_DOMAIN=
@@ -189,7 +189,7 @@ Follow the Mailgun onboarding process to setup your domain and then enter follow
 - ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
 - ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
 
-### Setup Step 6/6:
+#### Setup Step 6/6:
 ```
 REDISCLOUD_URL=redis://localhost:6379
 ```
@@ -198,6 +198,126 @@ emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queu
 You're free to choose between a local installation of redis or go with a hosted redis solution e.g. [Managed Redis on DigitalOcean](https://www.digitalocean.com/products/managed-databases-redis/). Grab your redis connection string and enter it in `.env.local` file:
 
 - ➡️ `REDISCLOUD_URL=redis://localhost:6379`
+
+✅ *Now you've setup all environment variables required to have a locally working emailapi instance.*
+
+## How to deploy to Production
+
+### Step 1/n: Spin up a DigitalOcean instance
+
+*Create a new account using [my DigitalOcean referral link](https://m.do.co/c/d676da2907e1) to receive **$100** in DigitalOcean credits **valid for 2 months**!*
+
+- Spin up a new Ubuntu 18.04 instance with atleast 1GB RAM and 1 CPU.
+- Copy the IP address of your new machine.
+
+### Step 2/n: Get a domain
+
+Get a free domain from [freenom](https://freenom.com) or buy one from [namecheap](http://www.namecheap.com/?aff=87584).
+
+*Alternatively, you can also set this up on a subdomain of a domain you already own.*
+
+Create a `A` record to point to this domain name to the IP address of your newly created DigitalOcean instance.
+
+*If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
+
+### Step 3/n: Setting up the DigitalOcean instance
+
+1. Follow the [DigitalOcean guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04) for a one-time initial setup of the instance.
+    - Ensure you setup SSH as the auth/login mechanism
+2. Setup `nginx` by following the [guide here](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-18-04). We'll use it as a reverse proxy.
+3. Serve `emailapi` on your domain
+    - `cd /etc/nginx/sites-enabled`
+    - `sudo nano emailapi`
+    - Copy paste the following server block to this file and replace `server_name` with the domain name that you procured from Step #2.
+    ```
+      upstream emailapi_upstream {
+        server 127.0.0.1:3000;
+        keepalive 64;
+      }
+
+      server {
+        listen 80;
+        listen [::]:80;
+
+        server_name emailapi.io;
+        location / {
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header Host $http_host;
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+
+          proxy_pass http://emailapi_upstream/;
+          proxy_redirect off;
+          proxy_read_timeout 240s;
+        }
+      }
+    ```
+
+
+4. Generate a free SSL certificate for your domain (thanks to Let's Encrypt) by using `certbot`. Follow the [guide here](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04).
+
+
+    ➡️ Note: `certbot` will update the nginx file with certificate paths and redirection rules.
+
+    Here's what the final nginx file for emailapi.io looks like. Yours should look similar.
+    ```
+      upstream emailapi_upstream {
+        server 127.0.0.1:3000;
+        keepalive 64;
+      }
+
+      server {
+        server_name emailapi.io;
+        location / {
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header Host $http_host;
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+
+          proxy_pass http://emailapi_upstream/;
+          proxy_redirect off;
+          proxy_read_timeout 240s;
+        }
+
+        listen [::]:443 ssl; # managed by Certbot
+        listen 443 ssl; # managed by Certbot
+        ssl_certificate /etc/letsencrypt/live/emailapi.io/fullchain.pem; # managed by Certbot
+        ssl_certificate_key /etc/letsencrypt/live/emailapi.io/privkey.pem; # managed by Certbot
+        include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+      }
+
+      server {
+        if ($host = emailapi.io) {
+            return 301 https://$host$request_uri;
+        } # managed by Certbot
+
+        listen 80;
+        listen [::]:80;
+
+        server_name emailapi.io;
+        return 404; # managed by Certbot
+      }
+    ```
+
+5. Create environment file on the server. Follow the steps below:
+    - Copy content of `.env.local` file from your local codebase.
+    - On remote server, run `cd ~/ && mkdir -p apps/emailapi-pipeline && nano .env`
+    - Paste content in this file, save and exit.
+
+6. Goto `https://github.com/<your_username>/emailapi/settings/secrets` and click on `New Secret` button. Add the following secrets one by one:
+    - `DO_HOST` = IP address of DigitalOcean instance
+    - `DO_USERNAME` = Your DigitalOcean instances' login username.
+    - `GITBUH_USERNAME` = Your Github username (*typo in key is intentional as Github doesn't allow using `GITHUB` in secret name*)
+    - `SSH_ID_RSA` = Copy paste contents of `id_rsa` file. This is from the SSH keypair that you use to login to your DigitalOcean instance.
+
+7. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`.
 
 ---
 ### LICENSE
