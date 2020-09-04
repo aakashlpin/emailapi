@@ -1,4 +1,4 @@
-# emailapi.io
+![logo](https://emailapi.io/static/images/logo.svg)
 
 ## Overview
 EmailAPI enables powerful extensions to your Gmail account with features like:
@@ -21,7 +21,7 @@ EmaiAPI comes with the following features out of the box:
 
     [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-## Getting started with EmailAPI
+## Using the hosted service
 
 Simply signin with your Gmail account on https://emailapi.io to play around with the service. Here are some key _terms of service_ to be aware of:
 
@@ -41,6 +41,8 @@ __Disclaimer: You should understand the risks of signing up on https://emailapi.
 **⏬ Follow the steps below to setup EmailAPI for yourself! ⏬**
 
 ---
+
+## Self hosting EmailAPI
 
 ### Get a domain name!
 *We'd be using a domain name throughout the setup steps, so don't skip this step!*
