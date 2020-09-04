@@ -9,15 +9,27 @@ EmailAPI enables powerful extensions to your Gmail account with features like:
 ---
 EmaiAPI comes with the following apps out of the box:
 
-  **1. Email to JSON**
+1. Email to JSON
 
-  This app allows easy scraping of content inside HTML email messages. Data points get extracted into a JSON endpoint and can then pushed to any JSON collection service via webhooks. It supports automatic sync to [jsonbox](jsonbox) out of the box.
+    This app allows easy scraping of content inside HTML email messages. Data points get extracted into a JSON endpoint and can then pushed to any JSON collection service via webhooks. It supports automatic sync to [jsonbox](jsonbox) out of the box.
 
-  [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
+    [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-  **2. Attachment Unlocker**
+2. Attachment Unlocker
 
-  This app sends you a copy of email with unlocked PDF attachments. Save the PDF password once and forget about ever having to unlock PDF attachments again. The app works on emails already in your mailbox as well as on the ones that are yet to come.
+    This app sends you a copy of email with unlocked PDF attachments. Save the PDF password once and forget about ever having to unlock PDF attachments again. The app works on emails already in your mailbox as well as on the ones that are yet to come.
+
+
+## Get a domain name!
+*We'd be using a domain name throughout the setup steps, so don't skip this step!*
+
+Get a free domain from [freenom](https://freenom.com) or buy one from [namecheap](http://www.namecheap.com/?aff=87584).
+
+*Alternatively, you can also set this up on a subdomain of a domain you already own.*
+
+Create a `A` record to point to this domain name to the IP address of your newly created DigitalOcean instance.
+
+*If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
 
 
 ## How to run locally
@@ -203,24 +215,14 @@ You're free to choose between a local installation of redis or go with a hosted 
 
 ## How to deploy to Production
 
-### Step 1/n: Spin up a DigitalOcean instance
+### 1. Spin up a DigitalOcean instance
 
 *Create a new account using [my DigitalOcean referral link](https://m.do.co/c/d676da2907e1) to receive **$100** in DigitalOcean credits **valid for 2 months**!*
 
 - Spin up a new Ubuntu 18.04 instance with atleast 1GB RAM and 1 CPU.
 - Copy the IP address of your new machine.
 
-### Step 2/n: Get a domain
-
-Get a free domain from [freenom](https://freenom.com) or buy one from [namecheap](http://www.namecheap.com/?aff=87584).
-
-*Alternatively, you can also set this up on a subdomain of a domain you already own.*
-
-Create a `A` record to point to this domain name to the IP address of your newly created DigitalOcean instance.
-
-*If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
-
-### Step 3/n: Setting up the DigitalOcean instance
+### 2. Setting up the DigitalOcean instance
 
 1. Follow the [DigitalOcean guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04) for a one-time initial setup of the instance.
     - Ensure you setup SSH as the auth/login mechanism
