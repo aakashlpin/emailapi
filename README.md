@@ -21,17 +21,21 @@ EmaiAPI comes with the following features out of the box:
 
 ## How to use EmailAPI?
 
-Login with your Gmail account on https://emailapi.io and play around with the service. Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted after 48 hours.
+Login with your Gmail account on https://emailapi.io and play around with the service.
+
+Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted after 48 hours.
 
 
 >During signup you'll encounter a screen that says that the app is "unverified". You'll need to click a dangerous looking button to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app.
 
-__Disclaimer: signup on emailapi.io at your own risk. I cannot be held responsible for any data theft arising out of it.__
-
 *EmailAPI is not offered as a hosted service in the interest of email privacy and data security. When you give an app access (even readonly) to your email account, they can read all your (private) conversations, have access to everything you've purchased so far, extract data from transactional emails — including your bank account/ credit card statements, and sell it to advertisers or misuse it for any other purpose.*
 
+__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account.__
 
-⏬ Follow the steps below to setup emailapi for yourself! ⏬
+---
+**⏬ Follow the steps below to setup emailapi for yourself! ⏬**
+
+---
 
 ### Get a domain name!
 *We'd be using a domain name throughout the setup steps, so don't skip this step!*
