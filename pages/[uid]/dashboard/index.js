@@ -121,6 +121,24 @@ const Dashboard = ({ router, ...props }) => {
               Logout
             </Button>
           </div>
+          <div>
+            <Button
+              onClick={async () => {
+                try {
+                  await axios.delete(`/api/user/${uid}`, {
+                    token,
+                    uid,
+                  });
+                  await logout();
+                  router.push('/');
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Delete account
+            </Button>
+          </div>
         </Body>
       </Container>
     </>
