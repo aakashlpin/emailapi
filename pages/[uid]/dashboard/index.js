@@ -30,6 +30,7 @@ const Dashboard = ({ router, ...props }) => {
     AuthUserInfo: { token },
   } = props;
 
+  const [isPendingAPI, setIsPendingAPI] = useState(false);
   const [user, setUser] = useState({});
   const [userServices, setUserServices] = useState([]);
 
@@ -44,9 +45,10 @@ const Dashboard = ({ router, ...props }) => {
   useEffect(() => {
     async function perform() {
       try {
-        const userReq = await axios(
-          `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`,
-        );
+        const userReq = await axios.post(`/api/jsonbox/get-user`, {
+          token,
+          uid,
+        });
         setUser(userReq.data);
 
         const [services] = await Promise.all([fetchServices()]);
@@ -123,35 +125,27 @@ const Dashboard = ({ router, ...props }) => {
 
           <div className="mb-4">
             <h1 className="text-xl mb-2 underline">Account Settings:</h1>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                await axios.post(`/api/user/hosted-optin`, {
-                  token,
-                  uid,
-                });
-              }}
-            />
             <label className="cursor-pointer" htmlFor="hosted-optin">
               <input
                 type="checkbox"
+                disabled={isPendingAPI}
                 id="hosted-optin"
                 onChange={async (e) => {
-                  if (e.target.value === 'on') {
-                    try {
-                      const updatedUserObject = {
-                        ...user,
-                        hostedOptin: true,
-                      };
-                      await axios.put(
-                        `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`,
-                        updatedUserObject,
-                      );
-
-                      setUser(updatedUserObject);
-                    } catch (err) {
-                      console.log(err);
-                    }
+                  try {
+                    setIsPendingAPI(true);
+                    const updatedUserObject = {
+                      ...user,
+                      hostedOptin: e.target.checked,
+                    };
+                    await axios.post(`/api/jsonbox/put-user`, {
+                      token,
+                      uid,
+                      data: updatedUserObject,
+                    });
+                    setUser(updatedUserObject);
+                    setIsPendingAPI(false);
+                  } catch (err) {
+                    console.log(err);
                   }
                 }}
                 checked={user.hostedOptin}

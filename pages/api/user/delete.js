@@ -1,7 +1,7 @@
 import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
 
-const EMAILAPI_BASE_URL = process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL;
+const { EMAILAPI_BASE_URL } = process.env;
 
 async function handle(req, res, resolve) {
   const { uid: id } = req.body;

@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const axios = require('axios');
 
-const EMAILAPI_BASE_URI = process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL;
+const EMAILAPI_BASE_URI = process.env.EMAILAPI_BASE_URL;
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,

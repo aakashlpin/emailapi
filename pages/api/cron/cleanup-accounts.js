@@ -5,11 +5,11 @@
  * with uid we can create endpoints required to run cron jobs
 
  * endpoint for user's db object
- *    `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`
+ *    `${process.env.EMAILAPI_BASE_URL}/users/${uid}`
  *    -> response contains `hostedOptin` boolean
  *
  *    if hostedOptin is false or not set and more than 48 hours have elapsed since `_createdOn`
- *    then delete record at `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`
+ *    then delete record at `${process.env.EMAILAPI_BASE_URL}/users/${uid}`
  *
  */
 
@@ -24,11 +24,11 @@ export default async function handle(req, res) {
   const [uid] = decodedUsernamePassword.split(':');
 
   try {
-    await axios(`${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`);
+    await axios(`${process.env.EMAILAPI_BASE_URL}/users/${uid}`);
     // if record is successfully found, then continue
 
     const response = await axios(
-      `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users?limit=100`,
+      `${process.env.EMAILAPI_BASE_URL}/users?limit=100`,
     );
 
     const prs = response.data
@@ -39,9 +39,7 @@ export default async function handle(req, res) {
       )
       // eslint-disable-next-line no-shadow
       .map(({ _id }) =>
-        axios.delete(
-          `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${_id}`,
-        ),
+        axios.delete(`${process.env.EMAILAPI_BASE_URL}/users/${_id}`),
       );
 
     if (prs.length) {
