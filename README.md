@@ -19,21 +19,31 @@ EmaiAPI comes with the following features out of the box:
 
     This app sends you a copy of email with unlocked PDF attachments. Save the PDF password once and forget about ever having to unlock PDF attachments again. The app works on emails already in your mailbox as well as on the ones that are yet to come.
 
+## How to use EmailAPI?
 
-## Get a domain name!
+Login with your Gmail account on https://emailapi.io and play around with the service. Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted after 48 hours.
+
+
+>During signup you'll encounter a screen that says that the app is "unverified". You'll need to click a dangerous looking button to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app.
+
+__Disclaimer: signup on emailapi.io at your own risk. I cannot be held responsible for any data theft arising out of it.__
+
+*EmailAPI is not offered as a hosted service in the interest of email privacy and data security. When you give an app access (even readonly) to your email account, they can read all your (private) conversations, have access to everything you've purchased so far, extract data from transactional emails — including your bank account/ credit card statements, and sell it to advertisers or misuse it for any other purpose.*
+
+
+⏬ Follow the steps below to setup emailapi for yourself! ⏬
+
+### Get a domain name!
+---
 *We'd be using a domain name throughout the setup steps, so don't skip this step!*
 
-Get a free domain from [freenom](https://freenom.com) or buy one from [namecheap](http://www.namecheap.com/?aff=87584).
+Get a free domain from [freenom](https://freenom.com) or buy one from [Namecheap](http://www.namecheap.com/?aff=87584).
 
 *Alternatively, you can also set this up on a subdomain of a domain you already own.*
 
-Create a `A` record to point to this domain name to the IP address of your newly created DigitalOcean instance.
-
-*If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
-
 
 ## How to run locally
-
+---
 Fork this repo and then clone it:
 
 ```
@@ -78,15 +88,21 @@ MAILGUN_SENDING_EMAIL_ID=
 REDISCLOUD_URL=
 ```
 
-### Steps to setup Environment Variables
-
-#### Setup Step 1/6:
+## Steps to setup Environment Variables
+---
+### Step # 1/6:
+We'll setup the following environment variables in this step:
 ```
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_OAUTH_REDIRECT_URI=
 ```
 
+**Summary:**
+
+Enable Gmail API on your Google Cloud account.
+
+**Steps:**
 1. Goto https://console.cloud.google.com/
 2. Click on `Select a project` dropdown and then click on `New Project` from the popup that opens up.
 3. Enter `emailapi` in the project name.
@@ -122,7 +138,8 @@ GOOGLE_OAUTH_REDIRECT_URI=
 
 
 
-#### Setup Step 2/6:
+### Step # 2/6:
+We'll setup the following environment variables in this step:
 ```
 FIREBASE_PROJECT_ID=
 FIREBASE_AUTH_DOMAIN=
@@ -130,6 +147,11 @@ FIREBASE_DATABASE_URL=
 FIREBASE_PUBLIC_API_KEY=
 ```
 
+**Summary:**
+
+Enable and add Firebase to Google Cloud project from last step.
+
+**Steps**:
 1. Goto https://console.firebase.google.com/
 2. Click on `Add project`
 3. Select `emailapi` (or whatever name that you entered in Step #3 from Setup Part 1) from the dropdown (this adds Firebase to the existing Google Cloud Project).
@@ -147,12 +169,20 @@ FIREBASE_PUBLIC_API_KEY=
   - ➡️ `FIREBASE_PUBLIC_API_KEY=<apiKey>`
 12. Click on `Continue to Console`.
 
-#### Setup Step 3/6:
+### Step # 3/6:
+We'll setup the following environment variables in this step:
 ```
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 ```
-(continuing from Setup Step 2/6)
+
+**Summary**
+
+Continuing from last step, we'd now configure Firebase to allow signing up via Google and generate private keys to access Firebase.
+
+>Take great care in **not** pushing this to Github or anywhere else publicly.
+
+**Steps:**
 1. Click on `Authentication` card.
 2. Click on `Set up sign-in method`.
 3. Click on row that says `Google` and toggle on `Enable`.
@@ -169,26 +199,28 @@ FIREBASE_PRIVATE_KEY=
   - ➡️ `FIREBASE_PRIVATE_KEY=<private_key>`
 
 
-#### Setup Step 4/6:
+### Step # 4/6:
+We'll setup the following environment variables in this step:
 ```
 EMAILAPI_DOMAIN=
 EMAILAPI_BASE_URL=
 ```
 
-In the interest of data security emailapi.io uses a [forked](https://github.com/aakashlpin/jsonbox) and self-hosted version of [jsonbox](https://github.com/vasanthv/jsonbox) as the underlying data store. This data store also stores `accessToken` which contains `readonly` access to the users Gmail account.
+In the interest of data security emailapi.io uses a [forked](https://github.com/aakashlpin/jsonbox) and self-hosted version of [jsonbox](https://github.com/vasanthv/jsonbox) as the underlying data store. This data store also stores `accessToken` which contains `readonly` access to the users (your) Gmail account.
 
 You're free to choose between hosted service of jsonbox at [jsonbox.io](https://jsonbox.io/) or to fork, clone, [configure](https://github.com/vasanthv/jsonbox/blob/master/src/config.js), and host it yourself with more generous limitations [than are currently permitted](https://github.com/vasanthv/jsonbox#limitations) with the hosted service.
 
 jsonbox internally uses mongodb as the underlying database. You're free to choose between self-managed mongodb instance or a more robust and managed mongodb solution.
 
-In the interest of reliability and ease-of-use emailapi.io uses managed mongodb solution from [MongoDB Atlas](https://cloud.mongodb.com) which comes with a generous free tier of 500MB to begin with.
+In the interest of reliability and ease-of-use emailapi.io uses managed mongodb solution from [MongoDB Atlas](https://cloud.mongodb.com) which comes with a generous free tier of 500MB out of the box.
 
 e.g. if you're using hosted jsonbox service:
 - ➡️ `EMAILAPI_DOMAIN=https://jsonbox.io`
 - ➡️ `EMAILAPI_BASE_URL=https://jsonbox.io/box_<id>`
 
 
-#### Setup Step 5/6:
+### Step # 5/6:
+We'll setup the following environment variables in this step:
 ```
 MAILGUN_API_KEY=
 MAILGUN_DOMAIN=
@@ -201,28 +233,42 @@ Follow the Mailgun onboarding process to setup your domain and then enter follow
 - ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
 - ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
 
-#### Setup Step 6/6:
+### Step # 6/6:
+We'll setup the following environment variables in this step:
 ```
 REDISCLOUD_URL=redis://localhost:6379
 ```
-emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queue for Node.
+emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queue for Node to schedule and run jobs.
 
-You're free to choose between a local installation of redis or go with a hosted redis solution e.g. [Managed Redis on DigitalOcean](https://www.digitalocean.com/products/managed-databases-redis/). Grab your redis connection string and enter it in `.env.local` file:
+Install `redis` on your machine. Grab your redis connection string and enter it in `.env.local` file:
 
 - ➡️ `REDISCLOUD_URL=redis://localhost:6379`
 
 ✅ *Now you've setup all environment variables required to have a locally working emailapi instance.*
 
-## How to deploy to Production
+`cd` into directory where the repo was cloned and run the following command:
 
-### 1. Spin up a DigitalOcean instance
+```
+yarn dev
+```
+
+and visit http://localhost:3000 to see emailapi in action! 🚀
+
+
+## How to deploy to Production
+---
+### Spin up a DigitalOcean instance
 
 *Create a new account using [my DigitalOcean referral link](https://m.do.co/c/d676da2907e1) to receive **$100** in DigitalOcean credits **valid for 2 months**!*
 
 - Spin up a new Ubuntu 18.04 instance with atleast 1GB RAM and 1 CPU.
 - Copy the IP address of your new machine.
+- Create a `A` record to point to your domain name to this IP address
 
-### 2. Setting up the DigitalOcean instance
+> *If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
+
+
+### Setting up the DigitalOcean instance
 
 1. Follow the [DigitalOcean guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04) for a one-time initial setup of the instance.
     - Ensure you setup SSH as the auth/login mechanism
@@ -308,22 +354,41 @@ You're free to choose between a local installation of redis or go with a hosted 
       }
     ```
 
-5. Create environment file on the server. Follow the steps below:
+5. Setup `redis` using [DigitalOcean's Managed Redis](https://www.digitalocean.com/products/managed-databases-redis/) in the same region as your DigitalOcean instance and grab the connection string (starts with `rediss://`). Alteratively, you can install `redis` locally on your DigitalOcean instance.
+
+    > If you install redis directly on DO instance, you'd need to make sure Docker container can access the port redis is running on on the host machine.
+
+6. Create environment file on the server. Follow the steps below:
     - Copy content of `.env.local` file from your local codebase.
     - On remote server, run `cd ~/ && mkdir -p apps/emailapi-pipeline && nano .env`
     - Paste content in this file, save and exit.
+        - Remember to edit the `REDISCLOUD_URL` variable with the connection string from last step.
 
-6. Goto `https://github.com/<your_username>/emailapi/settings/secrets` and click on `New Secret` button. Add the following secrets one by one:
+7. Visit `https://github.com/<your_username>/emailapi/settings/secrets` and click on `New Secret` button. Add the following secrets one by one:
     - `DO_HOST` = IP address of DigitalOcean instance
     - `DO_USERNAME` = Your DigitalOcean instances' login username.
     - `GITBUH_USERNAME` = Your Github username (*typo in key is intentional as Github doesn't allow using `GITHUB` in secret name*)
     - `SSH_ID_RSA` = Copy paste contents of `id_rsa` file. This is from the SSH keypair that you use to login to your DigitalOcean instance.
 
-7. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`. This will run a Github Action that'd deploy a docker container to your DigitalOcean instance and run `emailapi` on port 3000.
+8. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`. This will run a Github Action that'd deploy a docker container to your DigitalOcean instance and run `emailapi` on port 3000.
 
-🚀 EmailAPI should now be up and running!
+**EmailAPI should now be up and running on your domain!** 🚀
 
----
-### LICENSE
+## Enable Cron Jobs
 
-MIT
+* EmailAPI uses a free account with [UptimeRobot](https://uptimerobot.com/) to ping an endpoint that runs all your jobs every 5mins.
+
+### Steps to setup:
+* Create a monitor with UptimeRobot
+* Enter URL as https://<your_domain.com>/api/cron
+* Click Advanced Settings
+* Enter `Username` field with the `id` that you see when you login to your hosted EmailAPI instance. e.g. if you see https://emailapi.io/5f38ed1ba0c54626f12bfff9 in the URL bar when you login, then your `id` is `5f38ed1ba0c54626f12bfff9`
+* Leave Password field as empty
+* Select `Authentication Type` as HTTP Basic.
+* Click `Save Changes` to create monitor.
+
+*Good hack to both monitor your instances' uptime and run cron jobs, isn't it?*
+
+## License
+
+EmailAPI is [MIT licensed](https://github.com/aakashlpin/emailapi/LICENSE.md).
