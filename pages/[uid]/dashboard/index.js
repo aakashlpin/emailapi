@@ -125,7 +125,7 @@ const Dashboard = ({ router, ...props }) => {
             <Button
               onClick={async () => {
                 try {
-                  await axios.delete(`/api/user/${uid}`, {
+                  await axios.post(`/api/user/delete`, {
                     token,
                     uid,
                   });

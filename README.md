@@ -9,27 +9,33 @@ EmailAPI enables powerful extensions to your Gmail account with features like:
 
 EmaiAPI comes with the following features out of the box:
 
-1. Email to JSON
+1. **Email to JSON**
 
-    This app allows easy scraping of content inside HTML email messages. Data points get extracted into a JSON endpoint and can then pushed to any JSON collection service via webhooks. It supports automatic sync to [jsonbox](jsonbox) out of the box.
+    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox).
 
     [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-2. Attachment Unlocker
+2. **Attachment Unlocker**
 
-    This app sends you a copy of email with unlocked PDF attachments. Save the PDF password once and forget about ever having to unlock PDF attachments again. The app works on emails already in your mailbox as well as on the ones that are yet to come.
+    This feature automatically unlocks PDFs within emails (e.g. bank account statements, credit card statements, stock broker's contract notes etc.) and sends you an exact copy of the original email but with the unlocked attachment. Save PDF password uniquely for each sender once and then forget about ever having to unlock PDF attachments again. This can bulk unlock all existing emails in your mailbox and will continue unlocking all future emails that are yet to come.
 
-## How to use EmailAPI?
+    [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-Login with your Gmail account on https://emailapi.io and play around with the service.
+## Getting started with EmailAPI
 
-**Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted within 48 hours. To delete your account data before that, there's a "Delete account" button on your dashboard.**
+Simply signin with your Gmail account on https://emailapi.io to play around with the service. Here are some key _terms of service_ to be aware of:
 
->During signup you'll encounter a screen that says that the app is "unverified". You'll need to click a dangerous looking button to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app.
+* Your account data on emailapi.io (including `accessToken` to your Gmail account) will be **automatically deleted within 48 hours**.
+* If you wish to delete your account data before it automatically gets deleted, click the "Delete account" button on your dashboard.
+* If you wish to continue using emailapi.io as a hosted service, you can do so before your account gets auto deleted. Click **"I'd like to continue using the service"** button on your dashboard to prevent your account from being auto deleted. The button to "Delete account" will always be available on your dashboard.
 
-*EmailAPI is not offered as a long term hosted service in the interest of email privacy and data security. When you give an app access (even readonly) to your email account, they can read all your (private) conversations, have access to everything you've purchased so far, extract data from transactional emails — including your bank account/ credit card statements, and sell it to advertisers or misuse it for any other purpose.*
+    >During signup you'll encounter a popup that says that "This app isn't verified". You'll need to click "Advanced" and then on "Go to emailapi (unsafe)" link to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app — not a cost I can afford to incur while running this as an open source project.
 
-__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account.__
+    ![Google popup](https://dl.dropbox.com/s/rg699b7sq9ebfm3/Screenshot%202020-09-04%20at%2011.10.04%20PM.png?dl=0)
+
+> *I do not recommend using EmailAPI as a long term hosted service in the interest of email privacy and data security. When you give an app (even to a verified one) access to your email account, they can read all your (private) conversations, have access to your shopping history, extract data from financial emails — including your bank account/ credit card statements, and then sell it to 3rd-party advertisers and/or misuse it for any other purpose.*
+
+__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account or your emails arising out of this application.__
 
 ---
 **⏬ Follow the steps below to setup EmailAPI for yourself! ⏬**
