@@ -237,19 +237,19 @@ emailapi uses [Mailgun](https://mailgun.com) as the mailing service. Mailgun com
 
 Follow the Mailgun onboarding process to setup your domain and then enter following credentials in `.env.local` file
 - ➡️ `MAILGUN_API_KEY=<api_key>`
-- ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
-- ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
+- ➡️ `MAILGUN_DOMAIN=<verified_mg_domain>` (eg. m.emailapi.io)
+- ➡️ `MAILGUN_SENDING_EMAIL_ID=notifs@verified_mg_domain` (eg. notifications@m.emailapi.io)
 
 ### Step # 6/6:
 We'll setup the following environment variables in this step:
 ```
-REDISCLOUD_URL=redis://localhost:6379
+REDISCLOUD_URL=
 ```
 emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queue for Node to schedule and run jobs.
 
 Install `redis` on your machine. Grab your redis connection string and enter it in `.env.local` file:
 
-- ➡️ `REDISCLOUD_URL=redis://localhost:6379`
+ ➡️ `REDISCLOUD_URL=redis://localhost:6379`
 
 ✅ *Now you've setup all environment variables required to have a locally working emailapi instance.*
 
