@@ -71,6 +71,7 @@ const Dashboard = ({ router, ...props }) => {
             {userServices.map((service, idx) => (
               <div key={`service${idx}`} className="px-2 py-4">
                 <Label>
+                  {/* TODO fix the URL here from /service to app url */}
                   <span className="inline-block mr-2">Search Query</span>
                   <a
                     href={`/${uid}/service/${service._id}`}
