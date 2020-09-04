@@ -21,7 +21,7 @@ function CommonHeader({ children, router }) {
       </div>
       <div>{children}</div>
       <div className="pr-2 text-right">
-        <a href={`/${router.query.uid}/dashboard`}>My Account</a>
+        <a href={`/${router.query.uid}/dashboard`}>Dashboard</a>
       </div>
     </Header>
   );

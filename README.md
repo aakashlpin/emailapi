@@ -27,7 +27,7 @@ Simply signin with your Gmail account on https://emailapi.io to play around with
 
 * Your account and data on emailapi.io (including `accessToken` to your Gmail account) will get **automatically deleted within 48 hours**.
 * If you wish to delete your account data before it automatically gets deleted, click the **"Delete account"** button on your dashboard.
-* If you wish to continue using emailapi.io as a hosted service, you can do so before your account gets auto deleted. Click **"I'd like to continue using the service"** button on your dashboard to prevent your account from being auto deleted. _The button to "Delete account" will always be available on your dashboard._
+* If you wish to continue using emailapi.io as a hosted service, you can do so before your account gets auto deleted. Select **"I'd like to continue using the hosted service"** checkbox on your dashboard to prevent your account from being auto deleted. _The button to "Delete account" will always be available on your dashboard._
 
     >During signup you'll encounter a popup that says that "This app isn't verified". You'll need to click "Advanced" and then on "Go to emailapi (unsafe)" link to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app — not a cost I can afford to incur while running this as an open source project.
 
