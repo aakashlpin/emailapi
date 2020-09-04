@@ -23,7 +23,7 @@ EmaiAPI comes with the following features out of the box:
 
 Login with your Gmail account on https://emailapi.io and play around with the service.
 
-Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted after 48 hours.
+Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted within 48 hours.
 
 
 >During signup you'll encounter a screen that says that the app is "unverified". You'll need to click a dangerous looking button to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app.
