@@ -34,7 +34,6 @@ __Disclaimer: signup on emailapi.io at your own risk. I cannot be held responsib
 ⏬ Follow the steps below to setup emailapi for yourself! ⏬
 
 ### Get a domain name!
----
 *We'd be using a domain name throughout the setup steps, so don't skip this step!*
 
 Get a free domain from [freenom](https://freenom.com) or buy one from [Namecheap](http://www.namecheap.com/?aff=87584).
@@ -43,7 +42,6 @@ Get a free domain from [freenom](https://freenom.com) or buy one from [Namecheap
 
 
 ## How to run locally
----
 Fork this repo and then clone it:
 
 ```
@@ -89,7 +87,7 @@ REDISCLOUD_URL=
 ```
 
 ## Steps to setup Environment Variables
----
+
 ### Step # 1/6:
 We'll setup the following environment variables in this step:
 ```
@@ -256,7 +254,7 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 
 
 ## How to deploy to Production
----
+
 ### Spin up a DigitalOcean instance
 
 *Create a new account using [my DigitalOcean referral link](https://m.do.co/c/d676da2907e1) to receive **$100** in DigitalOcean credits **valid for 2 months**!*
