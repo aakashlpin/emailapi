@@ -26,7 +26,7 @@ EmaiAPI comes with the following features out of the box:
 Simply signin with your Gmail account on https://emailapi.io to play around with the service. Here are some key _terms of service_ to be aware of:
 
 * Your account and data on emailapi.io (including `accessToken` to your Gmail account) will get **automatically deleted within 48 hours**.
-* If you wish to delete your account data before it automatically gets deleted, click the **"Delete account"** button on your dashboard.
+* If you wish to delete your account data before it gets automatically deleted, click the **"Delete account"** button on your dashboard.
 * If you wish to continue using emailapi.io as a hosted service, you can do so before your account gets auto deleted. Select **"I'd like to continue using the hosted service"** checkbox on your dashboard to prevent your account from being auto deleted. _The button to "Delete account" will always be available on your dashboard._
 
     >During signup you'll encounter a popup that says that "This app isn't verified". You'll need to click "Advanced" and then on "Go to emailapi (unsafe)" link to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app — not a cost I can afford to incur while running this as an open source project.
@@ -107,37 +107,37 @@ GOOGLE_OAUTH_REDIRECT_URI=
 
 **Summary:**
 
-Enable Gmail API on your Google Cloud account.
+Create a new Google Cloud project and enable the Gmail API on it.
 
 **Steps:**
-1. Goto https://console.cloud.google.com/
-2. Click on `Select a project` dropdown and then click on `New Project` from the popup that opens up.
-3. Enter `emailapi` in the project name.
-4. Setup a Billing Account etc.
-5. Click `Create` and wait for the project to be created.
-6. Select `APIs & Services` from the hamburger menu (top left icon on page)
-7. Click on `Library` from the sidebar.
-8. Enter `Gmail` in the search bar and press Enter.
-9. Select `Gmail API` from the search result.
-10. Click `Enable` and wait for the API to be enabled.
-12. Click on `OAuth consent screen` button from sidebar.
-13. Select `External` User Type from the list and click `Create`.
-14. Fill the form with following details:
+* Login to https://console.cloud.google.com/
+* Click on `Select a project` dropdown and then click on `New Project` from the popup that opens up.
+* Enter `emailapi` in the project name.
+* Setup a Billing Account etc.
+* Click `Create` and wait for the project to be created.
+* Select `APIs & Services` from the hamburger menu (top left icon on page)
+* Click on `Library` from the sidebar.
+* Enter `Gmail` in the search bar and press Enter.
+* Select `Gmail API` from the search result.
+* Click `Enable` and wait for the API to be enabled.
+* Click on `OAuth consent screen` button from sidebar.
+* Select `External` User Type from the list and click `Create`.
+* Fill the form with following details:
   - Enter `emailapi` in the `Application Name` field
   - Click on `Add scope` button and search for `Gmail`
   - Select `../auth/gmail.readonly` scope
   - Click `Add` button
   - Ignore everything else and Click `Save`.
-15. Click on `Credentials` from the sidebar.
-16. Click on `+Create Credentials` from the top bar and select `OAuth client ID` from the dropdown.
+* Click on `Credentials` from the sidebar.
+* Click on `+Create Credentials` from the top bar and select `OAuth client ID` from the dropdown.
   - Select `Application type` as `Web application`
   - Enter `emailapi auth` in `Name` field
   - Under the `Authorized Javascript Origins` section:
-  - Click on `+Add URI` button and enter `http://localhost:3000`
-  - Again Click on `+Add URI` button and enter your production domain name e.g. `https://emailapi.io`
+      - Click on `+Add URI` button and enter `http://localhost:3000`
+      - Again Click on `+Add URI` button and enter your production domain name e.g. `https://emailapi.io`
   - Repeat the last 2 steps for `Authorized redirect URIs` section as well.
   - Click `Create`
-17. Copy values inside `Your Client ID` and `Your Client Secret` fields and paste them in your `.env.local` file as mentioned below:
+* Copy values inside `Your Client ID` and `Your Client Secret` fields and paste them in your `.env.local` file as mentioned below:
   - ➡️ `GOOGLE_CLIENT_ID=<Your Client ID>`
   - ➡️ `GOOGLE_CLIENT_SECRET=<Your Client Secret>`
 
@@ -159,22 +159,22 @@ FIREBASE_PUBLIC_API_KEY=
 Enable and add Firebase to Google Cloud project from last step.
 
 **Steps**:
-1. Goto https://console.firebase.google.com/
-2. Click on `Add project`
-3. Select `emailapi` (or whatever name that you entered in Step #3 from Setup Part 1) from the dropdown (this adds Firebase to the existing Google Cloud Project).
-4. Click `Continue`.
-5. Click `Confirm Plan` in the popup.
-6. Disable `Enable Google Analytics for this project`.
-7. Click `Add Firebase` and wait for project to be created.
-8. Click `Continue` when ready.
-9. Click on the `</>` (Web) icon.
-10. Enter `emailapi` in `App nickname` field and then click on `Register app`. (Ignore `Firebase Hosting` checkbox)
-11. Copy the strings from the code that gets generated and paste them in `.env.local`. Strings to be copied from `firebaseConfig` object.
+* Goto https://console.firebase.google.com/
+* Click on `Add project`
+* Select `emailapi` from the dropdown (this adds Firebase to Google Cloud Project we created in previous step).
+* Click `Continue`.
+* Click `Confirm Plan` in the popup.
+* Disable `Enable Google Analytics for this project`.
+* Click `Add Firebase` and wait for project to be created.
+* Click `Continue` when ready.
+* Click on the `</>` (Web) icon.
+* Enter `emailapi` in `App nickname` field and then click on `Register app`. (Ignore the `Firebase Hosting` checkbox)
+* Copy the values from the code that gets generated and paste them in `.env.local`. Strings need to be copied from JS object named `firebaseConfig` from the generated code.
   - ➡️ `FIREBASE_PROJECT_ID=<projectId>`
   - ➡️ `FIREBASE_AUTH_DOMAIN=<authDomain>`
   - ➡️ `FIREBASE_DATABASE_URL=<databaseURL>`
   - ➡️ `FIREBASE_PUBLIC_API_KEY=<apiKey>`
-12. Click on `Continue to Console`.
+* Click on `Continue to Console`.
 
 ### Step # 3/6:
 We'll setup the following environment variables in this step:
@@ -183,25 +183,25 @@ FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 ```
 
-**Summary**
+**Summary:**
 
-Continuing from last step, we'd now configure Firebase to allow signing up via Google and generate private keys to access Firebase.
+Continuing from the previous step, we'll now configure Firebase to allow signing up via Google accounts and generate private keys to access Firebase.
 
->Take great care in **not** pushing this to Github or anywhere else publicly.
+>Take great care in **not** pushing these private keys to Github or anywhere else publicly.
 
 **Steps:**
-1. Click on `Authentication` card.
-2. Click on `Set up sign-in method`.
-3. Click on row that says `Google` and toggle on `Enable`.
-4. Click `Save`.
-5. In the `Authorized domains` section click on `Add domain` button.
+* Click on `Authentication` card.
+* Click on `Set up sign-in method`.
+* Click on row that says `Google` and toggle on `Enable`.
+* Click `Save`.
+* In the `Authorized domains` section click on `Add domain` button.
   - Enter your production domain name e.g. `emailapi.io`
   - Click `Add` button.
-6. Click on Gear icon next to `Project Overview` from sidebar and select `Project Settings` from the menu.
-7. Click on `Service Accounts` from the top navigation bar.
+* Click on Gear icon next to `Project Overview` from sidebar and select `Project Settings` from the menu.
+* Click on `Service Accounts` from the top navigation bar.
   - Copy email id under `Firebase service account` and paste it in `.env.local` file.
   - ➡️ `FIREBASE_CLIENT_EMAIL=<Firebase service account>`
-8. Click on `Generate new private key` and then on `Generate Key` button in the confirmation dialogue.
+* Click on `Generate new private key` and then on `Generate Key` button in the confirmation dialogue.
   - A `.json` file will get downloaded. Open the file with any text editor and copy the value in front of `private_key`. It'll look like `-----BEGIN PRIVATE KEY-----\n...`. We'll then paste this in `.env.local` file.
   - ➡️ `FIREBASE_PRIVATE_KEY=<private_key>`
 
