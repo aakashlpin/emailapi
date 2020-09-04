@@ -317,7 +317,9 @@ Create a `A` record to point to this domain name to the IP address of your newly
     - `GITBUH_USERNAME` = Your Github username (*typo in key is intentional as Github doesn't allow using `GITHUB` in secret name*)
     - `SSH_ID_RSA` = Copy paste contents of `id_rsa` file. This is from the SSH keypair that you use to login to your DigitalOcean instance.
 
-7. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`.
+7. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`. This will run a Github Action that'd deploy a docker container to your DigitalOcean instance and run `emailapi` on port 3000.
+
+🚀 EmailAPI should now be up and running!
 
 ---
 ### LICENSE
