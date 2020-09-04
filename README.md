@@ -393,4 +393,4 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 
 ## License
 
-EmailAPI is [MIT licensed](https://github.com/aakashlpin/emailapi/LICENSE.md).
+EmailAPI is [MIT licensed](https://github.com/aakashlpin/emailapi/blob/master/LICENSE.md).
