@@ -5,9 +5,9 @@ EmailAPI enables powerful extensions to your Gmail account with features like:
 - Extracting data from the email body into a HTTP endpoint
 - Automatically unlocking emails with password protected PDFs
 
-## Apps
----
-EmaiAPI comes with the following apps out of the box:
+## Features
+
+EmaiAPI comes with the following features out of the box:
 
 1. Email to JSON
 
