@@ -80,7 +80,7 @@ REDISCLOUD_URL=
 
 ### Steps to setup Environment Variables
 
-##### Setup Step 1/6:
+#### Setup Step 1/6:
 ```
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -152,7 +152,7 @@ FIREBASE_PUBLIC_API_KEY=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 ```
-(continuing from Setup Part 2)
+(continuing from Setup Step 2/6)
 1. Click on `Authentication` card.
 2. Click on `Set up sign-in method`.
 3. Click on row that says `Google` and toggle on `Enable`.
