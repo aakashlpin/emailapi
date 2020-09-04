@@ -30,6 +30,8 @@ const Dashboard = ({ router, ...props }) => {
     AuthUserInfo: { token },
   } = props;
 
+  const [isPendingAPI, setIsPendingAPI] = useState(false);
+  const [user, setUser] = useState({});
   const [userServices, setUserServices] = useState([]);
 
   async function fetchServices() {
@@ -43,6 +45,12 @@ const Dashboard = ({ router, ...props }) => {
   useEffect(() => {
     async function perform() {
       try {
+        const userReq = await axios.post(`/api/jsonbox/get-user`, {
+          token,
+          uid,
+        });
+        setUser(userReq.data);
+
         const [services] = await Promise.all([fetchServices()]);
         setUserServices(services);
       } catch (e) {
@@ -66,47 +74,87 @@ const Dashboard = ({ router, ...props }) => {
         </CommonHeader>
 
         <Body>
-          <h1 className="text-2xl mb-4">Your Services</h1>
-          <div>
-            {userServices.map((service, idx) => (
-              <div key={`service${idx}`} className="px-2 py-4">
-                <Label>
-                  {/* TODO fix the URL here from /service to app url */}
-                  <span className="inline-block mr-2">Search Query</span>
-                  <a
-                    href={`/${uid}/service/${service._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
-                    <ExternalLink size={16} />
-                  </a>
-                </Label>
-                <div>&ldquo;{service.search_query}&rdquo;</div>
-                <div>
-                  {Array.isArray(service.data)
-                    ? service.data.map((dataItem) => {
-                        return (
-                          <div key={`data_${dataItem.id}`}>
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${dataItem.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="border-b-4"
-                            >
-                              View Extracted Data from{' '}
-                              {new Date(dataItem._isReadyOn).toLocaleString()}
-                            </a>
-                          </div>
-                        );
-                      })
-                    : null}
-                </div>
-              </div>
-            ))}
+          <div className="mb-8">
+            <h1 className="text-xl mb-2 underline">Your jobs</h1>
+            <div>
+              {userServices.length
+                ? userServices.map((service, idx) => (
+                    <div key={`service${idx}`} className="px-2 py-4">
+                      <Label>
+                        <span className="inline-block mr-2">Search Query</span>
+                        <a
+                          href={`/${uid}/ft/${
+                            service.app === 'AUTO_UNLOCK'
+                              ? 'attachment-unlocker'
+                              : 'email-json'
+                          }/${service._id}?q=`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <ExternalLink size={16} />
+                        </a>
+                      </Label>
+                      <div>&ldquo;{service.search_query}&rdquo;</div>
+                      <div>
+                        {Array.isArray(service.data)
+                          ? service.data.map((dataItem) => {
+                              return (
+                                <div key={`data_${dataItem.id}`}>
+                                  <a
+                                    href={`${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${dataItem.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="border-b-4"
+                                  >
+                                    View Extracted Data from{' '}
+                                    {new Date(
+                                      dataItem._isReadyOn,
+                                    ).toLocaleString()}
+                                  </a>
+                                </div>
+                              );
+                            })
+                          : null}
+                      </div>
+                    </div>
+                  ))
+                : 'No jobs yet. Click on Setup new job above to get started.'}
+            </div>
           </div>
 
-          <div>
+          <div className="mb-4">
+            <h1 className="text-xl mb-2 underline">Account Settings:</h1>
+            <label className="cursor-pointer" htmlFor="hosted-optin">
+              <input
+                type="checkbox"
+                disabled={isPendingAPI}
+                id="hosted-optin"
+                onChange={async (e) => {
+                  try {
+                    setIsPendingAPI(true);
+                    const updatedUserObject = {
+                      ...user,
+                      hostedOptin: e.target.checked,
+                    };
+                    await axios.post(`/api/jsonbox/put-user`, {
+                      token,
+                      uid,
+                      data: updatedUserObject,
+                    });
+                    setUser(updatedUserObject);
+                    setIsPendingAPI(false);
+                  } catch (err) {
+                    console.log(err);
+                  }
+                }}
+                checked={user.hostedOptin}
+              />
+              &nbsp;I&apos;d like to continue using the hosted service.
+            </label>
+          </div>
+
+          <div className="mb-2">
             <Button
               onClick={async () => {
                 try {
@@ -119,6 +167,25 @@ const Dashboard = ({ router, ...props }) => {
               }}
             >
               Logout
+            </Button>
+          </div>
+
+          <div className="mb-2">
+            <Button
+              onClick={async () => {
+                try {
+                  await axios.post(`/api/user/delete`, {
+                    token,
+                    uid,
+                  });
+                  await logout();
+                  router.push('/');
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Delete account
             </Button>
           </div>
         </Body>

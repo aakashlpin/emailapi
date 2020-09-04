@@ -5,7 +5,7 @@
  * with uid we can create endpoints required to run cron jobs
 
  * 1. endpoint for user's db object
- *    `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`
+ *    `${process.env.EMAILAPI_BASE_URL}/users/${uid}`
  *    -> response contains `refreshToken` necessary to query gmail api
  *
  * 2. endpoint for user's services array
@@ -23,7 +23,7 @@ export default async function handle(req, res) {
   const [uid] = decodedUsernamePassword.split(':');
 
   const { data: dbUser } = await axios(
-    `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`,
+    `${process.env.EMAILAPI_BASE_URL}/users/${uid}`,
   );
 
   const { data: userServices } = await axios(

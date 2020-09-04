@@ -9,28 +9,33 @@ EmailAPI enables powerful extensions to your Gmail account with features like:
 
 EmaiAPI comes with the following features out of the box:
 
-1. Email to JSON
+1. **Email to JSON**
 
-    This app allows easy scraping of content inside HTML email messages. Data points get extracted into a JSON endpoint and can then pushed to any JSON collection service via webhooks. It supports automatic sync to [jsonbox](jsonbox) out of the box.
+    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox)!
 
     [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-2. Attachment Unlocker
+2. **Attachment Unlocker**
 
-    This app sends you a copy of email with unlocked PDF attachments. Save the PDF password once and forget about ever having to unlock PDF attachments again. The app works on emails already in your mailbox as well as on the ones that are yet to come.
+    This feature automatically unlocks PDFs within emails (e.g. bank account statements, credit card statements, stock broker's contract notes etc.) and sends you an exact copy of the original email but with the unlocked attachment. Save PDF password uniquely for each sender once and then forget about ever having to unlock PDF attachments again. This can bulk unlock all existing emails in your mailbox and will continue unlocking all future emails as and when they come.
 
-## How to use EmailAPI?
+    [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
-Login with your Gmail account on https://emailapi.io and play around with the service.
+## Getting started with EmailAPI
 
-Any data that you create on emailapi.io (including `accessToken` to your Gmail account) will be deleted within 48 hours.
+Simply signin with your Gmail account on https://emailapi.io to play around with the service. Here are some key _terms of service_ to be aware of:
 
+* Your account and data on emailapi.io (including `accessToken` to your Gmail account) will get **automatically deleted within 48 hours**.
+* If you wish to delete your account data before it automatically gets deleted, click the **"Delete account"** button on your dashboard.
+* If you wish to continue using emailapi.io as a hosted service, you can do so before your account gets auto deleted. Select **"I'd like to continue using the hosted service"** checkbox on your dashboard to prevent your account from being auto deleted. _The button to "Delete account" will always be available on your dashboard._
 
->During signup you'll encounter a screen that says that the app is "unverified". You'll need to click a dangerous looking button to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app.
+    >During signup you'll encounter a popup that says that "This app isn't verified". You'll need to click "Advanced" and then on "Go to emailapi (unsafe)" link to proceed further. Google charges anywhere [between $15,000 and $75,000](https://support.google.com/cloud/answer/9110914?hl=en#submit-app-ver) (or more) to audit and verify the app — not a cost I can afford to incur while running this as an open source project.
 
-*EmailAPI is not offered as a hosted service in the interest of email privacy and data security. When you give an app access (even readonly) to your email account, they can read all your (private) conversations, have access to everything you've purchased so far, extract data from transactional emails — including your bank account/ credit card statements, and sell it to advertisers or misuse it for any other purpose.*
+    ![Google popup](https://dl.dropbox.com/s/rg699b7sq9ebfm3/Screenshot%202020-09-04%20at%2011.10.04%20PM.png?dl=0)
 
-__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account.__
+> *I do not recommend using EmailAPI as a long term hosted service in the interest of email privacy and data security. When you give an app (even to a verified one) access to your email account, they can read all your (private) conversations, have access to your shopping history, extract data from financial emails — including your bank account/ credit card statements, and then sell it to 3rd-party advertisers and/or misuse it for any other purpose.*
+
+__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account or your emails arising out of this application.__
 
 ---
 **⏬ Follow the steps below to setup EmailAPI for yourself! ⏬**
@@ -232,19 +237,19 @@ emailapi uses [Mailgun](https://mailgun.com) as the mailing service. Mailgun com
 
 Follow the Mailgun onboarding process to setup your domain and then enter following credentials in `.env.local` file
 - ➡️ `MAILGUN_API_KEY=<api_key>`
-- ➡️ `MAILGUN_DOMAIN=<mail.domain.com>` (eg. mail.emailapi.io)
-- ➡️ `MAILGUN_SENDING_EMAIL_ID=notifications@mail.domain.com` (eg. notifications@mail.emailapi.io)
+- ➡️ `MAILGUN_DOMAIN=<verified_mg_domain>` (eg. m.emailapi.io)
+- ➡️ `MAILGUN_SENDING_EMAIL_ID=notifs@verified_mg_domain` (eg. notifications@m.emailapi.io)
 
 ### Step # 6/6:
 We'll setup the following environment variables in this step:
 ```
-REDISCLOUD_URL=redis://localhost:6379
+REDISCLOUD_URL=
 ```
 emailapi uses [bull](https://github.com/OptimalBits/bull) — a redis based queue for Node to schedule and run jobs.
 
 Install `redis` on your machine. Grab your redis connection string and enter it in `.env.local` file:
 
-- ➡️ `REDISCLOUD_URL=redis://localhost:6379`
+ ➡️ `REDISCLOUD_URL=redis://localhost:6379`
 
 ✅ *Now you've setup all environment variables required to have a locally working emailapi instance.*
 
@@ -265,9 +270,9 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 
 - Spin up a new Ubuntu 18.04 instance with atleast 1GB RAM and 1 CPU.
 - Copy the IP address of your new machine.
-- Create a `A` record to point to your domain name to this IP address
+- Create a `A` record in your DNS settings to point to your domain name to this IP address.
 
-> *If you're using Cloudflare, then remember to setup A record with "DNS Only" setting. You can toggle it to "Proxy" after we've successfully issued SSL certificate in Step 3.*
+> *If you're using Cloudflare, then setup this A record with "DNS Only" setting to start with. You can enable "Proxy" after we've successfully issued SSL certificate in later steps.*
 
 
 ### Setting up the DigitalOcean instance
@@ -275,10 +280,10 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 1. Follow the [DigitalOcean guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04) for a one-time initial setup of the instance.
     - Ensure you setup SSH as the auth/login mechanism
 2. Setup `nginx` by following the [guide here](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-18-04). We'll use it as a reverse proxy.
-3. Serve `emailapi` on your domain
+3. Serve `emailapi` application on your domain:
     - `cd /etc/nginx/sites-enabled`
     - `sudo nano emailapi`
-    - Copy paste the following server block to this file and replace `server_name` with the domain name that you procured from Step #2.
+    - Copy paste the following code block to this file and replace `emailapi.io` with the domain name that you're using for this application.
     ```
       upstream emailapi_upstream {
         server 127.0.0.1:3000;
@@ -312,7 +317,7 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 
     ➡️ Note: `certbot` will update the nginx file with certificate paths and redirection rules.
 
-    Here's what the final nginx file for emailapi.io looks like. Yours should look similar.
+    Here's what the final nginx file for emailapi.io looks like after running `certbot`. Yours should look similar.
     ```
       upstream emailapi_upstream {
         server 127.0.0.1:3000;
@@ -363,33 +368,40 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
 6. Create environment file on the server. Follow the steps below:
     - Copy content of `.env.local` file from your local codebase.
     - On remote server, run `cd ~/ && mkdir -p apps/emailapi-pipeline && nano .env`
-    - Paste content in this file, save and exit.
-        - Remember to edit the `REDISCLOUD_URL` variable with the connection string from last step.
+    - Paste the copied content in this file, save and exit.
+        - Update the `REDISCLOUD_URL` variable with the connection string from last step.
 
 7. Visit `https://github.com/<your_username>/emailapi/settings/secrets` and click on `New Secret` button. Add the following secrets one by one:
-    - `DO_HOST` = IP address of DigitalOcean instance
-    - `DO_USERNAME` = Your DigitalOcean instances' login username.
+    - `DO_HOST` = IP address of the DigitalOcean instance
+    - `DO_USERNAME` = Login username of the DigitalOcean instance.
     - `GITBUH_USERNAME` = Your Github username (*typo in key is intentional as Github doesn't allow using `GITHUB` in secret name*)
-    - `SSH_ID_RSA` = Copy paste contents of `id_rsa` file. This is from the SSH keypair that you use to login to your DigitalOcean instance.
+    - `SSH_ID_RSA` = Copy paste contents of `id_rsa` file. This is from the SSH keypair that you'd be using to login to the DigitalOcean instance.
 
-8. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`. This will run a Github Action that'd deploy a docker container to your DigitalOcean instance and run `emailapi` on port 3000.
+8. Update `.github/workflows/deploy.yml` and change `aakashlpin` with your Github username. Commit this change to your fork's `master`. This will run a Github Action that'd deploy publish docker container to Github Packages and then pull and run it on the DigitalOcean instance.
 
 **EmailAPI should now be up and running on your domain!** 🚀
 
 ## Enable Cron Jobs
 
-* EmailAPI uses a free account with [UptimeRobot](https://uptimerobot.com/) to ping an endpoint that runs all your jobs every 5mins.
+* EmailAPI uses a free account with [UptimeRobot](https://uptimerobot.com/) to ping an endpoint that runs all the jobs that you create on EmailAPI at a frequency of every 5mins.
 
 ### Steps to setup:
-* Create a monitor with UptimeRobot
-* Enter URL as https://<your_domain.com>/api/cron
-* Click Advanced Settings
-* Enter `Username` field with the `id` that you see when you login to your hosted EmailAPI instance. e.g. if you see https://emailapi.io/5f38ed1ba0c54626f12bfff9 in the URL bar when you login, then your `id` is `5f38ed1ba0c54626f12bfff9`
-* Leave Password field as empty
+* Signup on [UptimeRobot](https://uptimerobot.com/).
+* Create a monitor with UptimeRobot.
+* In the form enter URL as https://<your_domain>/api/cron
+* Toggle open `Advanced Settings`
+* In the form enter `Username` field with the "id" that you see when you login to EmailAPI. e.g. if you see https://emailapi.io/5f38ed1ba0c54626f12bfff9 in the URL bar when you login, then your `id` would be `5f38ed1ba0c54626f12bfff9`.
+* Leave Password field as empty.
 * Select `Authentication Type` as HTTP Basic.
 * Click `Save Changes` to create monitor.
 
+UptimeRobot will hit this endpoint once every 5mins which'll inturn check for new emails since the service last ran and execute jobs on all new matching emails.
+
 *Good hack to both monitor your instances' uptime and run cron jobs, isn't it?*
+
+## Roadmap
+
+Track the product roadmap of EmailAPI on [Trello](https://trello.com/b/WYca2awy/emailapi-product-roadmap). Suggestions for improvements and features are welcome (even better if they're accompanied with PRs!).
 
 ## License
 

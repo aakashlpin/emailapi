@@ -31,7 +31,7 @@ export default (handler) => (req, res) => {
       if (uid) {
         try {
           const userRes = await axios(
-            `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users/${uid}`,
+            `${process.env.EMAILAPI_BASE_URL}/users/${uid}`,
           );
           userCreds = userRes.data;
           userRefreshToken = userCreds.refreshToken;
@@ -49,7 +49,7 @@ export default (handler) => (req, res) => {
         );
 
         const { data: users } = await axios.get(
-          `${process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL}/users?q=uid:${firebaseData.decodedToken.uid}`,
+          `${process.env.EMAILAPI_BASE_URL}/users?q=uid:${firebaseData.decodedToken.uid}`,
         );
 
         if (Array.isArray(users) && !users.length) {

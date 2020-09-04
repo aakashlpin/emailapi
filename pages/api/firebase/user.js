@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const axios = require('axios');
 
-const EMAILAPI_BASE_URI = process.env.NEXT_PUBLIC_EMAILAPI_BASE_URL;
+const EMAILAPI_BASE_URI = process.env.EMAILAPI_BASE_URL;
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -71,9 +71,12 @@ export default function User(req, res) {
         } catch (e) {
           console.log('existingUser not found. did the db change?');
           console.log(e);
-          res
-            .status(500)
-            .json({ error: 'try to uninstall app from /persmissions' });
+          res.status(500).json({
+            errorCode: 'INVALID_APP_INSTALL',
+            message:
+              'Visit https://myaccount.google.com/permissions and remove the emailapi app',
+          });
+          resolve();
           return;
         }
       }
