@@ -11,7 +11,7 @@ EmaiAPI comes with the following features out of the box:
 
 1. **Email to JSON**
 
-    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox)!
+    This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily be pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox)!
 
     [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
 
@@ -158,7 +158,7 @@ FIREBASE_PUBLIC_API_KEY=
 
 **Summary:**
 
-Enable and add Firebase to Google Cloud project from last step.
+Enable and add Firebase to Google Cloud project created from the previous step.
 
 **Steps**:
 * Goto https://console.firebase.google.com/
@@ -363,7 +363,7 @@ and visit http://localhost:3000 to see emailapi in action! 🚀
       }
     ```
 
-5. Setup `redis` using [DigitalOcean's Managed Redis](https://www.digitalocean.com/products/managed-databases-redis/) in the same region as your DigitalOcean instance and grab the connection string (starts with `rediss://`). Alteratively, you can install `redis` locally on your DigitalOcean instance.
+5. Setup `redis` using [DigitalOcean's Managed Redis](https://www.digitalocean.com/products/managed-databases-redis/) in the same region as your DigitalOcean instance and grab the connection string (starts with `rediss://`). Alternatively, you can install `redis` locally on your DigitalOcean instance.
 
     > If you install redis directly on DO instance, you'd need to make sure Docker container can access the port redis is running on on the host machine.
 
