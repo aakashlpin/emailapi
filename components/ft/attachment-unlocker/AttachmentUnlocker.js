@@ -398,40 +398,24 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
           </Main>
           <Aside>
             <AsideContainer>
-              {searchInput.includes('from:') ? (
-                <ConfigOutputBar
-                  searchInput={searchInput}
-                  messageItem={currentEmail}
-                  pdfPasswordInput={pdfPasswordInput}
-                  setPdfPasswordInput={setPdfPasswordInput}
-                  handleCreateUnlockJob={handleCreateUnlockJob}
-                  handleCreateUnlockService={handleCreateUnlockService}
-                  autoUnlockSettings={autoUnlockSettings}
-                  handleChangeAutoUnlockSettings={
-                    handleChangeAutoUnlockSettings
-                  }
-                  handleClickAttachmentFilename={handleFetchAttachmentFilename}
-                  isUnlockJobPendingServerResponse={
-                    isUnlockJobPendingServerResponse
-                  }
-                  isUnlockJobQueuedSuccessfully={isUnlockJobQueuedSuccessfully}
-                  unlockEmailBeingQueried={unlockEmailBeingQueried}
-                  unlockEmailReceived={unlockEmailReceived}
-                  isUnlockedAttachmentFetched={isUnlockedAttachmentFetched}
-                />
-              ) : (
-                <div className="justify-start">
-                  <p className="mb-4">
-                    Search with a &quot;from:&quot; query to use this feature.
-                  </p>
-                  <p className="font-medium">
-                    📣 Tip: You can use the Filter Icons on selected email to
-                    automatically filter by sender (search by &quot;from:&quot;)
-                    or both sender and subject (search by &quot;from:&quot; and
-                    &quot;subject:&quot;)
-                  </p>
-                </div>
-              )}
+              <ConfigOutputBar
+                searchInput={searchInput}
+                messageItem={currentEmail}
+                pdfPasswordInput={pdfPasswordInput}
+                setPdfPasswordInput={setPdfPasswordInput}
+                handleCreateUnlockJob={handleCreateUnlockJob}
+                handleCreateUnlockService={handleCreateUnlockService}
+                autoUnlockSettings={autoUnlockSettings}
+                handleChangeAutoUnlockSettings={handleChangeAutoUnlockSettings}
+                handleClickAttachmentFilename={handleFetchAttachmentFilename}
+                isUnlockJobPendingServerResponse={
+                  isUnlockJobPendingServerResponse
+                }
+                isUnlockJobQueuedSuccessfully={isUnlockJobQueuedSuccessfully}
+                unlockEmailBeingQueried={unlockEmailBeingQueried}
+                unlockEmailReceived={unlockEmailReceived}
+                isUnlockedAttachmentFetched={isUnlockedAttachmentFetched}
+              />
             </AsideContainer>
           </Aside>
         </ContainerBody>

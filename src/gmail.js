@@ -70,7 +70,8 @@ function processMessageBody(message) {
 
     const pdfProps =
       findPartOfType(parts, 'application/pdf') ||
-      findPartOfType(parts, 'application/octet-stream');
+      findPartOfType(parts, 'application/octet-stream') ||
+      findPartOfType(parts, 'binary/octet-stream');
 
     if (pdfProps) {
       const {
