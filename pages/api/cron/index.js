@@ -22,51 +22,27 @@ export default async function handle(req, res) {
   const decodedUsernamePassword = base64.decode(encodedUsernamePassword);
   const [uid] = decodedUsernamePassword.split(':');
 
-  const { data: dbUser } = await axios(
-    `${process.env.EMAILAPI_BASE_URL}/users/${uid}`,
-  );
+  try {
+    // if valid user initiated request, then continue
+    await axios(`${process.env.EMAILAPI_BASE_URL}/users/${uid}`);
 
-  const { data: userServices } = await axios(
-    `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/services`,
-  );
+    const { data: users } = await axios(
+      `${process.env.EMAILAPI_BASE_URL}/users?limit=100`,
+    );
 
-  const { refreshToken } = dbUser;
+    const userCrons = users.map(({ refreshToken, _id }) =>
+      axios.post(
+        `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/cron/user-cron`,
+        {
+          refresh_token: refreshToken,
+          uid: _id,
+        },
+      ),
+    );
 
-  userServices
-    .filter((service) => service.cron)
-    .forEach(async (service) => {
-      switch (service.app) {
-        case 'EMAIL_TO_JSON': {
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/apps/email-to-json`,
-            {
-              uid,
-              refresh_token: refreshToken,
-              new_only: true,
-              service_id: service._id,
-              cron: true,
-            },
-          );
-          break;
-        }
-        case 'AUTO_UNLOCK': {
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/apps/auto-unlock`,
-            {
-              uid,
-              refresh_token: refreshToken,
-              new_only: true,
-              service_id: service._id,
-              cron: true,
-            },
-          );
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    });
-
+    Promise.all(userCrons);
+  } catch (e) {
+    console.log(e);
+  }
   res.json({});
 }
