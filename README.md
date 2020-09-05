@@ -13,13 +13,13 @@ EmaiAPI comes with the following features out of the box:
 
     This feature allows easily scraping content inside HTML emails. Data points can be extracted into a JSON endpoint and can easily be pushed to any JSON collection service via webhooks. EmailAPI autosaves this data to an internal database by default and exposes them on unique HTTP endpoints, thanks to [jsonbox](https://github.com/vasanthv/jsonbox)!
 
-    [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
+    [Watch a video on how to set this up.](https://www.loom.com/share/d9aa5e75e971465ab651bd07f6e5cd42)
 
 2. **Attachment Unlocker**
 
     This feature automatically unlocks PDFs within emails (e.g. bank account statements, credit card statements, stock broker's contract notes etc.) and sends you an exact copy of the original email but with the unlocked attachment. Save PDF password uniquely for each sender once and then forget about ever having to unlock PDF attachments again. This can bulk unlock all existing emails in your mailbox and will continue unlocking all future emails as and when they come.
 
-    [Watch an interactive video of how this works.](Record_an_interactive_mmhmm_video)
+    [Watch a video on how to set this up.](https://www.loom.com/share/c894bd11a3794f7a83d7bc0c703adf46)
 
 ## Using the hosted service
 
