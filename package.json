@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.4.4",
+    "@sentry/node": "^5.22.3",
+    "@sentry/tracing": "^5.22.3",
     "@zeit/next-css": "^1.0.1",
     "autoprefixer": "^9.8.6",
     "axios": "^0.19.2",

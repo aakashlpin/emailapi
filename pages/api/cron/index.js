@@ -12,6 +12,7 @@
  *    `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/services`
  *    -> response contains array of objects with `{cron: true/false}` to identify services to run with cron
  */
+import Sentry from '~/src/sentry';
 
 const base64 = require('base-64');
 const axios = require('axios');
@@ -42,6 +43,7 @@ export default async function handle(req, res) {
 
     Promise.all(userCrons);
   } catch (e) {
+    Sentry.captureException(e);
     console.log(e);
   }
   res.json({});

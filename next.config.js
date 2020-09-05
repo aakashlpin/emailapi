@@ -19,6 +19,7 @@ module.exports = withCSS({
     MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN,
     MAILGUN_API_KEY: process.env.MAILGUN_API_KEY,
     NEXT_PUBLIC_SENDING_EMAIL_ID: process.env.MAILGUN_SENDING_EMAIL_ID,
+    SENTRY_DSN: process.env.SENTRY_DSN,
   },
   webpack: (config) => {
     const { alias } = config.resolve;
