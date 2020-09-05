@@ -4,6 +4,7 @@ import React from 'react';
 import { Button } from '~/components/common/Atoms';
 
 const ConfigOutputBar = ({
+  serviceId,
   searchInput,
   messageItem,
   pdfPasswordInput,
@@ -33,7 +34,7 @@ const ConfigOutputBar = ({
   const disableUnlockFeature = attachmentsGreaterThanOne || noFromInSearchQuery;
 
   const disableFormSubmit =
-    isUnlockJobPendingServerResponse || unlockEmailBeingQueried;
+    isUnlockJobPendingServerResponse || unlockEmailBeingQueried || serviceId;
 
   return (
     <div className="bg-yellow-100">
@@ -124,64 +125,75 @@ const ConfigOutputBar = ({
                           />
                         </label>
                       </div>
-                      <Button
-                        type="submit"
-                        className="text-sm"
-                        disabled={disableFormSubmit || !pdfPasswordInput.length}
-                      >
-                        Preview unlock
-                      </Button>
+                      {!serviceId ? (
+                        <Button
+                          type="submit"
+                          className="text-sm"
+                          disabled={
+                            disableFormSubmit || !pdfPasswordInput.length
+                          }
+                        >
+                          Preview unlock
+                        </Button>
+                      ) : null}
                     </form>
 
-                    <p className="w-5/6 text-sm italic text-gray-600 mb-4">
-                      ✨ This will setup a one time attachment unlock task
-                      that&apos;d send you an email with the unlocked
-                      attachment.
-                      <br />
-                      <br /> ➡️ Once we receive this email you&apos;d be able to
-                      create a job to unlock all past and upcoming emails for
-                      your search query.
-                    </p>
-
-                    {isUnlockJobPendingServerResponse ? (
-                      <p className="text-sm italic text-gray-600">
-                        ⏫ Sending Request. Please wait...
-                      </p>
-                    ) : null}
-
-                    {isUnlockJobQueuedSuccessfully ? (
-                      <p className="text-sm italic">✅ Request submitted!</p>
-                    ) : null}
-
-                    {isUnlockJobQueuedSuccessfully &&
-                    unlockEmailBeingQueried ? (
-                      <p className="text-sm italic text-gray-600">
-                        🔁 Waiting for unlocked email...
-                      </p>
-                    ) : null}
-
-                    {isUnlockJobQueuedSuccessfully && unlockEmailReceived ? (
+                    {!serviceId ? (
                       <>
-                        <p className="text-sm italic">
-                          ✅ Unlocked email received!{' '}
+                        <p className="w-5/6 text-sm italic text-gray-600 mb-4">
+                          ✨ This will setup a one time attachment unlock task
+                          that&apos;d send you an email with the unlocked
+                          attachment.
+                          <br />
+                          <br /> ➡️ Once we receive this email you&apos;d be
+                          able to create a job to unlock all past and upcoming
+                          emails for your search query.
                         </p>
-                        {!isUnlockedAttachmentFetched ? (
-                          <p className="w-3/4 text-sm italic text-gray-600">
-                            ⏬ Fetching unlocked attachment. Please wait...
+
+                        {isUnlockJobPendingServerResponse ? (
+                          <p className="text-sm italic text-gray-600">
+                            ⏫ Sending Request. Please wait...
                           </p>
-                        ) : (
+                        ) : null}
+
+                        {isUnlockJobQueuedSuccessfully ? (
                           <p className="text-sm italic">
-                            ✅ Unlocked attachment shown!
+                            ✅ Request submitted!
                           </p>
-                        )}
+                        ) : null}
+
+                        {isUnlockJobQueuedSuccessfully &&
+                        unlockEmailBeingQueried ? (
+                          <p className="text-sm italic text-gray-600">
+                            🔁 Waiting for unlocked email...
+                          </p>
+                        ) : null}
+
+                        {isUnlockJobQueuedSuccessfully &&
+                        unlockEmailReceived ? (
+                          <>
+                            <p className="text-sm italic">
+                              ✅ Unlocked email received!{' '}
+                            </p>
+                            {!isUnlockedAttachmentFetched ? (
+                              <p className="w-3/4 text-sm italic text-gray-600">
+                                ⏬ Fetching unlocked attachment. Please wait...
+                              </p>
+                            ) : (
+                              <p className="text-sm italic">
+                                ✅ Unlocked attachment shown!
+                              </p>
+                            )}
+                          </>
+                        ) : null}
                       </>
                     ) : null}
                   </div>
 
-                  {isUnlockedAttachmentFetched ? (
+                  {isUnlockedAttachmentFetched || serviceId ? (
                     <div>
                       <p className="mb-1 font-semibold underline uppercase">
-                        Setup job
+                        {!serviceId ? 'Setup job' : 'Job Settings'}
                       </p>
                       <form
                         onSubmit={(e) => {
@@ -189,29 +201,32 @@ const ConfigOutputBar = ({
                           handleCreateUnlockService();
                         }}
                       >
-                        <div className="mb-4">
-                          <label
-                            htmlFor="autoUnlockPast"
-                            className="cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              id="autoUnlockPast"
-                              name="autoUnlockPast"
-                              checked={autoUnlockSettings.past}
-                              onChange={() =>
-                                handleChangeAutoUnlockSettings(
-                                  'past',
-                                  !autoUnlockSettings.past,
-                                )
-                              }
-                            />
-                            &nbsp;Unlock all Past Emails <br />
-                            <span className="text-sm text-gray-600">
-                              (emails that you see in the left sidebar and more)
-                            </span>
-                          </label>
-                        </div>
+                        {!serviceId ? (
+                          <div className="mb-4">
+                            <label
+                              htmlFor="autoUnlockPast"
+                              className="cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                id="autoUnlockPast"
+                                name="autoUnlockPast"
+                                checked={autoUnlockSettings.past}
+                                onChange={() =>
+                                  handleChangeAutoUnlockSettings(
+                                    'past',
+                                    !autoUnlockSettings.past,
+                                  )
+                                }
+                              />
+                              &nbsp;Unlock all Past Emails <br />
+                              <span className="text-sm text-gray-600">
+                                (emails that you see in the left sidebar and
+                                more)
+                              </span>
+                            </label>
+                          </div>
+                        ) : null}
                         <div className="mb-4">
                           <label
                             htmlFor="autoUnlockFuture"
@@ -237,14 +252,16 @@ const ConfigOutputBar = ({
                         </div>
 
                         <Button type="submit" className="mb-1">
-                          Create job
+                          {!serviceId ? 'Create job' : 'Submit and Save'}
                         </Button>
                       </form>
 
-                      <p className="text-xs italic text-gray-600">
-                        This will setup selected tasks for search query — <br />{' '}
-                        <span className="text-sm">{searchInput}</span>
-                      </p>
+                      {!serviceId ? (
+                        <p className="text-xs italic text-gray-600">
+                          This will setup selected tasks for search query —{' '}
+                          <br /> <span className="text-sm">{searchInput}</span>
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                 </>
