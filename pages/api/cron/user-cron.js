@@ -1,3 +1,5 @@
+import Sentry from '~/src/sentry';
+
 const axios = require('axios');
 
 export default async function handle(req, res) {
@@ -43,6 +45,7 @@ export default async function handle(req, res) {
         }
       });
   } catch (e) {
+    Sentry.captureException(e);
     console.log(e);
   }
   res.json({});

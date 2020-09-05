@@ -12,6 +12,7 @@
  *    then delete record at `${process.env.EMAILAPI_BASE_URL}/users/${uid}`
  *
  */
+import Sentry from '~/src/sentry';
 
 const base64 = require('base-64');
 const axios = require('axios');
@@ -47,6 +48,7 @@ export default async function handle(req, res) {
     }
   } catch (e) {
     // invalid user
+    Sentry.captureException(e);
     console.log(e);
   }
 

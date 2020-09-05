@@ -1,3 +1,5 @@
+import Sentry from '~/src/sentry';
+
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
 import { getSearchQuery } from '~/src/apps/utils';
@@ -94,6 +96,7 @@ async function handle(req, res, resolve) {
     return resolve();
   } catch (e) {
     console.log(e);
+    Sentry.captureException(e);
     return resolve();
   }
 }
