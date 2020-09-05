@@ -35,8 +35,6 @@ Simply signin with your Gmail account on https://emailapi.io to play around with
 
 > *I do not recommend using EmailAPI as a long term hosted service in the interest of email privacy and data security. When you give an app (even to a verified one) access to your email account, they can read all your (private) conversations, have access to your shopping history, extract data from financial emails — including your bank account/ credit card statements, and then sell it to 3rd-party advertisers and/or misuse it for any other purpose.*
 
-__Disclaimer: You should understand the risks of signing up on https://emailapi.io. I cannot be held morally or legally responsible for any mishappenings with your Gmail account or your emails arising out of this application.__
-
 ---
 **⏬ Follow the steps below to setup EmailAPI for yourself! ⏬**
 
