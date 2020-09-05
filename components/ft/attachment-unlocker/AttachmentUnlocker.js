@@ -8,6 +8,7 @@ import Head from 'next/head';
 import 'react-responsive-modal/styles.css';
 import '~/css/react-responsive-modal-override.css';
 import { Modal } from 'react-responsive-modal';
+import Noty from 'noty';
 import styled, { createGlobalStyle } from 'styled-components';
 import axios from 'axios';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
@@ -18,6 +19,9 @@ import ActionBar from './action-bar';
 import EmailPreview from './email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
+
+require('noty/lib/noty.css');
+require('noty/lib/themes/relax.css');
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -125,6 +129,21 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
   }
 
   async function handleCreateUnlockService() {
+    if (serviceId) {
+      await axios.put(`${baseUri(uid)}/services/${serviceId}`, {
+        ...serviceIdData,
+        cron: autoUnlockSettings.future,
+      });
+
+      new Noty({
+        theme: 'relax',
+        text: `✅ Done! Your settings has been <a class="underline" href="${baseUri(
+          uid,
+        )}/services/${serviceId}" target="_blank">updated here</a>.`,
+      }).show();
+      return;
+    }
+
     const { data: serviceResponse } = await axios.post(
       `${baseUri(uid)}/services`,
       {
@@ -135,12 +154,31 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
       },
     );
 
+    const { _id: newServiceId } = serviceResponse;
+
+    new Noty({
+      theme: 'relax',
+      text: `✅ Fantastic! Your job has been successfully <a class="underline" href="${baseUri(
+        uid,
+      )}/services/${newServiceId}" target="_blank">created here</a>.`,
+    }).show();
+
     if (autoUnlockSettings.past) {
       await axios.post(`/api/apps/auto-unlock`, {
         token,
         uid,
-        service_id: serviceResponse._id,
+        service_id: newServiceId,
       });
+    }
+
+    if (!serviceId) {
+      router.push(
+        '/[uid]/ft/attachment-unlocker/[id]',
+        `/${uid}/ft/attachment-unlocker/${newServiceId}`,
+        {
+          shallow: true,
+        },
+      );
     }
   }
 
@@ -316,8 +354,14 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
         const { data: serviceData } = await axios.get(
           `${baseUri(uid)}/services/${serviceId}`,
         );
+
         setServiceIdData(serviceData);
         setIsServiceIdFetched(true);
+        setPdfPasswordInput(serviceData.unlock_password);
+        setAutoUnlockSettings((settings) => ({
+          ...settings,
+          future: serviceData.cron,
+        }));
         setIsLoading(false);
         setIsServiceIdLoading(false);
       }
@@ -399,6 +443,7 @@ const AttachmentUnlockerApp = ({ router, ...props }) => {
           <Aside>
             <AsideContainer>
               <ConfigOutputBar
+                serviceId={serviceId}
                 searchInput={searchInput}
                 messageItem={currentEmail}
                 pdfPasswordInput={pdfPasswordInput}
