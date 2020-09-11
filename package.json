@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build_start": "next build && next start && sh ./.github/scripts/maintenance-off.sh"
+    "build_start": "next build && && sh ./.github/scripts/maintenance-off.sh && next start"
   },
   "dependencies": {
     "@popperjs/core": "^2.4.4",
