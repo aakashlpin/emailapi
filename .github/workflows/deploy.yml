@@ -54,7 +54,7 @@ jobs:
         CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
         CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
       run: |
-        sh ./.github/scripts/maintenance-on.sh
+        ./scripts/maintenance-on.sh
 
     - name: Remote Start docker server
       uses: appleboy/ssh-action@master
@@ -83,4 +83,4 @@ jobs:
         CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
         CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
       run: |
-        sh ./.github/scripts/maintenance-off.sh
+        ./scripts/maintenance-off.sh
