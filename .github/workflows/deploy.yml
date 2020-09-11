@@ -37,11 +37,6 @@ jobs:
       env:
         GITBUH_USERNAME: ${{ secrets.GITBUH_USERNAME }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CF_EMAIL: ${{ secrets.CF_EMAIL }}
-        CF_API_KEY: ${{ secrets.CF_API_KEY}}
-        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
-        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
-        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
       with:
         host: ${{ secrets.DO_HOST }}
         username: ${{ secrets.DO_USERNAME }}
@@ -52,6 +47,12 @@ jobs:
           docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
 
     - name: Cloudflare Maintenance mode on
+      env:
+        CF_EMAIL: ${{ secrets.CF_EMAIL }}
+        CF_API_KEY: ${{ secrets.CF_API_KEY}}
+        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
+        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
       run: |
         sh ./.github/scripts/maintenance-on.sh
 
@@ -75,5 +76,11 @@ jobs:
         time: '40s'
 
     - name: Remote Maintenance mode off
+      env:
+        CF_EMAIL: ${{ secrets.CF_EMAIL }}
+        CF_API_KEY: ${{ secrets.CF_API_KEY}}
+        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
+        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
       run: |
         sh ./.github/scripts/maintenance-off.sh
