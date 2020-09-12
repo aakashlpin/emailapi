@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v0.4
+      uses: aakashlpin/cloudflare-worker-route-update@v0.5
       with:
         CF_EMAIL: ${{ secrets.CF_EMAIL }}
         CF_API_KEY: ${{ secrets.CF_API_KEY}}
