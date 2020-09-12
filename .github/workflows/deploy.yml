@@ -46,15 +46,15 @@ jobs:
           docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
           docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
 
-    - name: Cloudflare Maintenance mode on
-      env:
+    - name: Cloudflare Workers route update
+      uses: aakashlpin/cloudflare-worker-route-update@v1
+      with:
         CF_EMAIL: ${{ secrets.CF_EMAIL }}
         CF_API_KEY: ${{ secrets.CF_API_KEY}}
         CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
         CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
         CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
-      run: |
-        ./scripts/maintenance-on.sh
+        CF_ROUTE_PATTERN: 'emailapi.io/*'
 
     - name: Remote Start docker server
       uses: appleboy/ssh-action@master
@@ -75,12 +75,12 @@ jobs:
       with:
         time: '40s'
 
-    - name: Remote Maintenance mode off
-      env:
+    - name: Cloudflare Workers route update
+      uses: aakashlpin/cloudflare-worker-route-update@v1
+      with:
         CF_EMAIL: ${{ secrets.CF_EMAIL }}
         CF_API_KEY: ${{ secrets.CF_API_KEY}}
         CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
         CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
         CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
-      run: |
-        ./scripts/maintenance-off.sh
+        CF_ROUTE_PATTERN: 'away.emailapi.io/*'
