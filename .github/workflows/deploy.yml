@@ -68,6 +68,7 @@ jobs:
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
           docker stop emailapi_app
+          docker rm emailapi_app
           docker run -dit --rm --env-file ~/apps/emailapi-pipeline/.env -p 3000:3000 -v /tmp:/tmp --name emailapi_app docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
 
     - name: Wait for build 40s
