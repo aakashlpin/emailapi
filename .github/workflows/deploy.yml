@@ -76,7 +76,7 @@ jobs:
         time: '40s'
 
     - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v1
+      uses: aakashlpin/cloudflare-worker-route-update@v0.1
       with:
         CF_EMAIL: ${{ secrets.CF_EMAIL }}
         CF_API_KEY: ${{ secrets.CF_API_KEY}}
