@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v0.2
+      uses: aakashlpin/cloudflare-worker-route-update@v0.3
       with:
         CF_EMAIL: ${{ secrets.CF_EMAIL }}
         CF_API_KEY: ${{ secrets.CF_API_KEY}}
@@ -21,66 +21,66 @@ jobs:
         CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
         CF_ROUTE_PATTERN: 'emailapi.io/*'
 
-    - name: Use Node.js 12.18
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.18'
+    # - name: Use Node.js 12.18
+    #   uses: actions/setup-node@v1
+    #   with:
+    #     node-version: '12.18'
 
-    - name: Install yarn
-      run: |
-        yarn
-      env:
-        CI: true
+    # - name: Install yarn
+    #   run: |
+    #     yarn
+    #   env:
+    #     CI: true
 
-    - name: Publish to Github Packages Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
-      with:
-        name: aakashlpin/emailapi/emailapi
-        registry: docker.pkg.github.com
-        username: ${{ secrets.GITBUH_USERNAME }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        dockerfile: Dockerfile-prod
-        tags: latest
+    # - name: Publish to Github Packages Registry
+    #   uses: elgohr/Publish-Docker-Github-Action@master
+    #   with:
+    #     name: aakashlpin/emailapi/emailapi
+    #     registry: docker.pkg.github.com
+    #     username: ${{ secrets.GITBUH_USERNAME }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+    #     dockerfile: Dockerfile-prod
+    #     tags: latest
 
-    - name: Remote Pull docker image of emailapi
-      uses: appleboy/ssh-action@master
-      env:
-        GITBUH_USERNAME: ${{ secrets.GITBUH_USERNAME }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        host: ${{ secrets.DO_HOST }}
-        username: ${{ secrets.DO_USERNAME }}
-        key: ${{ secrets.SSH_ID_RSA }}
-        envs: GITBUH_USERNAME, GITHUB_TOKEN
-        script: |
-          docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
-          docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
+    # - name: Remote Pull docker image of emailapi
+    #   uses: appleboy/ssh-action@master
+    #   env:
+    #     GITBUH_USERNAME: ${{ secrets.GITBUH_USERNAME }}
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     host: ${{ secrets.DO_HOST }}
+    #     username: ${{ secrets.DO_USERNAME }}
+    #     key: ${{ secrets.SSH_ID_RSA }}
+    #     envs: GITBUH_USERNAME, GITHUB_TOKEN
+    #     script: |
+    #       docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
+    #       docker pull docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
 
-    - name: Remote Start docker server
-      uses: appleboy/ssh-action@master
-      env:
-        GITBUH_USERNAME: ${{ secrets.GITBUH_USERNAME }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        host: ${{ secrets.DO_HOST }}
-        username: ${{ secrets.DO_USERNAME }}
-        key: ${{ secrets.SSH_ID_RSA }}
-        envs: GITBUH_USERNAME, GITHUB_TOKEN
-        script: |
-          docker stop emailapi_app
-          docker run -dit --rm --env-file ~/apps/emailapi-pipeline/.env -p 3000:3000 -v /tmp:/tmp --name emailapi_app docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
+    # - name: Remote Start docker server
+    #   uses: appleboy/ssh-action@master
+    #   env:
+    #     GITBUH_USERNAME: ${{ secrets.GITBUH_USERNAME }}
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     host: ${{ secrets.DO_HOST }}
+    #     username: ${{ secrets.DO_USERNAME }}
+    #     key: ${{ secrets.SSH_ID_RSA }}
+    #     envs: GITBUH_USERNAME, GITHUB_TOKEN
+    #     script: |
+    #       docker stop emailapi_app
+    #       docker run -dit --rm --env-file ~/apps/emailapi-pipeline/.env -p 3000:3000 -v /tmp:/tmp --name emailapi_app docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest
 
-    - name: Wait for build 40s
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '40s'
+    # - name: Wait for build 40s
+    #   uses: jakejarvis/wait-action@master
+    #   with:
+    #     time: '40s'
 
-    - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v0.2
-      with:
-        CF_EMAIL: ${{ secrets.CF_EMAIL }}
-        CF_API_KEY: ${{ secrets.CF_API_KEY}}
-        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
-        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
-        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
-        CF_ROUTE_PATTERN: 'away.emailapi.io/*'
+    # - name: Cloudflare Workers route update
+    #   uses: aakashlpin/cloudflare-worker-route-update@v0.2
+    #   with:
+    #     CF_EMAIL: ${{ secrets.CF_EMAIL }}
+    #     CF_API_KEY: ${{ secrets.CF_API_KEY}}
+    #     CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+    #     CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
+    #     CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
+    #     CF_ROUTE_PATTERN: 'away.emailapi.io/*'
