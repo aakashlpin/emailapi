@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
 import { getSearchQuery } from '~/src/apps/utils';
@@ -25,57 +26,62 @@ async function handle(req, res, resolve) {
 
   res.json({ endpoint });
 
-  const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
-  const searchQuery = await getSearchQuery({
-    serviceEndpoint,
-    newOnly,
-  });
-
-  const {
-    data: { unlock_password: unlockPassword },
-  } = await axios(serviceEndpoint);
-
-  const { user } = req;
-  const userProps = {
-    uid,
-    user,
-    token,
-    refreshToken,
-  };
-
-  queues.mailFetchQueue.add({
-    apiOnly,
-    userProps,
-    searchQuery,
-    _nextQueue: 'autoUnlockQueue',
-    _nextQueueData: {
-      endpoint,
-      userProps,
-      unlockPassword,
+  try {
+    const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
+    const searchQuery = await getSearchQuery({
       serviceEndpoint,
-    },
-    completionNotifications: {
-      success: {
-        notifyConditions: {
-          childJobsGotCreated: true,
-        },
-        notifications: [
-          {
-            type: 'webhook',
-            data: {
-              method: 'POST',
-              url: `${APP_HOST}/api/apps/auto-unlock/webhook`,
+      newOnly,
+    });
+
+    const {
+      data: { unlock_password: unlockPassword },
+    } = await axios(serviceEndpoint);
+
+    const { user } = req;
+    const userProps = {
+      uid,
+      user,
+      token,
+      refreshToken,
+    };
+
+    queues.mailFetchQueue.add({
+      apiOnly,
+      userProps,
+      searchQuery,
+      _nextQueue: 'autoUnlockQueue',
+      _nextQueueData: {
+        endpoint,
+        userProps,
+        unlockPassword,
+        serviceEndpoint,
+      },
+      completionNotifications: {
+        success: {
+          notifyConditions: {
+            childJobsGotCreated: true,
+          },
+          notifications: [
+            {
+              type: 'webhook',
               data: {
-                apiId,
-                serviceEndpoint,
-                success: true,
+                method: 'POST',
+                url: `${APP_HOST}/api/apps/auto-unlock/webhook`,
+                data: {
+                  apiId,
+                  serviceEndpoint,
+                  success: true,
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       },
-    },
-  });
+    });
+  } catch (e) {
+    console.log(e);
+    Sentry.captureException(e);
+  }
 
   return resolve();
 }
