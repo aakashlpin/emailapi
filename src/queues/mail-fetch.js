@@ -135,7 +135,7 @@ async function processJob(job, done) {
 
 (() => {
   queues.mailFetchQueue.process((job, done) => {
-    console.log('mailFetchQueue job data', job.data);
+    console.log('processing mailFetchQueue job#', job.id);
     processJob(job, done);
   });
 })();

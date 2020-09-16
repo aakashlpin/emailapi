@@ -81,7 +81,7 @@ async function processJob(jobData, done) {
 
 (() => {
   queues.emailToJsonQueue.process(10, (job, done) => {
-    console.log('emailToJsonQueue job data', job.data);
+    console.log('processing emailToJsonQueue job#', job.id);
     processJob(job.data, done);
   });
 })();

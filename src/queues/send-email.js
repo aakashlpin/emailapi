@@ -12,7 +12,7 @@ async function processJob(job) {
 
 (() => {
   queues.sendEmailQueue.process(async (job) => {
-    console.log('sendEmailQueue job data', job.data);
+    console.log('processing sendEmailQueue job#', job.id);
     await processJob(job);
   });
 })();

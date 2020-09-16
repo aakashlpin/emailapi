@@ -50,7 +50,7 @@ async function processJob(job) {
 
 (() => {
   queues.taskStatusQueue.process(async (job) => {
-    console.log('taskStatusQueue job data', job.data);
+    console.log('processing taskStatusQueue job#', job.id);
     await processJob(job);
   });
 })();
