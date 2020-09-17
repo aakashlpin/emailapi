@@ -43,7 +43,7 @@ async function processJob(job) {
 
 (() => {
   queues.notificationsQueue.process(async (job) => {
-    console.log('notificationsQueue job data', job.data);
+    console.log('processing notificationsQueue job#', job.id);
     await processJob(job);
   });
 })();
