@@ -35,6 +35,8 @@ async function handle(req, res, resolve) {
 
     if (existingServiceData.gsheet_id) {
       // reset existing sheet
+      // [NB]: this has a side-effect of data existing on another sheet getting reset
+      // if user is changing sheets
       try {
         await resetSheet({
           googleSheetId: existingServiceData.gsheet_id,
@@ -47,6 +49,7 @@ async function handle(req, res, resolve) {
 
     // setup a task per pre-existing data endpoint to sync to gSheet
     const dataEndpoints = existingServiceData.data
+      .filter((item) => item.is_successful)
       .map(({ id }) => `${EMAILAPI_DOMAIN}/${uid}/${id}`)
       .map((endpoint) =>
         axios.post(
