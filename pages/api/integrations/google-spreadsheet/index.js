@@ -12,21 +12,7 @@ const getPageRecords = async ({ page, dataEndpoint, size = 20 }) =>
   axios(`${dataEndpoint}?limit=${size}&skip=${page * size}`);
 
 async function handle(req, res, resolve) {
-  const {
-    uid,
-    service_id: serviceId,
-    data_endpoint: dataEndpoint,
-    resync_data: reSyncData,
-  } = req.body;
-
-  if (reSyncData && dataEndpoint) {
-    // reSyncData will clean the sheet and resync data from all existing data endpoints
-    res.status(400).json({
-      error: 'resync_data and data_endpoint both cannot be supplied together',
-    });
-  }
-
-  // [TODO] implement resync_data
+  const { uid, service_id: serviceId, data_endpoint: dataEndpoint } = req.body;
 
   const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
   console.log({ serviceEndpoint });

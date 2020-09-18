@@ -525,6 +525,42 @@ const EmailJsonApp = ({ router, ...props }) => {
     );
   }
 
+  const [isSyncIntegrationSelected, setIsSyncIntegrationSelected] = useState(
+    !!serviceId,
+  );
+  function handleClickSyncIntegrations() {
+    setIsSyncIntegrationSelected(true);
+  }
+
+  function handleChangeGSheetId(gSheetId) {
+    setServiceIdData({
+      ...serviceIdData,
+      gsheet_id: gSheetId,
+    });
+  }
+
+  function handleChangePreSyncWebhook(preSyncWebhook) {
+    setServiceIdData({
+      ...serviceIdData,
+      presync_webhook: preSyncWebhook,
+    });
+  }
+
+  async function onSubmitSyncToGoogleSheet() {
+    const {
+      gsheet_id: gSheetId,
+      presync_webhook: preSyncWebhook,
+    } = serviceIdData;
+
+    await axios.post(`/api/apps/email-to-json/integrations/google-sheet`, {
+      uid,
+      token,
+      service_id: serviceId,
+      gsheet_id: gSheetId,
+      presync_webhook: preSyncWebhook,
+    });
+  }
+
   return (
     <>
       <Head>
@@ -548,6 +584,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           uid={uid}
           token={token}
           isLoading={isLoading}
+          serviceId={serviceId}
           parsedData={parsedData}
           searchInput={searchInput}
           searchResults={searchResults}
@@ -557,6 +594,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           isCreateApiPending={isCreateApiPending}
           doPreviewParsedData={doPreviewParsedData}
           handleFetchMoreMails={handleFetchMoreMails}
+          handleClickSyncIntegrations={handleClickSyncIntegrations}
           matchedSearchResults={matchedSearchResults}
           GOOGLE_CLIENT_ID={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         />
@@ -603,6 +641,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           </Main>
           <Aside>
             <ConfigOutputBar
+              isSyncIntegrationSelected={isSyncIntegrationSelected}
               isPreviewMode={isPreviewMode}
               searchInput={searchInput}
               parsedData={parsedData}
@@ -616,6 +655,11 @@ const EmailJsonApp = ({ router, ...props }) => {
               doPreviewParsedData={doPreviewParsedData}
               handleChangeSearchInput={handleChangeSearchInput}
               setTriggerSearch={setTriggerSearch}
+              gSheetId={serviceIdData && serviceIdData.gsheet_id}
+              handleChangeGSheetId={handleChangeGSheetId}
+              preSyncWebhook={serviceIdData && serviceIdData.presync_webhook}
+              handleChangePreSyncWebhook={handleChangePreSyncWebhook}
+              onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
             />
           </Aside>
         </ContainerBody>
