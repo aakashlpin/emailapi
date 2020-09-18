@@ -2,7 +2,7 @@ import Sentry from '~/src/sentry';
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 
-export default async function sync({ googleSheetId, sheetHeader, sheetRows }) {
+export default async function resetSheet({ googleSheetId }) {
   try {
     const doc = new GoogleSpreadsheet(googleSheetId);
 
@@ -14,10 +14,11 @@ export default async function sync({ googleSheetId, sheetHeader, sheetRows }) {
 
     await doc.loadInfo();
 
-    const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id]
-
-    await sheet.setHeaderRow(sheetHeader);
-    await sheet.addRows(sheetRows);
+    // add another sheet
+    await doc.addSheet();
+    // delete the first one
+    const sheet = doc.sheetsByIndex[0];
+    await sheet.delete();
   } catch (e) {
     Sentry.captureException(e);
     Promise.reject(e);

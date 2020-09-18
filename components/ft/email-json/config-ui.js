@@ -41,6 +41,7 @@ const PreviewContainer = styled.div.attrs({
 `;
 
 const ConfigOutputBar = ({
+  isSyncIntegrationSelected,
   isPreviewMode,
   searchInput,
   parsedData,
@@ -54,7 +55,75 @@ const ConfigOutputBar = ({
   doPreviewParsedData,
   handleChangeSearchInput,
   setTriggerSearch,
+  gSheetId,
+  handleChangeGSheetId,
+  preSyncWebhook,
+  handleChangePreSyncWebhook,
+  onSubmitSyncToGoogleSheet,
 }) => {
+  if (isSyncIntegrationSelected) {
+    return (
+      <AsideContainer>
+        <div className="p-4">
+          <h4 className="text-xl text-bold mb-4 underline">Integrations</h4>
+          <div className="">
+            <p className="text-2xl mb-1">Google Spreadsheet</p>
+            <p className="p-4 rounded bg-gray-100 mb-4">
+              Sync data extracted from your emails directly into Google Sheets!
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSubmitSyncToGoogleSheet();
+              }}
+            >
+              <div className="mb-4">
+                <label htmlFor="gsheetId">
+                  Google Sheet Id: <br />
+                  <input
+                    type="text"
+                    id="gsheetId"
+                    value={gSheetId}
+                    className="border mb-1 p-2 w-full"
+                    onChange={(e) => handleChangeGSheetId(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="mb-4">
+                <label htmlFor="preSyncWebhook">
+                  Pre Sync Webhook: <br />
+                  <input
+                    type="text"
+                    id="gsheetId"
+                    value={preSyncWebhook}
+                    className="border mb-1 p-2 w-full"
+                    onChange={(e) => handleChangePreSyncWebhook(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div>
+                <p className="text-xs text-gray-700 mb-4 italic">
+                  Open Google sheet, Click &quot;Share&quot; and give
+                  &quot;Editor&quot; permission to{' '}
+                  <span className="font-bold underline">
+                    {process.env.NEXT_PUBLIC_GOOGLE_SERVICE_ACCOUNT_EMAIL}
+                  </span>
+                </p>
+                <Button type="submit" className="mb-2">
+                  Save &amp; Sync
+                </Button>
+                <p className="italic text-gray-600">
+                  This action can be done any number of times until you&rsquo;re
+                  happy with the data format in Google Sheet!
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </AsideContainer>
+    );
+  }
+
   let sampleData;
   if (
     selectedConfigurationIndex !== null &&

@@ -18,6 +18,7 @@ const Nudges = styled.div.attrs({
 const ActionBar = ({
   uid,
   token,
+  serviceId,
   isLoading,
   parsedData,
   searchInput,
@@ -28,6 +29,7 @@ const ActionBar = ({
   isCreateApiPending,
   doPreviewParsedData,
   handleFetchMoreMails,
+  handleClickSyncIntegrations,
   matchedSearchResults,
   GOOGLE_CLIENT_ID,
 }) => (
@@ -57,25 +59,33 @@ const ActionBar = ({
     <div className="text-center">Original Email</div>
     <div className="flex justify-end items-center">
       <div className="flex flex-col items-start justify-start flex-1 pl-2">
-        <Label>Email matches</Label>
-        {searchResults.length && matchedSearchResults.length
-          ? `${parseInt(
-              (matchedSearchResults.length / searchResults.length) * 100,
-              10,
-            )}%`
-          : '-'}
+        {!serviceId ? (
+          <>
+            <Label>Email matches</Label>
+            {searchResults.length && matchedSearchResults.length
+              ? `${parseInt(
+                  (matchedSearchResults.length / searchResults.length) * 100,
+                  10,
+                )}%`
+              : '-'}
+          </>
+        ) : null}
       </div>
+
+      <Button className="mr-4" onClick={handleClickSyncIntegrations}>
+        Integrations
+      </Button>
 
       <Button
         className="mr-4"
-        disabled={!flatten(parsedData).length}
+        disabled={!flatten(parsedData).length || serviceId}
         onClick={doPreviewParsedData}
       >
         {!isPreviewMode ? 'Preview API' : '< Go Back'}
       </Button>
       {token ? (
         <Button
-          disabled={!isPreviewMode || isCreateApiPending}
+          disabled={!isPreviewMode || isCreateApiPending || serviceId}
           onClick={onClickCreateAPI}
         >
           Create API
