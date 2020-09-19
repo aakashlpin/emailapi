@@ -33,6 +33,9 @@ async function handle(req, res, resolve) {
       presync_webhook: preSyncWebhook,
     });
 
+    // acknowledge request
+    res.json({});
+
     if (existingServiceData.gsheet_id) {
       // reset existing sheet
       // [NB]: this has a side-effect of data existing on another sheet getting reset
@@ -64,11 +67,9 @@ async function handle(req, res, resolve) {
       );
 
     await Promise.all(dataEndpoints);
-    res.json({});
   } catch (e) {
     console.log(e);
     Sentry.captureException(e);
-    res.status(500).send(e);
   }
 
   resolve();

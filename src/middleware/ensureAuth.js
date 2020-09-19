@@ -12,6 +12,8 @@ export default (handler) => (req, res) => {
 
   return new Promise((resolve) => {
     async function perform() {
+      // [TODO] check why's the logic around `either` and not `and`
+      // it's possible to impersonate a user by uid only!!
       if (!token && !uid && !(skipAuth || apiOnly)) {
         return res.status(401).json({
           error: 'either `token` or `uid` is required',
