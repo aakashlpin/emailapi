@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import flatten from 'lodash/flatten';
 import { format } from 'date-fns';
 
-import FirebaseAuth from '~/components/FirebaseAuth';
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
 
 const Nudges = styled.div.attrs({
@@ -16,12 +15,9 @@ const Nudges = styled.div.attrs({
 `;
 
 const ActionBar = ({
-  uid,
-  token,
   serviceId,
   isLoading,
   parsedData,
-  searchInput,
   searchResults,
   isPreviewMode,
   nextPageToken,
@@ -31,7 +27,6 @@ const ActionBar = ({
   handleFetchMoreMails,
   handleClickSyncIntegrations,
   matchedSearchResults,
-  GOOGLE_CLIENT_ID,
 }) => (
   <Nudges>
     <div>
@@ -72,10 +67,6 @@ const ActionBar = ({
         ) : null}
       </div>
 
-      <Button className="mr-4" onClick={handleClickSyncIntegrations}>
-        Integrations
-      </Button>
-
       <Button
         className="mr-4"
         disabled={!flatten(parsedData).length || serviceId}
@@ -83,37 +74,16 @@ const ActionBar = ({
       >
         {!isPreviewMode ? 'Preview API' : '< Go Back'}
       </Button>
-      {token ? (
-        <Button
-          disabled={!isPreviewMode || isCreateApiPending || serviceId}
-          onClick={onClickCreateAPI}
-        >
-          Create API
-        </Button>
-      ) : (
-        <FirebaseAuth
-          uid={uid}
-          scope="profile email"
-          buttonLabel="Signup to Create API"
-          GOOGLE_CLIENT_ID={GOOGLE_CLIENT_ID}
-          // eslint-disable-next-line consistent-return
-          callback={(error, associatedUser) => {
-            if (error) {
-              return <div>Oops! Something went wrong there!</div>;
-            }
-            const { uid: redirectToUid, mailboxes } = associatedUser;
-            if (uid !== redirectToUid) {
-              // existing user
-              const redirectToMailboxId = mailboxes.find(
-                (mb) => `to: ${mb.email}` === searchInput,
-              )._id;
-              window.location.href = `/${redirectToUid}/mailbox/${redirectToMailboxId}`;
-            } else {
-              window.location.reload();
-            }
-          }}
-        />
-      )}
+      <Button
+        disabled={!isPreviewMode || isCreateApiPending || serviceId}
+        onClick={onClickCreateAPI}
+        className="mr-4"
+      >
+        Create API
+      </Button>
+      <Button onClick={handleClickSyncIntegrations} disabled={!serviceId}>
+        Integrations
+      </Button>
     </div>
   </Nudges>
 );

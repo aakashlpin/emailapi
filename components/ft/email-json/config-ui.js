@@ -114,7 +114,7 @@ const ConfigOutputBar = ({
                 </Button>
                 <p className="italic text-gray-600">
                   This action can be done any number of times until you&rsquo;re
-                  happy with the data format in Google Sheet!
+                  satisfied with the data formatting in Google Sheet!
                 </p>
               </div>
             </form>
