@@ -53,12 +53,13 @@ function readFiles(dirname) {
 }
 
 export default async function extractTableInJson(inputPdfPath, options = {}) {
+  const dir = '/tmp';
   const inputPdfPathParts = inputPdfPath.split('/');
   const inputPdfFilename = inputPdfPathParts.length
     ? inputPdfPathParts[inputPdfPathParts.length - 1]
     : inputPdfPath;
   const outputFilename = inputPdfFilename.replace('.pdf', '');
-  const outputPath = `/tmp/${outputFilename}.json`;
+  const outputPath = `${dir}/${outputFilename}.json`;
   const command = [
     'camelot',
     '--zip',
@@ -92,10 +93,10 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
     return shell.exit(1);
   }
 
-  const zipPath = `/tmp/${outputFilename}.zip`;
+  const zipPath = `${dir}/${outputFilename}.zip`;
 
   return new Promise((resolve) => {
-    const extractedFolder = `/tmp/${outputFilename}`;
+    const extractedFolder = `${dir}/${outputFilename}`;
     fs.createReadStream(zipPath)
       .pipe(unzipper.Extract({ path: extractedFolder }))
       .on('close', () => {
@@ -114,6 +115,6 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
 }
 
 (async () => {
-  const response = await extractTableInJson('/tmp/nse.pdf');
+  const response = await extractTableInJson('/tmp/nse-2.pdf');
   console.log(response);
 })();
