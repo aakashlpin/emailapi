@@ -70,6 +70,250 @@ const Aside = styled.aside`
   overflow-y: hidden;
 `;
 
+const toArray = (arrayLikeObj) =>
+  Object.keys(arrayLikeObj).map((idx) => arrayLikeObj[idx]);
+
+const RulePreview = ({ data, rule }) => {
+  // function validateCell
+  const previewData = data.map((table) => {
+    if (!rule.where.length) {
+      return table;
+    }
+    const [header, ...rows] = toArray(table);
+
+    const filteredRows = rows.filter((row) => {
+      let reject = true;
+      console.log({ row });
+      toArray(row).forEach((cellValue, cellIndex) => {
+        rule.where.forEach((where) => {
+          const {
+            colIndex: whereColIndex,
+            type: whereType,
+            value: whereValue,
+          } = where;
+
+          console.log({ where, cellValue, cellIndex });
+
+          if (whereColIndex && Number(cellIndex) !== Number(whereColIndex)) {
+            // console.log({whereColIndex, cellIndex});
+            return;
+          }
+
+          switch (whereType) {
+            case 'cell_notEmpty': {
+              reject = !cellValue;
+              break;
+            }
+            case 'cell_startsWith': {
+              reject = !cellValue.startsWith(whereValue);
+              break;
+            }
+            case 'cell_endsWith': {
+              reject = !cellValue.endsWith(whereValue);
+              break;
+            }
+            case 'cell_equals': {
+              reject = !cellValue !== whereValue;
+              break;
+            }
+            case 'cell_contains': {
+              reject = !cellValue.includes(whereValue);
+              break;
+            }
+            default: {
+              reject = true;
+              break;
+            }
+          }
+        });
+      });
+
+      return !reject;
+    });
+
+    return [header, ...filteredRows];
+  });
+  return (
+    <>
+      {previewData.map((table, id) => (
+        <div className="mb-4">
+          <p>Extracted Data from Table #{id + 1}</p>
+          <Grid data={table} />
+        </div>
+      ))}
+    </>
+  );
+};
+
+/**
+ *
+ * rule = {
+ *  type: 'row_whitelist',
+ *  where: [{
+ *    type: 'equals/startsWith/endsWith/contains',
+ *    value: 'value',
+ *    colIndex: 2
+ *  }]
+ * }
+ */
+
+const ExtractionRules = ({ data, rules, setRules }) => {
+  function handleAddAnotherCellCheck({ ruleId }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              where: [
+                ...rule.where,
+                {
+                  type: '',
+                  comparator: '',
+                  value: '',
+                },
+              ],
+            },
+      ),
+    );
+  }
+
+  function onClickRemoveCheck({ ruleId, whereId }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              where: rule.where.filter((_, whereIdx) => whereId !== whereIdx),
+            },
+      ),
+    );
+  }
+
+  function setRuleType({ ruleId, type }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              type,
+            },
+      ),
+    );
+  }
+
+  function setKeyPairAtWhere({ ruleId, whereId, ...props }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              where: rule.where.map((whereRule, whereIdx) =>
+                whereId !== whereIdx
+                  ? whereRule
+                  : {
+                      ...whereRule,
+                      ...props,
+                    },
+              ),
+            },
+      ),
+    );
+  }
+
+  function setColIndexOnWhereRule({ colIndex, ruleId, whereId }) {
+    setKeyPairAtWhere({ ruleId, whereId, colIndex });
+  }
+
+  function setWhereRuleType({ type, ruleId, whereId }) {
+    setKeyPairAtWhere({ ruleId, whereId, type });
+  }
+
+  function setWhereValue({ value, ruleId, whereId }) {
+    setKeyPairAtWhere({ value, whereId, ruleId });
+  }
+
+  return (
+    <div className="mb-8">
+      {rules.map((rule, ruleId) => (
+        <div key={`rule_${ruleId}`}>
+          <span>Rule #{ruleId + 1}</span>{' '}
+          <select
+            className="border border-1 block"
+            value={rule.type}
+            onChange={(e) => setRuleType({ ruleId, type: e.target.value })}
+          >
+            <option value="row_whitelist">Include Rows</option>
+            <option value="row_blacklist">Exclude Rows</option>
+          </select>{' '}
+          {rule.where.map((whereRule, whereId) => (
+            <div key={`whererule_${whereId}`}>
+              <span>if a cell value at column index</span>{' '}
+              <input
+                type="text"
+                className="border border-1 w-8"
+                value={whereRule.colIndex}
+                onChange={(e) =>
+                  setColIndexOnWhereRule({
+                    colIndex: e.target.value,
+                    ruleId,
+                    whereId,
+                  })
+                }
+              />{' '}
+              <select
+                className="border border-1"
+                value={whereRule.type}
+                onChange={(e) =>
+                  setWhereRuleType({ ruleId, whereId, type: e.target.value })
+                }
+              >
+                {whereRule.colIndex ? (
+                  <option value="cell_notEmpty">is not empty</option>
+                ) : null}
+                <option value="cell_startsWith">starts with</option>
+                <option value="cell_endsWith">ends with</option>
+                <option value="cell_equals">is exactly</option>
+                <option value="cell_contains">contains</option>
+              </select>{' '}
+              {whereRule.type !== 'cell_notEmpty' ? (
+                <input
+                  type="text"
+                  className="border border-1"
+                  value={whereRule.value}
+                  onChange={(e) =>
+                    setWhereValue({ ruleId, whereId, value: e.target.value })
+                  }
+                />
+              ) : null}{' '}
+              <Button
+                onClick={() =>
+                  onClickRemoveCheck({
+                    ruleId,
+                    whereId,
+                  })
+                }
+              >
+                x Remove Check
+              </Button>
+            </div>
+          ))}
+          <Button
+            className="block mb-8"
+            onClick={() => handleAddAnotherCellCheck({ ruleId })}
+          >
+            + Add another cell check
+          </Button>
+          <RulePreview rule={rules[ruleId]} data={data} />
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const EmailJsonApp = ({ router, ...props }) => {
   const {
     query: { q, uid, id: serviceId },
@@ -113,6 +357,7 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
+  const [extractionRules, setExtractionRules] = useState([]);
 
   function resetData() {
     setSearchResults([]);
@@ -572,9 +817,15 @@ const EmailJsonApp = ({ router, ...props }) => {
   }
 
   const [extractedDataFromPDF, setExtractedDataFromPDF] = useState(null);
+  const [camelotMethod, setCamelotMethod] = useState('lattice');
+
+  async function onClosePDFPreview() {
+    setExtractedDataFromPDF(null);
+    setCamelotMethod('lattice');
+    setOpen(false);
+  }
 
   async function handleFetchExtractDataFromPDF() {
-    setExtractedDataFromPDF(null);
     const { data: extractedData } = await axios.post(
       `/api/fetch/tables-from-attachment`,
       {
@@ -582,10 +833,27 @@ const EmailJsonApp = ({ router, ...props }) => {
         token,
         messageId: selectedMessageId,
         attachmentId: selectedAttachmentId,
+        camelotMethod,
       },
     );
 
     setExtractedDataFromPDF(extractedData);
+  }
+
+  async function onCreateExtractionRule() {
+    //
+    const ruleConfig = {
+      type: null,
+      where: [],
+    };
+    setExtractionRules([...extractionRules, ruleConfig]);
+  }
+
+  function onClickIgnoreTable({ id }) {
+    // NB: this suffers from the problem of never being able to reveal the original tables again
+    setExtractedDataFromPDF(
+      extractedDataFromPDF.filter((_, idx) => id !== idx),
+    );
   }
 
   return (
@@ -694,7 +962,7 @@ const EmailJsonApp = ({ router, ...props }) => {
       <>
         <Modal
           open={open}
-          onClose={() => setOpen(false)}
+          onClose={onClosePDFPreview}
           style={{ width: '100vw' }}
         >
           <div className="grid" style={{ gridTemplateColumns: '50% 1fr' }}>
@@ -706,32 +974,62 @@ const EmailJsonApp = ({ router, ...props }) => {
             <div className="p-4">
               <h3 className="text-xl mb-2">Extract data from PDF</h3>
 
-              <p className="underline italic text-red-500">
-                TODO: <br />
-                1. Add camelot configuration options here in a human consumable
-                format <br />
-                2. View only beautiful tables
-                <br />
-                3. Actions:
-                <br />
-                3.1 Ignore table <br />
-                3.2 Accept table
-                <br />
-                3.2.1. As whole
-                <br />
-                3.2.2. Skip rows by some rules
-                <br />
-              </p>
+              <label htmlFor="camelotMethod">
+                Technique:
+                <div className="relative">
+                  <select
+                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="camelotMethod"
+                    id="camelotMethod"
+                    value={camelotMethod}
+                    onChange={(e) => setCamelotMethod(e.target.value)}
+                  >
+                    <option value="lattice">Lattice</option>
+                    <option value="stream">Stream</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </label>
 
-              <Button onClick={handleFetchExtractDataFromPDF} className="mb-8">
+              <Button
+                onClick={handleFetchExtractDataFromPDF}
+                className="block mb-4"
+              >
                 Extract data
               </Button>
+
+              <Button onClick={onCreateExtractionRule} className="mb-8">
+                Create extraction rule
+              </Button>
+              {extractedDataFromPDF ? (
+                <ExtractionRules
+                  rules={extractionRules}
+                  data={extractedDataFromPDF}
+                  setRules={setExtractionRules}
+                />
+              ) : null}
 
               {extractedDataFromPDF
                 ? extractedDataFromPDF.map((table, idx) => {
                     return (
                       <div key={`table_${idx}`} className="mb-4">
-                        <p>Table #{idx + 1}</p>
+                        <p>
+                          Table #{idx + 1}{' '}
+                          <Button
+                            className="text-xs"
+                            onClick={() => onClickIgnoreTable({ id: idx })}
+                          >
+                            Ignore table
+                          </Button>
+                        </p>
                         <Grid data={table} />
                       </div>
                     );

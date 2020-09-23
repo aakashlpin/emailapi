@@ -26,3 +26,16 @@
 - Remove `done` based callbacks from queue and move to Promise.resolve()s
 - Enable job success/failure notification system
 - Include all queues from filesystem instead of `require`ing them individually
+
+
+## Extracting tables
+
+### Scenarios
+
+> User knows this PDF template always contains X number of tables
+1. User can reject tables as is
+2. User can select tables as is
+  2.1. or/and add whitelist rules
+    2.1.1. grab a row only if it contains a cell where cell's value `==` or `contains` some value
+  2.2. or/and add blacklist rules
+    2.2.1. reject rows if it contains a cell where cell's value `==` or `contains` some value

@@ -83,9 +83,11 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
   command.push(options.stream ? 'stream' : 'lattice');
   // input path is the last argument
 
-  // custom scale
-  if (options.scale) {
-    command.push('-scale', options.scale);
+  // lattice options
+  if (!options.stream) {
+    if (options.scale) {
+      command.push('-scale', options.scale);
+    }
   }
 
   command.push(inputPdfPath);
