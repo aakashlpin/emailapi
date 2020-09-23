@@ -1,3 +1,6 @@
+/* eslint-disable no-shadow */
+/* eslint-disable consistent-return */
+/* eslint-disable func-names */
 import shell from 'shelljs';
 import fs from 'fs';
 import unzipper from 'unzipper';
@@ -65,37 +68,41 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
     '--zip',
     '--format',
     'json',
+    '--pages',
+    'all',
     '--output',
     outputPath,
   ];
 
+  // pdf password
+  if (options.password) {
+    command.push('--password', options.password);
+  }
+
   // table extration technique
   command.push(options.stream ? 'stream' : 'lattice');
+  // input path is the last argument
 
   // custom scale
   if (options.scale) {
     command.push('-scale', options.scale);
   }
 
-  // pdf password
-  if (options.password) {
-    command.push('-pw', options.password);
-  }
-
-  // input path is the last argument
   command.push(inputPdfPath);
 
   const shellCmd = command.join(' ');
 
+  console.log('camelot command', shellCmd);
+
   if (shell.exec(shellCmd).code !== 0) {
     shell.echo('Error: camelot failed');
     Promise.reject(new Error('Error: camelot failed'));
-    return shell.exit(1);
+    // return shell.exit(1);
   }
 
   const zipPath = `${dir}/${outputFilename}.zip`;
 
-  return new Promise((resolve) => {
+  const tablesPr = new Promise((resolve) => {
     const extractedFolder = `${dir}/${outputFilename}`;
     fs.createReadStream(zipPath)
       .pipe(unzipper.Extract({ path: extractedFolder }))
@@ -112,9 +119,36 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
           });
       });
   });
+
+  const extractedTables = await tablesPr;
+  const validTables = extractedTables.filter((table) => {
+    const firstRow = table[0];
+    // valid tables will contain first row as header
+    // header cols should not contain empty cells
+
+    if (
+      Object.values(firstRow).filter((item) => item).length !==
+      Object.keys(firstRow).length
+    ) {
+      return false;
+    }
+
+    if (Object.keys(firstRow).length < 2) {
+      // single column table? more like horizontally layed out table
+      return false;
+    }
+
+    // console.log('----table----');
+    // console.log(table);
+    return true;
+  });
+  return extractedTables;
 }
 
-(async () => {
-  const response = await extractTableInJson('/tmp/nse-2.pdf');
-  console.log(response);
-})();
+// (async () => {
+//   const response = await extractTableInJson('/tmp/kotak-1.pdf', {
+//     stream: true,
+//     password: '50226488',
+//   });
+//   console.log(response);
+// })();

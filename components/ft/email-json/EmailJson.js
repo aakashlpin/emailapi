@@ -3,6 +3,7 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import 'react-responsive-modal/styles.css';
 import '~/css/react-responsive-modal-override.css';
@@ -23,6 +24,10 @@ import ActionBar from '~/components/service-creator/action-bar';
 import EmailPreview from '~/components/service-creator/email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
+
+import { Button } from '~/components/common/Atoms';
+
+const Grid = dynamic(() => import('react-json-grid'), { ssr: false });
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -233,6 +238,9 @@ const EmailJsonApp = ({ router, ...props }) => {
     );
   }
 
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+  const [selectedAttachmentId, setSelectedAttachmentId] = useState(null);
+
   async function handleClickAttachmentFilename({ messageId, attachmentId }) {
     const { data } = await axios.post(`/api/fetch/attachment`, {
       messageId,
@@ -242,6 +250,8 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
 
     setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setSelectedMessageId(messageId);
+    setSelectedAttachmentId(attachmentId);
     setOpen(true);
   }
 
@@ -561,6 +571,23 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
+  const [extractedDataFromPDF, setExtractedDataFromPDF] = useState(null);
+
+  async function handleFetchExtractDataFromPDF() {
+    setExtractedDataFromPDF(null);
+    const { data: extractedData } = await axios.post(
+      `/api/fetch/tables-from-attachment`,
+      {
+        uid,
+        token,
+        messageId: selectedMessageId,
+        attachmentId: selectedAttachmentId,
+      },
+    );
+
+    setExtractedDataFromPDF(extractedData);
+  }
+
   return (
     <>
       <Head>
@@ -665,12 +692,53 @@ const EmailJsonApp = ({ router, ...props }) => {
         </ContainerBody>
       </Container>
       <>
-        <Modal open={open} onClose={() => setOpen(false)}>
-          <iframe
-            src={attachmentBase64}
-            title="preview attachment"
-            style={{ height: '100vh', width: '1024px' }}
-          />
+        <Modal
+          open={open}
+          onClose={() => setOpen(false)}
+          style={{ width: '100vw' }}
+        >
+          <div className="grid" style={{ gridTemplateColumns: '50% 1fr' }}>
+            <iframe
+              src={attachmentBase64}
+              title="preview attachment"
+              style={{ height: '100vh', width: '100%' }}
+            />
+            <div className="p-4">
+              <h3 className="text-xl mb-2">Extract data from PDF</h3>
+
+              <p className="underline italic text-red-500">
+                TODO: <br />
+                1. Add camelot configuration options here in a human consumable
+                format <br />
+                2. View only beautiful tables
+                <br />
+                3. Actions:
+                <br />
+                3.1 Ignore table <br />
+                3.2 Accept table
+                <br />
+                3.2.1. As whole
+                <br />
+                3.2.2. Skip rows by some rules
+                <br />
+              </p>
+
+              <Button onClick={handleFetchExtractDataFromPDF} className="mb-8">
+                Extract data
+              </Button>
+
+              {extractedDataFromPDF
+                ? extractedDataFromPDF.map((table, idx) => {
+                    return (
+                      <div key={`table_${idx}`} className="mb-4">
+                        <p>Table #{idx + 1}</p>
+                        <Grid data={table} />
+                      </div>
+                    );
+                  })
+                : null}
+            </div>
+          </div>
         </Modal>
       </>
     </>
