@@ -79,56 +79,60 @@ const RulePreview = ({ data, rule }) => {
     if (!rule.where.length) {
       return table;
     }
+    const applicableWhereRules = rule.where.filter(
+      (whereRule) => whereRule.type,
+    );
+
+    if (!applicableWhereRules.length) {
+      return table;
+    }
+
     const [header, ...rows] = toArray(table);
 
     const filteredRows = rows.filter((row) => {
-      let reject = true;
-      console.log({ row });
-      toArray(row).forEach((cellValue, cellIndex) => {
-        rule.where.forEach((where) => {
+      const cellChecks = toArray(row).map((cellValue, cellIndex) => {
+        const checks = applicableWhereRules.map((where) => {
+          let checkPassed = false;
           const {
             colIndex: whereColIndex,
             type: whereType,
             value: whereValue,
           } = where;
 
-          console.log({ where, cellValue, cellIndex });
-
-          if (whereColIndex && Number(cellIndex) !== Number(whereColIndex)) {
-            // console.log({whereColIndex, cellIndex});
-            return;
+          if (whereColIndex && cellIndex !== Number(whereColIndex)) {
+            return true;
           }
 
           switch (whereType) {
             case 'cell_notEmpty': {
-              reject = !cellValue;
+              checkPassed = !!cellValue;
               break;
             }
             case 'cell_startsWith': {
-              reject = !cellValue.startsWith(whereValue);
+              checkPassed = cellValue.startsWith(whereValue);
               break;
             }
             case 'cell_endsWith': {
-              reject = !cellValue.endsWith(whereValue);
+              checkPassed = cellValue.endsWith(whereValue);
               break;
             }
             case 'cell_equals': {
-              reject = !cellValue !== whereValue;
+              checkPassed = cellValue !== whereValue;
               break;
             }
             case 'cell_contains': {
-              reject = !cellValue.includes(whereValue);
+              checkPassed = cellValue.includes(whereValue);
               break;
             }
             default: {
-              reject = true;
               break;
             }
           }
+          return checkPassed;
         });
+        return checks.every((check) => check);
       });
-
-      return !reject;
+      return cellChecks.every((check) => check);
     });
 
     return [header, ...filteredRows];
@@ -137,7 +141,7 @@ const RulePreview = ({ data, rule }) => {
     <>
       {previewData.map((table, id) => (
         <div className="mb-4">
-          <p>Extracted Data from Table #{id + 1}</p>
+          <p className="font-bold">Extracted Data as per rule above:</p>
           <Grid data={table} />
         </div>
       ))}
@@ -169,8 +173,8 @@ const ExtractionRules = ({ data, rules, setRules }) => {
                 ...rule.where,
                 {
                   type: '',
-                  comparator: '',
                   value: '',
+                  colIndex: null,
                 },
               ],
             },
@@ -205,6 +209,7 @@ const ExtractionRules = ({ data, rules, setRules }) => {
   }
 
   function setKeyPairAtWhere({ ruleId, whereId, ...props }) {
+    console.log({ props });
     setRules(
       rules.map((rule, idx) =>
         ruleId !== idx
@@ -837,7 +842,7 @@ const EmailJsonApp = ({ router, ...props }) => {
       },
     );
 
-    setExtractedDataFromPDF(extractedData);
+    setExtractedDataFromPDF(extractedData.filter((_, idx) => idx === 3));
   }
 
   async function onCreateExtractionRule() {
