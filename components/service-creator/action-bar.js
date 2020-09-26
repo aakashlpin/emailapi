@@ -67,6 +67,13 @@ const ActionBar = ({
         ) : null}
       </div>
 
+      {/* <Button
+        className="mr-4"
+        disabled={!flatten(parsedData).length || serviceId}
+        onClick={doPreviewParsedData}
+      >
+        {!isPreviewMode ? 'Preview API' : '< Go Back'}
+      </Button> */}
       <Button
         className="mr-4"
         disabled={!flatten(parsedData).length || serviceId}

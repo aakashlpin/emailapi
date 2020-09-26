@@ -6,6 +6,7 @@ import cx from 'classnames';
 
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
 import ConfigurationEditor from '~/components/service-creator/configuration-editor';
+import RulePreview from './rules-preview';
 
 const AsideContainer = styled.div.attrs({
   className: 'bg-yellow-100',
@@ -60,6 +61,8 @@ const ConfigOutputBar = ({
   preSyncWebhook,
   handleChangePreSyncWebhook,
   onSubmitSyncToGoogleSheet,
+  extractionRules,
+  extractedData,
 }) => {
   if (isSyncIntegrationSelected) {
     return (

@@ -24,8 +24,9 @@ import ActionBar from '~/components/service-creator/action-bar';
 import EmailPreview from '~/components/service-creator/email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
+import RulePreview from './rules-preview';
 
-import { Button } from '~/components/common/Atoms';
+import { Button, FlexEnds } from '~/components/common/Atoms';
 
 const Grid = dynamic(() => import('react-json-grid'), { ssr: false });
 
@@ -70,89 +71,14 @@ const Aside = styled.aside`
   overflow-y: hidden;
 `;
 
-const toArray = (arrayLikeObj) =>
-  Object.keys(arrayLikeObj).map((idx) => arrayLikeObj[idx]);
-
-const RulePreview = ({ data, rule }) => {
-  // function validateCell
-  const previewData = data.map((table) => {
-    if (!rule.where.length) {
-      return table;
-    }
-    const applicableWhereRules = rule.where.filter(
-      (whereRule) => whereRule.type,
-    );
-
-    if (!applicableWhereRules.length) {
-      return table;
-    }
-
-    const [header, ...rows] = toArray(table);
-
-    const filteredRows = rows.filter((row) => {
-      const cellChecks = toArray(row).map((cellValue, cellIndex) => {
-        const checks = applicableWhereRules.map((where) => {
-          let checkPassed = false;
-          const {
-            colIndex: whereColIndex,
-            type: whereType,
-            value: whereValue,
-          } = where;
-
-          if (whereColIndex && cellIndex !== Number(whereColIndex)) {
-            return true;
-          }
-
-          switch (whereType) {
-            case 'cell_notEmpty': {
-              checkPassed = !!cellValue;
-              break;
-            }
-            case 'cell_startsWith': {
-              checkPassed = cellValue.startsWith(whereValue);
-              break;
-            }
-            case 'cell_endsWith': {
-              checkPassed = cellValue.endsWith(whereValue);
-              break;
-            }
-            case 'cell_equals': {
-              checkPassed = cellValue !== whereValue;
-              break;
-            }
-            case 'cell_contains': {
-              checkPassed = cellValue.includes(whereValue);
-              break;
-            }
-            default: {
-              break;
-            }
-          }
-          return checkPassed;
-        });
-        return checks.every((check) => check);
-      });
-      return cellChecks.every((check) => check);
-    });
-
-    return [header, ...filteredRows];
-  });
-  return (
-    <>
-      {previewData.map((table, id) => (
-        <div className="mb-4">
-          <p className="font-bold">Extracted Data as per rule above:</p>
-          <Grid data={table} />
-        </div>
-      ))}
-    </>
-  );
-};
-
 /**
  *
  * rule = {
  *  type: 'row_whitelist',
+ *  name: 'Futures trading',
+ *  camelot_method: 'lattice',
+ *  probable_table_sequence: 4,
+ *  table_column_count: 14,
  *  where: [{
  *    type: 'equals/startsWith/endsWith/contains',
  *    value: 'value',
@@ -209,7 +135,6 @@ const ExtractionRules = ({ data, rules, setRules }) => {
   }
 
   function setKeyPairAtWhere({ ruleId, whereId, ...props }) {
-    console.log({ props });
     setRules(
       rules.map((rule, idx) =>
         ruleId !== idx
@@ -245,7 +170,7 @@ const ExtractionRules = ({ data, rules, setRules }) => {
     <div className="mb-8">
       {rules.map((rule, ruleId) => (
         <div key={`rule_${ruleId}`}>
-          <span>Rule #{ruleId + 1}</span>{' '}
+          <p className="font-bold">{ruleId + 1}. Rule Definition</p>{' '}
           <select
             className="border border-1 block"
             value={rule.type}
@@ -276,13 +201,13 @@ const ExtractionRules = ({ data, rules, setRules }) => {
                   setWhereRuleType({ ruleId, whereId, type: e.target.value })
                 }
               >
-                {whereRule.colIndex ? (
-                  <option value="cell_notEmpty">is not empty</option>
-                ) : null}
                 <option value="cell_startsWith">starts with</option>
                 <option value="cell_endsWith">ends with</option>
                 <option value="cell_equals">is exactly</option>
                 <option value="cell_contains">contains</option>
+                {whereRule.colIndex ? (
+                  <option value="cell_notEmpty">is not empty</option>
+                ) : null}
               </select>{' '}
               {whereRule.type !== 'cell_notEmpty' ? (
                 <input
@@ -822,11 +747,18 @@ const EmailJsonApp = ({ router, ...props }) => {
   }
 
   const [extractedDataFromPDF, setExtractedDataFromPDF] = useState(null);
+  const [tableDataForExtractionRule, setTableDataForExtractionRule] = useState(
+    null,
+  );
   const [camelotMethod, setCamelotMethod] = useState('lattice');
+  const [camelotScale, setCamelotScale] = useState(null);
 
   async function onClosePDFPreview() {
     setExtractedDataFromPDF(null);
+    setTableDataForExtractionRule(null);
     setCamelotMethod('lattice');
+    setCamelotScale(null);
+    setExtractionRules([]);
     setOpen(false);
   }
 
@@ -839,14 +771,14 @@ const EmailJsonApp = ({ router, ...props }) => {
         messageId: selectedMessageId,
         attachmentId: selectedAttachmentId,
         camelotMethod,
+        camelotScale,
       },
     );
 
-    setExtractedDataFromPDF(extractedData.filter((_, idx) => idx === 3));
+    setExtractedDataFromPDF(extractedData);
   }
 
   async function onCreateExtractionRule() {
-    //
     const ruleConfig = {
       type: null,
       where: [],
@@ -854,11 +786,62 @@ const EmailJsonApp = ({ router, ...props }) => {
     setExtractionRules([...extractionRules, ruleConfig]);
   }
 
-  function onClickIgnoreTable({ id }) {
-    // NB: this suffers from the problem of never being able to reveal the original tables again
-    setExtractedDataFromPDF(
-      extractedDataFromPDF.filter((_, idx) => id !== idx),
+  const [selectedTableId, setSelectedTableId] = useState(null);
+
+  function onClickSelectTable({ id }) {
+    setSelectedTableId(id);
+    setTableDataForExtractionRule(
+      extractedDataFromPDF.filter((_, idx) => id === idx)[0],
     );
+  }
+
+  function onClickSavePDFExtractionRules(e) {
+    e.preventDefault();
+    setOpen(false);
+  }
+
+  async function onClickPreviewExtractionRules(e) {
+    e.preventDefault();
+
+    const {
+      data: { dataEndpoint, statusCheckerEndpoint },
+    } = await axios.post('/api/fetch/preview-attachment-rules', {
+      uid,
+      token,
+      on_previous_emails_count: 10,
+      search_query: searchInput,
+      selected_table_data: extractedDataFromPDF[selectedTableId],
+      camelot_method: camelotMethod,
+      camelot_scale: camelotScale,
+      rules: extractionRules,
+    });
+
+    window.open(dataEndpoint, '_blank');
+
+    const statusCheckTimer = setInterval(() => {
+      async function check() {
+        const { data: statusData } = await axios(statusCheckerEndpoint);
+        if (statusData.success) {
+          clearInterval(statusCheckTimer);
+          return;
+        }
+        if (statusData.pending) {
+          const {
+            total_jobs: totalJobs,
+            completed_jobs: completedJobs,
+            pending_jobs: pendingJobs,
+          } = statusData;
+
+          if (totalJobs) {
+            console.log(
+              `${completedJobs}/${totalJobs} completed! ${pendingJobs} pending...`,
+            );
+          }
+        }
+      }
+
+      check();
+    }, 10 * 1000);
   }
 
   return (
@@ -960,6 +943,8 @@ const EmailJsonApp = ({ router, ...props }) => {
               preSyncWebhook={serviceIdData && serviceIdData.presync_webhook}
               handleChangePreSyncWebhook={handleChangePreSyncWebhook}
               onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
+              extractionRules={extractionRules}
+              extractedData={extractedDataFromPDF}
             />
           </Aside>
         </ContainerBody>
@@ -977,7 +962,20 @@ const EmailJsonApp = ({ router, ...props }) => {
               style={{ height: '100vh', width: '100%' }}
             />
             <div className="p-4">
-              <h3 className="text-xl mb-2">Extract data from PDF</h3>
+              <FlexEnds className="pr-12">
+                <h3 className="text-xl mb-2">Extract data from PDF</h3>
+                <div>
+                  <Button
+                    onClick={onClickPreviewExtractionRules}
+                    className="mr-4"
+                  >
+                    Preview API
+                  </Button>
+                  <Button onClick={onClickSavePDFExtractionRules}>
+                    Close with Save
+                  </Button>
+                </div>
+              </FlexEnds>
 
               <label htmlFor="camelotMethod">
                 Technique:
@@ -1004,25 +1002,28 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </div>
               </label>
 
+              {camelotMethod === 'lattice' ? (
+                <label htmlFor="camelotScale">
+                  Lattice Scale:
+                  <input
+                    id="camelotScale"
+                    type="text"
+                    value={camelotScale}
+                    onChange={(e) => setCamelotScale(e.target.value)}
+                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+                </label>
+              ) : null}
+
               <Button
                 onClick={handleFetchExtractDataFromPDF}
+                disabled={!!tableDataForExtractionRule}
                 className="block mb-4"
               >
                 Extract data
               </Button>
 
-              <Button onClick={onCreateExtractionRule} className="mb-8">
-                Create extraction rule
-              </Button>
-              {extractedDataFromPDF ? (
-                <ExtractionRules
-                  rules={extractionRules}
-                  data={extractedDataFromPDF}
-                  setRules={setExtractionRules}
-                />
-              ) : null}
-
-              {extractedDataFromPDF
+              {extractedDataFromPDF && !tableDataForExtractionRule
                 ? extractedDataFromPDF.map((table, idx) => {
                     return (
                       <div key={`table_${idx}`} className="mb-4">
@@ -1030,9 +1031,9 @@ const EmailJsonApp = ({ router, ...props }) => {
                           Table #{idx + 1}{' '}
                           <Button
                             className="text-xs"
-                            onClick={() => onClickIgnoreTable({ id: idx })}
+                            onClick={() => onClickSelectTable({ id: idx })}
                           >
-                            Ignore table
+                            Select table
                           </Button>
                         </p>
                         <Grid data={table} />
@@ -1040,6 +1041,25 @@ const EmailJsonApp = ({ router, ...props }) => {
                     );
                   })
                 : null}
+
+              {tableDataForExtractionRule ? (
+                <div className="mb-4">
+                  <p className="font-bold">Selected table</p>
+                  <Grid data={tableDataForExtractionRule} />
+                </div>
+              ) : null}
+
+              <Button onClick={onCreateExtractionRule} className="mb-8">
+                Create extraction rule
+              </Button>
+
+              {tableDataForExtractionRule ? (
+                <ExtractionRules
+                  rules={extractionRules}
+                  data={tableDataForExtractionRule}
+                  setRules={setExtractionRules}
+                />
+              ) : null}
             </div>
           </div>
         </Modal>
