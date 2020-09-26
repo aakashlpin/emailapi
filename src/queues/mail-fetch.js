@@ -39,6 +39,7 @@ async function iterable({
   _nextQueue,
   _nextQueueData,
   parentJobId,
+  singlePageRun,
 }) {
   const { uid, token, refreshToken } = userProps;
   const { emails, nextPageToken } = await fetchEmails({
@@ -59,6 +60,7 @@ async function iterable({
     queues[_nextQueue].add({
       email,
       queueData: _nextQueueData,
+      userProps,
       parentJobId,
     }),
   );
@@ -72,7 +74,7 @@ async function iterable({
     );
   }
 
-  if (nextPageToken) {
+  if (nextPageToken && !singlePageRun) {
     return iterable({
       apiOnly,
       userProps,
@@ -97,6 +99,8 @@ async function processJob(job, done) {
     _nextQueueData,
     initNotifications,
     completionNotifications,
+    pendingWebhookNotifications,
+    singlePageRun = true,
   } = jobData;
 
   await iterable({
@@ -106,6 +110,7 @@ async function processJob(job, done) {
     _nextQueue,
     _nextQueueData,
     parentJobId: id,
+    singlePageRun,
   });
 
   if (isLengthyArray(initNotifications)) {
@@ -118,6 +123,7 @@ async function processJob(job, done) {
     {
       taskId: id,
       completionNotifications,
+      pendingWebhookNotifications,
     },
     {
       attempts: 30,

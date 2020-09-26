@@ -5,28 +5,33 @@ import savePdfAttachmentToDisk from '~/src/pdf/create-file';
 const { fetchAttachment } = require('~/src/gmail');
 
 async function handle(req, res, resolve) {
-  const {
-    attachmentId,
-    messageId,
-    attachmentPassword,
-    camelotMethod = 'lattice',
-    camelotScale = 60,
-  } = req.body;
+  try {
+    const {
+      attachmentId,
+      messageId,
+      attachmentPassword,
+      camelotMethod = 'lattice',
+      camelotScale,
+    } = req.body;
 
-  const base64Encoded = await fetchAttachment({
-    attachmentId,
-    messageId,
-    refreshToken: req.refresh_token,
-  });
+    const base64Encoded = await fetchAttachment({
+      attachmentId,
+      messageId,
+      refreshToken: req.refresh_token,
+    });
 
-  const pdfDiskPath = await savePdfAttachmentToDisk(base64Encoded);
-  const extractedTables = await extractTableInJson(pdfDiskPath, {
-    stream: camelotMethod === 'stream',
-    scale: camelotScale,
-    password: attachmentPassword,
-  });
+    const pdfDiskPath = await savePdfAttachmentToDisk(base64Encoded);
+    const extractedTables = await extractTableInJson(pdfDiskPath, {
+      stream: camelotMethod === 'stream',
+      scale: camelotScale,
+      password: attachmentPassword,
+    });
 
-  res.json(extractedTables);
+    res.json(extractedTables);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send(e);
+  }
   resolve();
 }
 

@@ -32,6 +32,11 @@ const queues = [
     childQueue: true,
   },
   {
+    exportName: 'pdfExtractionQueue',
+    bullName: 'pdf-extraction',
+    childQueue: true,
+  },
+  {
     exportName: 'sendEmailQueue',
     bullName: 'send-email',
     bullOpts: {
