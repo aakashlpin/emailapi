@@ -6,7 +6,7 @@ export default async function handle(req, res) {
   const { refresh_token: refreshToken, uid } = req.body;
   try {
     const { data: userServices } = await axios(
-      `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/services`,
+      `${process.env.JSONBOX_NETWORK_URL}/${uid}/services`,
     );
 
     userServices

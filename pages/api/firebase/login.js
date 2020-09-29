@@ -50,9 +50,11 @@ const handler = (req, res, resolve) => {
     })
     .then((props) => {
       res.status(200).json({ status: true, ...props });
+      resolve();
     })
     .catch((error) => {
       res.status(500).json({ error });
+      resolve();
     });
 };
 

@@ -6,6 +6,7 @@ WORKDIR /codebase
 COPY package.json ./
 COPY yarn.lock ./
 COPY . ./
+COPY .env.development.local ./.env.local
 RUN yarn && yarn build
 EXPOSE 3000
 CMD ["yarn", "start"]
