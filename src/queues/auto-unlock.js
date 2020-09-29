@@ -1,10 +1,8 @@
 import axios from 'axios';
 import Sentry from '~/src/sentry';
-// import flatten from 'lodash/flatten';
 
 import queues from '../redis-queue';
 
-// const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 

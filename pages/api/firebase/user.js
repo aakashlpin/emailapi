@@ -29,33 +29,37 @@ export async function userExists(firebaseUid) {
 
 async function dbSyncup({ firebaseUid, profile, refreshToken, existingUser }) {
   // const { id, email, verified_email, name, given_name, family_name, picture, locale } = profile;
-  const userProfile = existingUser || (await userExists(firebaseUid));
-  if (!userProfile) {
-    const { data: newUserProfile } = await axios.post(
-      `${EMAILAPI_BASE_URI}/users`,
-      {
-        uid: firebaseUid,
-        email: profile.email,
-        refreshToken,
-        profile,
-      },
-    );
-    return newUserProfile;
-  }
+  try {
+    const userProfile = existingUser || (await userExists(firebaseUid));
+    if (!userProfile) {
+      const { data: newUserProfile } = await axios.post(
+        `${EMAILAPI_BASE_URI}/users`,
+        {
+          uid: firebaseUid,
+          email: profile.email,
+          refreshToken,
+          profile,
+        },
+      );
+      return newUserProfile;
+    }
 
-  const updatedUserProfile = {
-    ...userProfile,
-    profile,
-  };
-  if (refreshToken) {
-    // user revoked the app from google permissions, and is now signing up again
-    updatedUserProfile.refreshToken = refreshToken;
+    const updatedUserProfile = {
+      ...userProfile,
+      profile,
+    };
+    if (refreshToken) {
+      // user revoked the app from google permissions, and is now signing up again
+      updatedUserProfile.refreshToken = refreshToken;
+    }
+    await axios.put(
+      `${EMAILAPI_BASE_URI}/users/${userProfile._id}`,  //eslint-disable-line
+      updatedUserProfile,
+    );
+    return updatedUserProfile;
+  } catch (e) {
+    return Promise.reject(e);
   }
-  await axios.put(
-    `${EMAILAPI_BASE_URI}/users/${userProfile._id}`,  //eslint-disable-line
-    updatedUserProfile,
-  );
-  return updatedUserProfile;
 }
 
 export default function User(req, res) {
@@ -97,14 +101,18 @@ export default function User(req, res) {
 
         const { data: profile } = userInfo;
 
-        const dbUser = await dbSyncup({
-          profile,
-          firebaseUid,
-          refreshToken,
-          existingUser,
-        });
+        try {
+          const dbUser = await dbSyncup({
+            profile,
+            firebaseUid,
+            refreshToken,
+            existingUser,
+          });
 
-        res.json(dbUser);
+          res.json(dbUser);
+        } catch (e) {
+          res.status(500).send(e);
+        }
         resolve();
       });
     }

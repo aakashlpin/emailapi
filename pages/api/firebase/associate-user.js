@@ -9,10 +9,10 @@ const oAuth2Client = new google.auth.OAuth2(
 
 async function migrateMailboxToUser({ fromUser, fromUid, toUid }) {
   const fromUidMailboxes = await axios(
-    `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${fromUid}/mailbox`,
+    `${process.env.JSONBOX_NETWORK_URL}/${fromUid}/mailbox`,
   );
   const toUidMailboxes = await axios.post(
-    `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${toUid}/mailbox`,
+    `${process.env.JSONBOX_NETWORK_URL}/${toUid}/mailbox`,
     fromUidMailboxes.data.map((item) => ({
       email: item.email,
     })),
