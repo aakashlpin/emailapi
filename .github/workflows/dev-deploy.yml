@@ -25,12 +25,12 @@ jobs:
     - name: Publish to Github Packages Registry
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
-        name: aakashlpin/emailapi/emailapi:dev
+        name: aakashlpin/emailapi/emailapi
         registry: docker.pkg.github.com
         username: ${{ secrets.GITBUH_USERNAME }}
         password: ${{ secrets.GITHUB_TOKEN }}
         dockerfile: Dockerfile-prod
-        tags: latest
+        tags: dev
 
     - name: Remote Pull docker image of emailapi
       uses: appleboy/ssh-action@master
