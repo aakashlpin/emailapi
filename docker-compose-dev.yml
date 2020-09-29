@@ -1,0 +1,41 @@
+version: '2'
+
+networks:
+  devapp-tier:
+    driver: bridge
+
+services:
+  jsonbox_dev:
+    container_name: jsonbox_dev
+    image: 'docker.pkg.github.com/aakashlpin/jsonbox/jsonbox:latest'
+    env_file:
+      - ~/apps/jsonbox/dev.env
+    ports:
+      - '4001:3000'
+    networks:
+      - devapp-tier
+
+  redis:
+    image: 'bitnami/redis:latest'
+    volumes:
+      - /tmp/dev/redis/data:/bitnami/redis/data
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - devapp-tier
+
+  emailapi_dev:
+    container_name: emailapi_dev
+    restart: always
+    image: 'docker.pkg.github.com/aakashlpin/emailapi/emailapi:dev'
+    env_file:
+      - ~/apps/emailapi-pipeline/dev.env
+    volumes:
+      - /tmp:/tmp
+    ports:
+      - '4000:3000'
+    networks:
+      - devapp-tier
+    depends_on:
+      - jsonbox_dev
+      - redis
