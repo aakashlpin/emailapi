@@ -57,4 +57,4 @@ jobs:
         key: ${{ secrets.SSH_ID_RSA }}
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
-          cd ~/apps/emailapi-pipeline && docker-compose up -f docker-compose-dev.yml --detach --build emailapi_dev
+          cd ~/apps/emailapi-pipeline && docker-compose -f docker-compose-dev.yml -p emailapi_dev_proj up --detach --build emailapi_dev

@@ -67,7 +67,7 @@ jobs:
         key: ${{ secrets.SSH_ID_RSA }}
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
-          cd ~/apps/emailapi-pipeline && docker-compose up --detach --build emailapi
+          cd ~/apps/emailapi-pipeline && docker-compose -p emailapi_prod_prod up --detach --build emailapi
 
     - name: Wait for build 40s
       uses: jakejarvis/wait-action@master
