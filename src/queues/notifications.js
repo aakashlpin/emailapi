@@ -12,7 +12,13 @@ async function sendEmail({ to, subject, body }) {
 }
 
 async function sendWebhook({ url, data, method }) {
-  await axios[method.toLowerCase()](url, data);
+  console.log('🔼 sendWebhook running:', { url, data, method });
+  try {
+    const response = await axios[method.toLowerCase()](url, data);
+    console.log('⬇️ sendWebhook success:', response.data);
+  } catch (e) {
+    console.log('🚨  sendWebhook error:', e);
+  }
 }
 
 async function processJob(job) {

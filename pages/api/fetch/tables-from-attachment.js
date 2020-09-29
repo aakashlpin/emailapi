@@ -9,7 +9,7 @@ async function handle(req, res, resolve) {
     const {
       attachmentId,
       messageId,
-      attachmentPassword,
+      attachmentPassword = 'BCCPG2423G',
       camelotMethod = 'lattice',
       camelotScale,
     } = req.body;

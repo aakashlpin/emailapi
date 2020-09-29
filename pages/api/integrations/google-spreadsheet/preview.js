@@ -2,8 +2,9 @@ import axios from 'axios';
 import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import gSheetSync from '~/src/integrations/google-spreadsheet/sync';
+import { toArray } from '~/src/pdf/utils';
 
-const { EMAILAPI_DOMAIN } = process.env;
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 const dataExists = (data) => Array.isArray(data) && data.length;
 
@@ -11,91 +12,89 @@ const dataExists = (data) => Array.isArray(data) && data.length;
 const getPageRecords = async ({ page, dataEndpoint, size = 20 }) =>
   axios(`${dataEndpoint}?limit=${size}&skip=${page * size}`);
 
+// function sleep(ms) {
+//   return new Promise((resolve) => {
+//     setTimeout(() => {
+//       resolve();
+//     }, ms);
+//   });
+// }
+
+async function updateSheet({ sheet, sheetHeader, sheetRows }) {
+  await sheet.setHeaderRow(sheetHeader);
+  await sheet.addRows(sheetRows);
+}
+
 async function handle(req, res, resolve) {
-  const {
-    uid,
-    data_endpoint: dataEndpoint,
-    gsheet_id: googleSheetId,
-  } = req.body;
+  const { data_endpoint: dataEndpoint, gsheet_id: googleSheetId } = req.body;
+  console.log(req.body);
 
   if (!googleSheetId) {
-    res.status(500).json({ code: 'gsheet_id not found in service data ' });
+    res.status(500).json({ code: 'gsheet_id is required prop!' });
     return resolve();
   }
 
-  dataEndpoint.map((dataItem) => {
-    const ruleKeys = Object.keys(dataItem).filter(
-      (key) => key !== '_id' && key !== '_createdOn',
-    );
-    return ruleKeys.map((ruleKey) => {
-      const ruleTableData = dataItem[ruleKey];
-      const [header, ...rows] = ruleTableData;
-    });
+  const doc = new GoogleSpreadsheet(googleSheetId);
+
+  // use service account creds
+  await doc.useServiceAccountAuth({
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   });
 
-  const fieldKeyToNameMap = fields.reduce(
-    (accum, field) => ({
-      ...accum,
-      [field.fieldKey]: field.fieldName,
-    }),
-    {},
-  );
+  await doc.loadInfo();
+
+  const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id]
 
   const syncPageToGSheet = async ({ page }) => {
     const { data: recordsOnPage } = await getPageRecords({
       dataEndpoint,
       page,
     });
+    console.log({ recordsOnPage });
     if (!dataExists(recordsOnPage)) {
       return false;
     }
 
-    const sheetHeader = fields.map((field) => field.fieldName);
+    const toSyncData = recordsOnPage
+      .map((dataItem) => {
+        const ruleKeys = Object.keys(dataItem).filter(
+          (key) => key !== '_id' && key !== '_createdOn',
+        );
+        return ruleKeys.map((ruleKey) => {
+          const ruleTableData = dataItem[ruleKey];
+          const [header, ...rows] = ruleTableData;
+          const cleanHeader = toArray(header).map((item) =>
+            item.replace(/\n/gi, ' '),
+          );
+          return {
+            sheetName: ruleKey,
+            sheetHeader: cleanHeader,
+            sheetRows: rows.map((row) =>
+              Object.keys(row).reduce(
+                (accum, cellKey) => ({
+                  ...accum,
+                  [cleanHeader[cellKey]]: row[cellKey],
+                }),
+                {},
+              ),
+            ),
+          };
+        });
+      })
+      .reduce((accum, item) => [...accum, ...item], []);
 
-    const sheetRows = recordsOnPage.map((record) =>
-      Object.keys(record)
-        .filter((recordKey) => recordKey in fieldKeyToNameMap)
-        .reduce(
-          (accum, recordKey) => ({
-            ...accum,
-            [fieldKeyToNameMap[recordKey]]: record[recordKey],
-          }),
-          {},
-        ),
+    const prs = toSyncData.map(({ sheetHeader, sheetRows, sheetName }) =>
+      updateSheet({
+        googleSheetId,
+        sheet,
+        sheetHeader,
+        sheetRows,
+        sheetName,
+      }),
     );
 
-    if (!preSyncWebhook) {
-      console.log('👎 preSyncWebhook');
-      try {
-        await gSheetSync({
-          googleSheetId,
-          sheetHeader,
-          sheetRows,
-        });
-      } catch (e) {
-        console.log('error with gSheetSync without preSyncWebhook', e);
-        Sentry.captureException(e);
-      }
-    } else {
-      console.log('👍 preSyncWebhook');
-      try {
-        const {
-          data: { header: customSheetHeader, rows: customSheetRows },
-        } = await axios.post(preSyncWebhook, {
-          header: sheetHeader,
-          rows: sheetRows,
-        });
-
-        await gSheetSync({
-          googleSheetId,
-          sheetHeader: customSheetHeader,
-          sheetRows: customSheetRows,
-        });
-      } catch (e) {
-        console.log('error with gSheetSync or preSyncWebhook', e);
-        Sentry.captureException(e);
-      }
-    }
+    await Promise.all(prs);
 
     return true;
   };

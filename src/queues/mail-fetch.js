@@ -100,7 +100,7 @@ async function processJob(job, done) {
     initNotifications,
     completionNotifications,
     pendingWebhookNotifications,
-    singlePageRun = true,
+    singlePageRun = false,
   } = jobData;
 
   await iterable({
@@ -131,7 +131,7 @@ async function processJob(job, done) {
       delay: 15 * 1000,
       backoff: {
         type: 'exponential',
-        delay: 30 * 1000,
+        delay: 15 * 1000,
       },
     },
   );
