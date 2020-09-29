@@ -21,8 +21,7 @@ async function processJob(job) {
     await redis.smembers(`spawnedBy:${taskId}:completed`),
   );
   if (pendingJobIds.size === completedJobIds.size) {
-    console.log('✅ taskStatusQueue completed!');
-
+    console.log('✅ taskStatusQueue completed! taskId: ', taskId);
     if (completionNotifications.success) {
       const { notifyConditions = {} } = completionNotifications.success;
 
@@ -32,6 +31,7 @@ async function processJob(job) {
           notifyConditions.hasDataAtEndpoint,
         );
         const { data = [] } = await axios(notifyConditions.hasDataAtEndpoint);
+
         if (data.length) {
           addNotificationsToQueue(
             completionNotifications.success.notifications,

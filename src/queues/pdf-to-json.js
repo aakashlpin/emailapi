@@ -20,6 +20,7 @@ async function processJob(jobData) {
       selectedTableData,
       camelotMethod,
       camelotScale,
+      attachmentPassword,
     } = queueData;
 
     const { attachments, messageId } = email;
@@ -33,6 +34,7 @@ async function processJob(jobData) {
         attachmentId,
         camelotMethod,
         camelotScale,
+        attachmentPassword,
       },
     );
 
@@ -76,8 +78,8 @@ async function processJob(jobData) {
 }
 
 (() => {
-  queues.pdfExtractionQueue.process((job) => {
+  queues.pdfExtractionQueue.process(5, async (job) => {
     console.log('processing pdfExtractionQueue job#', job.id);
-    processJob(job.data);
+    await processJob(job.data);
   });
 })();
