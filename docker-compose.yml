@@ -29,7 +29,7 @@ services:
     restart: always
     image: 'docker.pkg.github.com/aakashlpin/emailapi/emailapi:latest'
     env_file:
-      - ~/apps/emailapi-pipeline/.env
+      - ~/apps/emailapi-pipeline/docker.env
     volumes:
       - /tmp:/tmp
     ports:
