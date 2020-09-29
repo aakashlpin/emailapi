@@ -44,7 +44,7 @@ jobs:
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
           docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
-          docker-compose pull
+          cd ~/apps/emailapi-pipeline && docker-compose pull
 
     - name: Cloudflare Workers route update
       uses: aakashlpin/cloudflare-worker-route-update@v0.5
@@ -67,7 +67,7 @@ jobs:
         key: ${{ secrets.SSH_ID_RSA }}
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
-          docker-compose up --detach --build emailapi
+          cd ~/apps/emailapi-pipeline && docker-compose up --detach --build emailapi
 
     - name: Wait for build 40s
       uses: jakejarvis/wait-action@master
