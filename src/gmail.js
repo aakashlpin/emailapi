@@ -1,11 +1,12 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-await-in-loop */
+import Sentry from '~/src/sentry';
+
 const { google } = require('googleapis');
 const format = require('date-fns/format');
 const b64Decode = require('base-64').decode;
 
 const authHandler = require('./auth');
-const { log } = require('./integrations/utils');
 
 function getHeaderValueFromEmail(headers = [], name) {
   try {
@@ -89,47 +90,60 @@ function processMessageBody(message) {
 
     return parsedData;
   } catch (e) {
-    console.log(e);
+    Sentry.captureException(e);
+    console.error(e);
     return null;
   }
 }
 
 async function getEmailsFromRemote(gmail, reqParams) {
-  const res = await gmail.users.messages.list(reqParams);
-  const messageList = res.data.messages;
+  try {
+    const res = await gmail.users.messages.list(reqParams);
+    const messageList = res.data.messages;
 
-  if (!messageList) {
+    if (!messageList) {
+      return {
+        nextPageToken: null,
+        messages: [],
+      };
+    }
+
+    const remotes = messageList.map((messageListItem) =>
+      gmail.users.messages.get({
+        userId: reqParams.userId,
+        id: messageListItem.id,
+      }),
+    );
+
+    const messages = await Promise.all(remotes);
+
     return {
-      nextPageToken: null,
-      messages: [],
+      nextPageToken: res.data.nextPageToken,
+      messages,
     };
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return null;
   }
-
-  const remotes = messageList.map((messageListItem) =>
-    gmail.users.messages.get({
-      userId: reqParams.userId,
-      id: messageListItem.id,
-    }),
-  );
-
-  const messages = await Promise.all(remotes);
-
-  return {
-    nextPageToken: res.data.nextPageToken,
-    messages,
-  };
 }
 
 async function fetchEmailByMessageId({ messageId, refreshToken }) {
-  const auth = await authHandler(refreshToken);
-  const gmail = google.gmail({ version: 'v1', auth });
+  try {
+    const auth = await authHandler(refreshToken);
+    const gmail = google.gmail({ version: 'v1', auth });
 
-  const { data } = await gmail.users.messages.get({
-    id: messageId,
-    userId: 'me',
-  });
+    const { data } = await gmail.users.messages.get({
+      id: messageId,
+      userId: 'me',
+    });
 
-  return data;
+    return data;
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return null;
+  }
 }
 
 async function fetchEmails(
@@ -163,59 +177,73 @@ async function fetchEmails(
     const emails = emailsFromRemote.messages;
     return { emails, nextPageToken: emailsFromRemote.nextPageToken };
   } catch (e) {
-    return Promise.reject(new Error(e));
+    Sentry.captureException(e);
+    console.error(e);
+    return null;
   }
 }
 
 const fetchAttachment = async ({ attachmentId, messageId, refreshToken }) => {
-  const auth = await authHandler(refreshToken);
-  const gmail = google.gmail({ version: 'v1', auth });
+  try {
+    const auth = await authHandler(refreshToken);
+    const gmail = google.gmail({ version: 'v1', auth });
 
-  const pdfRemoteResponse = await gmail.users.messages.attachments.get({
-    id: attachmentId,
-    messageId,
-    userId: 'me',
-  });
+    const pdfRemoteResponse = await gmail.users.messages.attachments.get({
+      id: attachmentId,
+      messageId,
+      userId: 'me',
+    });
 
-  const { data } = pdfRemoteResponse;
-  if (data.size) {
-    // decode data.data
-    // and store in a attachment
-    return data.data.replace(/-/g, '+').replace(/_/g, '/');
+    const { data } = pdfRemoteResponse;
+    if (data.size) {
+      // decode data.data
+      // and store in a attachment
+      return data.data.replace(/-/g, '+').replace(/_/g, '/');
+    }
+
+    return pdfRemoteResponse;
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return null;
   }
-
-  return pdfRemoteResponse;
 };
 
 const fetchAttachments = async (attachmentParams) => {
-  const auth = await authHandler();
-  const gmail = google.gmail({ version: 'v1', auth });
+  try {
+    const auth = await authHandler();
+    const gmail = google.gmail({ version: 'v1', auth });
 
-  log({ attachments: attachmentParams.length });
+    let responses = [];
+    const batchSize = 50;
+    const maxIter = Math.ceil(attachmentParams.length / batchSize);
+    let iter = 0;
 
-  let responses = [];
-  const batchSize = 50;
-  const maxIter = Math.ceil(attachmentParams.length / batchSize);
-  let iter = 0;
+    const attachmentParamsCopy = [...attachmentParams];
+    while (iter < maxIter) {
+      const thisBatch = attachmentParamsCopy.splice(
+        iter * batchSize,
+        batchSize,
+      );
+      const pdfRemotes = thisBatch.map(({ attachmentId, messageId }) =>
+        gmail.users.messages.attachments.get({
+          id: attachmentId,
+          messageId,
+          userId: 'me',
+        }),
+      );
 
-  const attachmentParamsCopy = [...attachmentParams];
-  while (iter < maxIter) {
-    log({ doing: 'fetchAttachments', iter });
-    const thisBatch = attachmentParamsCopy.splice(iter * batchSize, batchSize);
-    const pdfRemotes = thisBatch.map(({ attachmentId, messageId }) =>
-      gmail.users.messages.attachments.get({
-        id: attachmentId,
-        messageId,
-        userId: 'me',
-      }),
-    );
+      const pdfResponses = await Promise.all(pdfRemotes);
+      responses = [...responses, ...pdfResponses];
+      iter += 1;
+    }
 
-    const pdfResponses = await Promise.all(pdfRemotes);
-    responses = [...responses, ...pdfResponses];
-    iter += 1;
+    return responses;
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return null;
   }
-
-  return responses;
 };
 
 const attachAfterDatePropToQuery = (q, afterDateInMilliseconds) =>

@@ -9,12 +9,14 @@ export default async function handle(req, res) {
       `${process.env.JSONBOX_NETWORK_URL}/${uid}/services`,
     );
 
-    userServices
+    res.json({});
+
+    const prs = userServices
       .filter((service) => service.cron)
-      .forEach(async (service) => {
+      .map(async (service) => {
         switch (service.app) {
           case 'EMAIL_TO_JSON': {
-            axios.post(
+            return axios.post(
               `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/apps/email-to-json`,
               {
                 uid,
@@ -24,10 +26,9 @@ export default async function handle(req, res) {
                 cron: true,
               },
             );
-            break;
           }
           case 'AUTO_UNLOCK': {
-            axios.post(
+            return axios.post(
               `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/apps/auto-unlock`,
               {
                 uid,
@@ -37,16 +38,21 @@ export default async function handle(req, res) {
                 cron: true,
               },
             );
-            break;
           }
           default: {
-            break;
+            return null;
           }
         }
       });
+
+    try {
+      await Promise.all(prs.filter((pr) => pr));
+    } catch (e) {
+      Sentry.captureException(e);
+      console.log(e);
+    }
   } catch (e) {
     Sentry.captureException(e);
     console.log(e);
   }
-  res.json({});
 }
