@@ -24,6 +24,12 @@ async function processJob(jobData) {
     } = queueData;
 
     const { attachments, messageId } = email;
+
+    if (!(Array.isArray(attachments) && attachments.length)) {
+      // return if no attachments
+      return Promise.resolve();
+    }
+
     const { id: attachmentId } = attachments[0];
     const { data: tablesFromAttachment } = await axios.post(
       `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/tables-from-attachment`,
