@@ -1,4 +1,4 @@
-name: build
+name: Deploy emailapi.io
 
 on:
   push:
