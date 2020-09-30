@@ -1,5 +1,6 @@
 import axios from 'axios';
 import queues from '~/src/redis-queue';
+import Sentry from '~/src/sentry';
 
 const normalizeHtmlWhitespace = require('normalize-html-whitespace');
 
@@ -18,33 +19,39 @@ async function sendWebhook({ url, data, method }) {
     console.log('⬇️ sendWebhook success:', response.data);
   } catch (e) {
     console.log('🚨  sendWebhook error:', e);
+    Sentry.captureException(e);
   }
 }
 
 async function processJob(job) {
-  const { data: jobData } = job;
-  const { type } = jobData;
+  try {
+    const { data: jobData } = job;
+    const { type } = jobData;
 
-  switch (type) {
-    case 'email': {
-      const { data: emailData } = jobData;
-      await sendEmail(emailData);
-      break;
-    }
+    switch (type) {
+      case 'email': {
+        const { data: emailData } = jobData;
+        await sendEmail(emailData);
+        break;
+      }
 
-    case 'webhook': {
-      const { data: webhookData } = jobData;
-      await sendWebhook(webhookData);
-      break;
-    }
+      case 'webhook': {
+        const { data: webhookData } = jobData;
+        await sendWebhook(webhookData);
+        break;
+      }
 
-    default: {
-      Promise.resolve();
-      break;
+      default: {
+        Promise.resolve();
+        break;
+      }
     }
+  } catch (e) {
+    Sentry.captureException(e);
+    console.log(e);
   }
 
-  return Promise.resolve();
+  Promise.resolve();
 }
 
 (() => {

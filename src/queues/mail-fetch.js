@@ -1,5 +1,6 @@
 import axios from 'axios';
 import queues, { redis } from '~/src/redis-queue';
+import Sentry from '~/src/sentry';
 
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
@@ -14,21 +15,27 @@ async function fetchEmails({
   searchQuery,
   refreshToken,
 }) {
-  const {
-    data: { emails, nextPageToken },
-  } = await axios.post(`${GOOGLE_OAUTH_REDIRECT_URI}/api/email-search`, {
-    query: searchQuery,
-    uid,
-    token,
-    refresh_token: refreshToken,
-    api_only: apiOnly,
-    nextPageToken: pageToken,
-  });
+  try {
+    const {
+      data: { emails, nextPageToken },
+    } = await axios.post(`${GOOGLE_OAUTH_REDIRECT_URI}/api/email-search`, {
+      query: searchQuery,
+      uid,
+      token,
+      refresh_token: refreshToken,
+      api_only: apiOnly,
+      nextPageToken: pageToken,
+    });
 
-  return {
-    emails,
-    nextPageToken,
-  };
+    return {
+      emails,
+      nextPageToken,
+    };
+  } catch (e) {
+    Sentry.captureException(e);
+    console.log(e);
+    return null;
+  }
 }
 
 async function iterable({
@@ -42,14 +49,24 @@ async function iterable({
   singlePageRun,
 }) {
   const { uid, token, refreshToken } = userProps;
-  const { emails, nextPageToken } = await fetchEmails({
-    uid,
-    token,
-    apiOnly,
-    pageToken,
-    searchQuery,
-    refreshToken,
-  });
+  let emails;
+  let nextPageToken;
+  try {
+    const response = await fetchEmails({
+      uid,
+      token,
+      apiOnly,
+      pageToken,
+      searchQuery,
+      refreshToken,
+    });
+    emails = response.emails;
+    nextPageToken = response.nextPageToken;
+  } catch (e) {
+    Sentry.captureException(e);
+    console.log(e);
+    return null;
+  }
 
   /**
    * NB: each redis record is pretty BIG
@@ -103,38 +120,43 @@ async function processJob(job, done) {
     singlePageRun = false,
   } = jobData;
 
-  await iterable({
-    userProps,
-    apiOnly,
-    searchQuery,
-    _nextQueue,
-    _nextQueueData,
-    parentJobId: id,
-    singlePageRun,
-  });
-
-  if (isLengthyArray(initNotifications)) {
-    initNotifications.forEach((notif) => {
-      queues.notificationsQueue.add(notif);
+  try {
+    await iterable({
+      userProps,
+      apiOnly,
+      searchQuery,
+      _nextQueue,
+      _nextQueueData,
+      parentJobId: id,
+      singlePageRun,
     });
-  }
 
-  queues.taskStatusQueue.add(
-    {
-      taskId: id,
-      completionNotifications,
-      pendingWebhookNotifications,
-    },
-    {
-      attempts: 30,
-      // run it first time after a 15s delay
-      delay: 15 * 1000,
-      backoff: {
-        type: 'exponential',
-        delay: 15 * 1000,
+    if (isLengthyArray(initNotifications)) {
+      initNotifications.forEach((notif) => {
+        queues.notificationsQueue.add(notif);
+      });
+    }
+
+    queues.taskStatusQueue.add(
+      {
+        taskId: id,
+        completionNotifications,
+        pendingWebhookNotifications,
       },
-    },
-  );
+      {
+        attempts: 30,
+        // run it first time after a 15s delay
+        delay: 15 * 1000,
+        backoff: {
+          type: 'exponential',
+          delay: 15 * 1000,
+        },
+      },
+    );
+  } catch (e) {
+    Sentry.captureException(e);
+    console.log(e);
+  }
 
   done();
 }
