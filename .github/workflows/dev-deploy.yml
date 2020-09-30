@@ -1,9 +1,6 @@
-name: Deploy emailapi.io
+name: Deploy dev.emailapi.io
 
-on:
-  push:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
   build:
@@ -30,7 +27,7 @@ jobs:
         username: ${{ secrets.GITBUH_USERNAME }}
         password: ${{ secrets.GITHUB_TOKEN }}
         dockerfile: Dockerfile-prod
-        tags: latest
+        tags: dev
 
     - name: Remote Pull docker image of emailapi
       uses: appleboy/ssh-action@master
@@ -44,17 +41,7 @@ jobs:
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
           docker login docker.pkg.github.com -u $GITBUH_USERNAME -p $GITHUB_TOKEN
-          cd ~/apps/emailapi-pipeline && docker-compose pull
-
-    - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v0.5
-      with:
-        CF_EMAIL: ${{ secrets.CF_EMAIL }}
-        CF_API_KEY: ${{ secrets.CF_API_KEY}}
-        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
-        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
-        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
-        CF_ROUTE_PATTERN: 'emailapi.io/*'
+          cd ~/apps/emailapi-pipeline && docker-compose -f docker-compose-dev.yml pull
 
     - name: Remote Start docker server
       uses: appleboy/ssh-action@master
@@ -67,19 +54,4 @@ jobs:
         key: ${{ secrets.SSH_ID_RSA }}
         envs: GITBUH_USERNAME, GITHUB_TOKEN
         script: |
-          cd ~/apps/emailapi-pipeline && docker-compose -p emailapi_prod_proj up --detach --build emailapi
-
-    - name: Wait for build 40s
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '40s'
-
-    - name: Cloudflare Workers route update
-      uses: aakashlpin/cloudflare-worker-route-update@v0.5
-      with:
-        CF_EMAIL: ${{ secrets.CF_EMAIL }}
-        CF_API_KEY: ${{ secrets.CF_API_KEY}}
-        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
-        CF_ROUTE_ID: ${{ secrets.CF_ROUTE_ID }}
-        CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
-        CF_ROUTE_PATTERN: 'away.emailapi.io/*'
+          cd ~/apps/emailapi-pipeline && docker-compose -f docker-compose-dev.yml -p emailapi_dev_proj up --detach --build emailapi_dev
