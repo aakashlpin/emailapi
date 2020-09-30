@@ -1,9 +1,5 @@
 version: '2'
 
-networks:
-  app-tier:
-    driver: bridge
-
 services:
   jsonbox:
     container_name: jsonbox
@@ -12,8 +8,6 @@ services:
       - ~/apps/jsonbox/.env
     ports:
       - '3001:3000'
-    networks:
-      - app-tier
 
   redis:
     image: 'bitnami/redis:latest'
@@ -21,8 +15,6 @@ services:
       - /tmp/redis/data:/bitnami/redis/data
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-    networks:
-      - app-tier
 
   emailapi:
     container_name: emailapi
@@ -34,8 +26,6 @@ services:
       - /tmp:/tmp
     ports:
       - '3000:3000'
-    networks:
-      - app-tier
     depends_on:
       - jsonbox
       - redis
