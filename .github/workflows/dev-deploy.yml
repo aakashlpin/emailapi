@@ -1,9 +1,6 @@
-name: stage
+name: Deploy dev.emailapi.io
 
-on:
-  push:
-    branches:
-      - develop
+on: [pull_request]
 
 jobs:
   build:
