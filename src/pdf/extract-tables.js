@@ -124,6 +124,10 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
     });
 
     const extractedTables = await tablesPr;
+    if (!(Array.isArray(extractedTables) && extractedTables.length)) {
+      return null;
+    }
+
     const validTables = extractedTables.filter((table) => {
       const firstRow = table[0];
       // valid tables will contain first row as header
