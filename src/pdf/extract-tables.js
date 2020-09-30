@@ -6,6 +6,7 @@ import fs from 'fs';
 import unzipper from 'unzipper';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import path from 'path';
+import Sentry from '~/src/sentry';
 
 /**
  * Promise all
@@ -56,95 +57,100 @@ function readFiles(dirname) {
 }
 
 export default async function extractTableInJson(inputPdfPath, options = {}) {
-  const dir = '/tmp';
-  const inputPdfPathParts = inputPdfPath.split('/');
-  const inputPdfFilename = inputPdfPathParts.length
-    ? inputPdfPathParts[inputPdfPathParts.length - 1]
-    : inputPdfPath;
-  const outputFilename = inputPdfFilename.replace('.pdf', '');
-  const outputPath = `${dir}/${outputFilename}.json`;
-  const command = [
-    'camelot',
-    '--zip',
-    '--format',
-    'json',
-    '--pages',
-    'all',
-    '--output',
-    outputPath,
-  ];
+  try {
+    const dir = '/tmp';
+    const inputPdfPathParts = inputPdfPath.split('/');
+    const inputPdfFilename = inputPdfPathParts.length
+      ? inputPdfPathParts[inputPdfPathParts.length - 1]
+      : inputPdfPath;
+    const outputFilename = inputPdfFilename.replace('.pdf', '');
+    const outputPath = `${dir}/${outputFilename}.json`;
+    const command = [
+      'camelot',
+      '--zip',
+      '--format',
+      'json',
+      '--pages',
+      'all',
+      '--output',
+      outputPath,
+    ];
 
-  // pdf password
-  if (options.password) {
-    command.push('--password', options.password);
-  }
-
-  // table extration technique
-  command.push(options.stream ? 'stream' : 'lattice');
-  // input path is the last argument
-
-  // lattice options
-  if (!options.stream) {
-    if (options.scale) {
-      command.push('-scale', options.scale);
-    }
-  }
-
-  command.push(inputPdfPath);
-
-  const shellCmd = command.join(' ');
-
-  console.log('camelot command', shellCmd);
-
-  if (shell.exec(shellCmd).code !== 0) {
-    shell.echo('Error: camelot failed');
-    Promise.reject(new Error('Error: camelot failed'));
-    // return shell.exit(1);
-  }
-
-  const zipPath = `${dir}/${outputFilename}.zip`;
-
-  const tablesPr = new Promise((resolve) => {
-    const extractedFolder = `${dir}/${outputFilename}`;
-    fs.createReadStream(zipPath)
-      .pipe(unzipper.Extract({ path: extractedFolder }))
-      .on('close', () => {
-        readFiles(extractedFolder)
-          .then((files) => {
-            console.log('loaded ', files.length);
-            const data = files.map((item) => JSON.parse(item.contents));
-            resolve(data);
-          })
-          .catch((error) => {
-            console.log(error);
-            resolve(null);
-          });
-      });
-  });
-
-  const extractedTables = await tablesPr;
-  const validTables = extractedTables.filter((table) => {
-    const firstRow = table[0];
-    // valid tables will contain first row as header
-    // header cols should not contain empty cells
-
-    if (
-      Object.values(firstRow).filter((item) => item).length !==
-      Object.keys(firstRow).length
-    ) {
-      return false;
+    // pdf password
+    if (options.password) {
+      command.push('--password', options.password);
     }
 
-    if (Object.keys(firstRow).length < 2) {
-      // single column table? more like horizontally layed out table
-      return false;
+    // table extration technique
+    command.push(options.stream ? 'stream' : 'lattice');
+    // input path is the last argument
+
+    // lattice options
+    if (!options.stream) {
+      if (options.scale) {
+        command.push('-scale', options.scale);
+      }
     }
 
-    // console.log('----table----');
-    // console.log(table);
-    return true;
-  });
-  return extractedTables;
+    command.push(inputPdfPath);
+
+    const shellCmd = command.join(' ');
+
+    console.log('camelot command', shellCmd);
+
+    if (shell.exec(shellCmd).code !== 0) {
+      shell.echo('Error: camelot failed');
+      return null;
+    }
+
+    const zipPath = `${dir}/${outputFilename}.zip`;
+
+    const tablesPr = new Promise((resolve) => {
+      const extractedFolder = `${dir}/${outputFilename}`;
+      fs.createReadStream(zipPath)
+        .pipe(unzipper.Extract({ path: extractedFolder }))
+        .on('close', () => {
+          readFiles(extractedFolder)
+            .then((files) => {
+              console.log('loaded ', files.length);
+              const data = files.map((item) => JSON.parse(item.contents));
+              resolve(data);
+            })
+            .catch((error) => {
+              console.log(error);
+              resolve(null);
+            });
+        });
+    });
+
+    const extractedTables = await tablesPr;
+    const validTables = extractedTables.filter((table) => {
+      const firstRow = table[0];
+      // valid tables will contain first row as header
+      // header cols should not contain empty cells
+
+      if (
+        Object.values(firstRow).filter((item) => item).length !==
+        Object.keys(firstRow).length
+      ) {
+        return false;
+      }
+
+      if (Object.keys(firstRow).length < 2) {
+        // single column table? more like horizontally layed out table
+        return false;
+      }
+
+      // console.log('----table----');
+      // console.log(table);
+      return true;
+    });
+    return extractedTables;
+  } catch (e) {
+    Sentry.captureException(e);
+    console.log(e);
+    return null;
+  }
 }
 
 // (async () => {
