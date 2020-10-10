@@ -1,0 +1,68 @@
+{
+    "store": {
+        "Simpl <alerts@simpl-mails.com>": [
+            "Payment of ₹2580.15 received.",
+            "Your Simpl ONE BILL of Rs.2324.15 is due on 05 Oct 2020",
+            "₹256.0 on Zomato charged via Simpl",
+            "Your Simpl ONE BILL Statement - ₹2324.15 due on 05 Oct 2020.",
+            "₹360.0 on Dunzo charged via Simpl",
+            "₹330.0 from Dunzo refunded to Simpl",
+            "₹605.0 on Dunzo charged via Simpl"
+        ],
+        "Citibank India <CitiAlert.India@citicorp.com>": [
+            "Transaction confirmation on your Citibank credit card",
+            "Transaction confirmation on your Citibank credit card",
+            "Transaction confirmation on your Citibank credit card",
+            "Transaction confirmation on your Citibank credit card"
+        ],
+        "Seth Godin <notify@sethgodin.com>": [
+            "Seth's Blog : Walking away from the idée fixe",
+            "Seth's Blog : The arc and the arch",
+            "Seth's Blog : \"Well, that's a dumb idea\"",
+            "Seth's Blog : Lottery thinking",
+            "Seth's Blog : Professional wrestling",
+            "Seth's Blog : Here I am",
+            "Seth's Blog : \"What time is your flight?\"",
+            "Seth's Blog : The magic of trade-offs",
+            "Seth's Blog : One at a time, over and over",
+            "Seth's Blog : When can we talk about our systems?",
+            "Seth's Blog : What does \"shortly\" mean?",
+            "Seth's Blog : Dancing with belief",
+            "Seth's Blog : Crossing from the early adopters to a larger group"
+        ],
+
+        "Flipkart <info@ncp.flipkart.com>": [
+            "Your Cart misses you"
+        ],
+        "The Man Company <care@themancompany.com>": [
+            "Hi Aakash, Heard of the offer that you can decide?",
+            "Hi Aakash, Double your options this weekend. For half the effort!",
+            "Hi Aakash, Friday is a great excuse for a facelift!"
+        ],
+        "Kotak Mutual Fund <info@kotakmf.com>": [
+            "This fund is Automatic! 📈",
+            "Happy October! Here’s something you should consider doing today...",
+            "SIP - It's the smarter way!",
+            "How to generate wealth? #Investmentor",
+            "Our key funds in four different categories 🗝️"
+        ],
+        "Quikr <noreply@emails.quikr.com>": [
+            "💥 Upto 80% Off on Branded Furniture"
+        ],
+        "\"Neemans.com\" <info@neemans.com>": [
+            "Wool Joggers are Back in Stock 👞"
+        ],
+        "ETtech News Alert <newsletter@ettech.com>": [
+            "A recap of our must-read stories from this week",
+            "Lee Fixel is back, makes first India bet from new fund Addition",
+            "A recap of our must-read stories from this week"
+        ],
+        "ICICI Bank <services@custcomm.icicibank.com>": [
+            "Congratulations! You are eligible for a pre-approved ICICI Bank Two Wheeler Loan",
+            "Cardless cash withdrawal through ICICI Bank ATM using iMobile",
+            "Would you like an instant gift voucher?",
+            "Congratulations! You have received a Gift card",
+            "Choose digital payments to make secure payments."
+        ],
+   }
+}
