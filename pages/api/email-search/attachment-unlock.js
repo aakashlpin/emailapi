@@ -38,13 +38,14 @@ async function handle(req, res, resolve) {
     }
 
     try {
-      const localFilePath = `/tmp/${filename}`;
+      const unixFriendlyFilename = filename.replace(/\s/g, '_');
+      const localFilePath = `/tmp/${unixFriendlyFilename}`;
       base64.base64Decode(data.base64, localFilePath);
 
       const params = {
         inputFilePath: localFilePath,
         password: pdfPasswordInput,
-        outputFilePath: `/tmp/${filename
+        outputFilePath: `/tmp/${unixFriendlyFilename
           .split('.')
           .map((v, idx) => (idx === 0 ? `${v}_unlocked` : v))
           .join('.')}`,
