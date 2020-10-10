@@ -5,8 +5,9 @@ const axios = require('axios');
 export default async function handle(req, res) {
   const { refresh_token: refreshToken, uid } = req.body;
   try {
+    // NB: only processes 100 services
     const { data: userServices } = await axios(
-      `${process.env.JSONBOX_NETWORK_URL}/${uid}/services`,
+      `${process.env.JSONBOX_NETWORK_URL}/${uid}/services?limit=100`,
     );
 
     res.json({});

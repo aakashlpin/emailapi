@@ -6,7 +6,7 @@ import { getSearchQuery } from '~/src/apps/utils';
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
-const EMAILAPI_DOMAIN = process.env.JSONBOX_NETWORK_URL;
+const { EMAILAPI_DOMAIN, JSONBOX_NETWORK_URL } = process.env;
 const APP_HOST = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 require('~/src/queues');
@@ -22,12 +22,13 @@ async function handle(req, res, resolve) {
   } = req.body;
 
   const apiId = generateUniqueId();
-  const endpoint = `${EMAILAPI_DOMAIN}/${uid}/${apiId}`;
+  const endpoint = `${JSONBOX_NETWORK_URL}/${uid}/${apiId}`;
+  const publicEndpoint = `${EMAILAPI_DOMAIN}/${uid}/${apiId}`;
 
-  res.json({ endpoint });
+  res.json({ endpoint: publicEndpoint });
 
   try {
-    const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
+    const serviceEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`;
     const searchQuery = await getSearchQuery({
       serviceEndpoint,
       newOnly,
