@@ -8,7 +8,7 @@ require('~/src/queues');
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
-const EMAILAPI_DOMAIN = process.env.JSONBOX_NETWORK_URL;
+const { JSONBOX_NETWORK_URL, EMAILAPI_DOMAIN } = process.env;
 const APP_HOST = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function handle(req, res, resolve) {
@@ -24,11 +24,12 @@ async function handle(req, res, resolve) {
 
   try {
     const apiId = generateUniqueId();
-    const endpoint = `${EMAILAPI_DOMAIN}/${uid}/${apiId}`;
+    const endpoint = `${JSONBOX_NETWORK_URL}/${uid}/${apiId}`;
+    const publicEndpoint = `${EMAILAPI_DOMAIN}/${uid}/${apiId}`;
 
-    res.json({ endpoint });
+    res.json({ endpoint: publicEndpoint });
 
-    const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
+    const serviceEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`;
     const searchQuery = await getSearchQuery({
       serviceEndpoint,
       newOnly,
@@ -68,7 +69,7 @@ async function handle(req, res, resolve) {
                   : `🔁 cron succeeded for "${searchQuery}"`,
                 body: `
                   Hello ${user.given_name || user.name},<br/><br/>
-                  Here's the <a href="${endpoint}">data endpoint</a> for emails belonging to search query ${searchQuery}.<br/><br/>
+                  Here's the <a href="${publicEndpoint}">data endpoint</a> for emails belonging to search query ${searchQuery}.<br/><br/>
                   emailapi.io uses a hosted version of jsonbox.io as its underlying database. <a href="https://github.com/vasanthv/jsonbox#read">Follow its docs</a> for further instructions on how to use your new data endpoint.<br/><br/>
                   If you've got a question or a comment, or if you'd like to say hi (that's a nice thing to do), hit reply!<br/><br/>
                   Thanks,<br/>
