@@ -964,6 +964,9 @@ const EmailJsonApp = ({ router, ...props }) => {
             <div className="p-4">
               <FlexEnds className="pr-12">
                 <h3 className="text-xl mb-2">Extract data from PDF</h3>
+                {/* [TODO] add a helper question here asking */}
+                {/* Is the PDF locked with password? */}
+                {/* on clicking reveal an input box to accept password */}
                 <div>
                   <Button
                     onClick={onClickPreviewExtractionRules}
@@ -1001,6 +1004,19 @@ const EmailJsonApp = ({ router, ...props }) => {
                   </div>
                 </div>
               </label>
+
+              {camelotMethod === 'lattice' ? (
+                <label htmlFor="camelotScale">
+                  Lattice Scale:
+                  <input
+                    id="camelotScale"
+                    type="text"
+                    value={camelotScale}
+                    onChange={(e) => setCamelotScale(e.target.value)}
+                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+                </label>
+              ) : null}
 
               {camelotMethod === 'lattice' ? (
                 <label htmlFor="camelotScale">
