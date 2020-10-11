@@ -6,6 +6,7 @@ import fs from 'fs';
 import unzipper from 'unzipper';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import path from 'path';
+import removePdfPassword from 'remove-pdf-password';
 import Sentry from '~/src/sentry';
 
 /**
@@ -64,6 +65,24 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       ? inputPdfPathParts[inputPdfPathParts.length - 1]
       : inputPdfPath;
     const outputFilename = inputPdfFilename.replace('.pdf', '');
+    // pdf password
+    let unlockedPdfPath = inputPdfPath;
+    if (options.password) {
+      const outputFilePath = `${inputPdfPath
+        .split('.pdf')
+        .map((v, idx) => (idx === 0 ? `${v}_unlocked` : v))
+        .join('.pdf')}`;
+
+      const params = {
+        inputFilePath: inputPdfPath,
+        password: options.password,
+        outputFilePath,
+      };
+
+      removePdfPassword(params);
+      unlockedPdfPath = outputFilePath;
+    }
+
     const outputPath = `${dir}/${outputFilename}.json`;
     const command = [
       'camelot',
@@ -76,11 +95,6 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       outputPath,
     ];
 
-    // pdf password
-    if (options.password) {
-      command.push('--password', options.password);
-    }
-
     // table extration technique
     command.push(options.stream ? 'stream' : 'lattice');
     // input path is the last argument
@@ -92,7 +106,7 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       }
     }
 
-    command.push(inputPdfPath);
+    command.push(unlockedPdfPath);
 
     const shellCmd = command.join(' ');
 
@@ -128,27 +142,6 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       return null;
     }
 
-    const validTables = extractedTables.filter((table) => {
-      const firstRow = table[0];
-      // valid tables will contain first row as header
-      // header cols should not contain empty cells
-
-      if (
-        Object.values(firstRow).filter((item) => item).length !==
-        Object.keys(firstRow).length
-      ) {
-        return false;
-      }
-
-      if (Object.keys(firstRow).length < 2) {
-        // single column table? more like horizontally layed out table
-        return false;
-      }
-
-      // console.log('----table----');
-      // console.log(table);
-      return true;
-    });
     return extractedTables;
   } catch (e) {
     Sentry.captureException(e);

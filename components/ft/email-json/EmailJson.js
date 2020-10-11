@@ -752,12 +752,14 @@ const EmailJsonApp = ({ router, ...props }) => {
   );
   const [camelotMethod, setCamelotMethod] = useState('lattice');
   const [camelotScale, setCamelotScale] = useState(null);
+  const [attachmentPassword, setAttachmentPassword] = useState(null);
 
   async function onClosePDFPreview() {
     setExtractedDataFromPDF(null);
     setTableDataForExtractionRule(null);
     setCamelotMethod('lattice');
     setCamelotScale(null);
+    setAttachmentPassword(null);
     setExtractionRules([]);
     setOpen(false);
   }
@@ -770,6 +772,7 @@ const EmailJsonApp = ({ router, ...props }) => {
         token,
         messageId: selectedMessageId,
         attachmentId: selectedAttachmentId,
+        attachmentPassword,
         camelotMethod,
         camelotScale,
       },
@@ -1019,13 +1022,13 @@ const EmailJsonApp = ({ router, ...props }) => {
               ) : null}
 
               {camelotMethod === 'lattice' ? (
-                <label htmlFor="camelotScale">
-                  Lattice Scale:
+                <label htmlFor="attachmentPassword">
+                  PDF Password
                   <input
-                    id="camelotScale"
+                    id="attachmentPassword"
                     type="text"
-                    value={camelotScale}
-                    onChange={(e) => setCamelotScale(e.target.value)}
+                    value={attachmentPassword}
+                    onChange={(e) => setAttachmentPassword(e.target.value)}
                     className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   />
                 </label>
