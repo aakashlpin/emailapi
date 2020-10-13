@@ -1,9 +1,6 @@
 import React from 'react';
-import dynamic from 'next/dynamic';
-
 import { getRuleDataFromTable } from '~/src/pdf/utils';
-
-const Grid = dynamic(() => import('./Grid'), { ssr: false });
+import Grid from './Grid';
 
 export default function RulePreview({ data, rule }) {
   // function validateCell
@@ -11,7 +8,7 @@ export default function RulePreview({ data, rule }) {
   return (
     <div className="mb-4">
       <p className="font-bold">Rows Extracted by cell rules:</p>
-      <Grid data={ruleDataFromTable} />
+      <Grid data={ruleDataFromTable.rows} />
     </div>
   );
 }

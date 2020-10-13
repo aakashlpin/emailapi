@@ -56,10 +56,11 @@ async function processJob(jobData) {
       .map((table) =>
         rules
           .map((rule, idx) => {
+            // [TODO] this will need to be processed as per rule type
             const ruleData = getRuleDataFromTable({ data: table, rule });
             if (ruleData) {
               return {
-                [`rule_${idx}`]: ruleData,
+                [`rule_${idx}`]: ruleData.rows,
               };
             }
             return null;

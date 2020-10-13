@@ -26,6 +26,7 @@ import ConfigOutputBar from './config-ui';
 import ExtractionRules from './ExtractionRules';
 
 import { Button, FlexEnds } from '~/components/common/Atoms';
+import { RULE_TYPE } from '../../../src/pdf/enums';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -633,7 +634,13 @@ const EmailJsonApp = ({ router, ...props }) => {
   }
 
   async function onCreateExtractionRule() {
-    setExtractionRules([...extractionRules, {}]);
+    setExtractionRules([
+      ...extractionRules,
+      {
+        type: RULE_TYPE.INCLUDE_ROWS,
+        where: [],
+      },
+    ]);
   }
 
   async function handleFetchExtractDataFromPDF() {
@@ -902,7 +909,7 @@ const EmailJsonApp = ({ router, ...props }) => {
 
               {extractedTablesFromPDF ? (
                 <Button onClick={onCreateExtractionRule} className="mb-4 block">
-                  + Create extraction rule
+                  + Create new extraction rule
                 </Button>
               ) : null}
 
