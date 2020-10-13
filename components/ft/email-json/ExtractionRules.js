@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { defaultsDeep } from 'lodash';
 import RulePreview from './rules-preview';
 import { RULE_TYPE } from '../../../src/pdf/enums';
-import { Button } from '~/components/common/Atoms';
+import { Button, FlexEnds } from '~/components/common/Atoms';
 
 const Grid = dynamic(() => import('./Grid'), { ssr: false });
 
@@ -170,6 +170,26 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
     });
   }
 
+  function setKeyPairAtCell({ ruleId, cellId, ...props }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              cells: rule.cells.map((cellRule, cellIdx) =>
+                cellId !== cellIdx
+                  ? cellRule
+                  : {
+                      ...cellRule,
+                      ...props,
+                    },
+              ),
+            },
+      ),
+    );
+  }
+
   return (
     <div className="mb-8">
       {rules.map((rule, ruleId) => {
@@ -182,7 +202,7 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                     <p>
                       Table #{idx + 1}{' '}
                       <Button
-                        className="text-xs"
+                        className="text-sm"
                         onClick={() => onClickSelectTable({ ruleId, id: idx })}
                       >
                         Select table
@@ -199,82 +219,94 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
         const selectedTableData = extractedTablesFromPDF[rule.selectedTableId];
 
         return (
-          <div key={`rule_${ruleId}`}>
-            <p className="font-bold">Original Table:</p>{' '}
-            <select
-              className="border border-1 block"
-              value={rule.type}
-              onChange={(e) =>
-                onSelectExtractionType({ ruleId, type: e.target.value })
-              }
-            >
-              <option value="">Select extraction type...</option>
-              <option value={RULE_TYPE.INCLUDE_ROWS}>Extract Rows</option>
-              <option value={RULE_TYPE.INCLUDE_CELLS}>Extract Cells</option>
-            </select>{' '}
-            <div className="mb-4">
-              <Grid
-                data={selectedTableData}
-                isCellClickable={rule.type === RULE_TYPE.INCLUDE_CELLS}
-                cellClickCb={(props) => onClickCell({ ruleId, ...props })}
+          <div
+            className="mb-12 border-l-4 border-orange-300 pl-4"
+            key={`rule_${ruleId}`}
+          >
+            <label htmlFor={`rule${ruleId}_name`}>
+              <span className="font-bold">Rule Name:</span>
+              <input
+                type="text"
+                id={`rule${ruleId}_name`}
+                value={rule.name}
+                onChange={(e) => setRuleProp({ ruleId, name: e.target.value })}
+                className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               />
-            </div>
+            </label>
+            <label htmlFor={`rule${ruleId}_name`}>
+              <span className="font-bold">Extraction type:</span>
+              <select
+                className="mb-4 border border-1 block"
+                value={rule.type}
+                onChange={(e) =>
+                  onSelectExtractionType({ ruleId, type: e.target.value })
+                }
+              >
+                <option value={RULE_TYPE.INCLUDE_ROWS}>Extract Rows</option>
+                <option value={RULE_TYPE.INCLUDE_CELLS}>Extract Cells</option>
+              </select>{' '}
+            </label>
+            <Grid
+              className="mb-4"
+              data={selectedTableData}
+              isCellClickable={rule.type === RULE_TYPE.INCLUDE_CELLS}
+              cellClickCb={(props) => onClickCell({ ruleId, ...props })}
+            />
             {rule.type === RULE_TYPE.INCLUDE_ROWS ? (
-              <div className="mb-4">
-                <RulePreview rule={rules[ruleId]} data={selectedTableData} />
-              </div>
-            ) : null}
-            {rule.type === RULE_TYPE.INCLUDE_ROWS ? (
-              <div>
+              <div className="mb-12">
+                <span className="font-bold">Define Cell Rules:</span>
                 {rule.where.map((whereRule, whereId) => (
-                  <div key={`whererule_${whereId}`}>
-                    <span>if a cell value at column index</span>{' '}
-                    <input
-                      type="text"
-                      className="border border-1 w-8"
-                      value={whereRule.colIndex}
-                      onChange={(e) =>
-                        setColIndexOnWhereRule({
-                          colIndex: e.target.value,
-                          ruleId,
-                          whereId,
-                        })
-                      }
-                    />{' '}
-                    <select
-                      className="border border-1"
-                      value={whereRule.type}
-                      onChange={(e) =>
-                        setWhereRuleType({
-                          ruleId,
-                          whereId,
-                          type: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="cell_startsWith">starts with</option>
-                      <option value="cell_endsWith">ends with</option>
-                      <option value="cell_equals">is exactly</option>
-                      <option value="cell_contains">contains</option>
-                      {whereRule.colIndex ? (
-                        <option value="cell_notEmpty">is not empty</option>
-                      ) : null}
-                    </select>{' '}
-                    {whereRule.type !== 'cell_notEmpty' ? (
+                  <FlexEnds className="mb-4" key={`whererule_${whereId}`}>
+                    <div>
+                      <span>{whereId + 1}. if cell value at column index</span>{' '}
                       <input
                         type="text"
-                        className="border border-1"
-                        value={whereRule.value}
+                        className="border border-1 p-1 w-8"
+                        value={whereRule.colIndex}
                         onChange={(e) =>
-                          setWhereValue({
+                          setColIndexOnWhereRule({
+                            colIndex: e.target.value,
                             ruleId,
                             whereId,
-                            value: e.target.value,
                           })
                         }
-                      />
-                    ) : null}{' '}
+                      />{' '}
+                      <select
+                        className="border border-1 p-1 w-40"
+                        value={whereRule.type}
+                        onChange={(e) =>
+                          setWhereRuleType({
+                            ruleId,
+                            whereId,
+                            type: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="cell_startsWith">starts with</option>
+                        <option value="cell_endsWith">ends with</option>
+                        <option value="cell_equals">is exactly</option>
+                        <option value="cell_contains">contains</option>
+                        {whereRule.colIndex ? (
+                          <option value="cell_notEmpty">is not empty</option>
+                        ) : null}
+                      </select>{' '}
+                      {whereRule.type !== 'cell_notEmpty' ? (
+                        <input
+                          type="text"
+                          className="border border-1 p-1 w-24"
+                          value={whereRule.value}
+                          onChange={(e) =>
+                            setWhereValue({
+                              ruleId,
+                              whereId,
+                              value: e.target.value,
+                            })
+                          }
+                        />
+                      ) : null}{' '}
+                    </div>
                     <Button
+                      className="text-sm"
                       onClick={() =>
                         onClickRemoveCheck({
                           ruleId,
@@ -282,16 +314,26 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                         })
                       }
                     >
-                      x Remove Check
+                      Delete
                     </Button>
-                  </div>
+                  </FlexEnds>
                 ))}
                 <Button
                   className="block mb-8"
                   onClick={() => handleAddAnotherCellCheck({ ruleId })}
                 >
-                  + Add another cell check
+                  + Add cell rule
                 </Button>
+
+                {rule.type === RULE_TYPE.INCLUDE_ROWS ? (
+                  <div className="mb-4">
+                    <RulePreview
+                      rule={rules[ruleId]}
+                      data={selectedTableData}
+                    />
+                  </div>
+                ) : null}
+
                 <label htmlFor="googleSheetId">
                   Sync to Google Sheet Id:
                   <input
@@ -316,11 +358,37 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
               <div>
                 {rule.cells.map((cell, cellId) => {
                   return (
-                    <div key={`cell_${cellId}`}>
+                    <FlexEnds
+                      className="mb-6"
+                      key={`rule_${ruleId}_cell_${cellId}`}
+                    >
                       <div>
-                        {cell.value} at {cell.rowIdx}, {cell.colIdx}
+                        <div>
+                          <label htmlFor={`rule_${ruleId}_cell_${cellId}`}>
+                            Enter key for sample value{' '}
+                            <span className="font-bold underline">
+                              {cell.value}
+                            </span>
+                            :
+                            <br />
+                            <input
+                              type="text"
+                              id={`rule_${ruleId}_cell_${cellId}`}
+                              value={cell.name}
+                              className="border border-1 p-1"
+                              onChange={(e) =>
+                                setKeyPairAtCell({
+                                  ruleId,
+                                  cellId,
+                                  name: e.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
                       </div>
                       <Button
+                        className="text-sm"
                         onClick={() =>
                           onClickRemoveCell({
                             ruleId,
@@ -328,9 +396,9 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                           })
                         }
                       >
-                        x Remove Cell
+                        Delete
                       </Button>
-                    </div>
+                    </FlexEnds>
                   );
                 })}
               </div>

@@ -903,7 +903,7 @@ const EmailJsonApp = ({ router, ...props }) => {
 
               {extractedTablesFromPDF ? (
                 <Button onClick={onCreateExtractionRule} className="mb-4 block">
-                  Create extraction rule
+                  + Create extraction rule
                 </Button>
               ) : null}
 
@@ -911,7 +911,7 @@ const EmailJsonApp = ({ router, ...props }) => {
                 onClick={onClickPreviewExtractionRules}
                 className="mr-4 block"
               >
-                Preview API
+                &gt; Preview API
               </Button>
             </div>
           </div>

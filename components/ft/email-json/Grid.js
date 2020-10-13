@@ -8,7 +8,7 @@ const StyledGrid = styled.div`
   border: 1px solid #ddd;
   overflow-x: scroll;
   font-size: 0.8rem;
-  max-width: 900px;
+  max-width: calc(50vw - 4rem - 1rem);
 `;
 
 const GridRowCell = styled.div`
@@ -22,12 +22,13 @@ export default function Grid({
   data,
   isCellClickable = false,
   cellClickCb = () => {},
+  className = '',
 }) {
   if (!data) {
     return <p>Glitch!</p>;
   }
   return (
-    <StyledGrid cols={toArray(data[0]).length}>
+    <StyledGrid className={className} cols={toArray(data[0]).length}>
       {data.map((row, rowIdx) => {
         const cells = toArray(row);
         return (

@@ -10,7 +10,7 @@ export default function RulePreview({ data, rule }) {
   const ruleDataFromTable = getRuleDataFromTable({ data, rule });
   return (
     <div className="mb-4">
-      <p className="font-bold">Extracted Data as per rule:</p>
+      <p className="font-bold">Rows Extracted by cell rules:</p>
       <Grid data={ruleDataFromTable} />
     </div>
   );
