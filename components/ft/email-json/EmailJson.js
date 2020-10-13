@@ -634,19 +634,7 @@ const EmailJsonApp = ({ router, ...props }) => {
   }
 
   async function onCreateExtractionRule() {
-    const ruleConfig = {
-      type: RULE_TYPE.INCLUDE_ROWS,
-      selectedTableId: null,
-      selectedTableData: null,
-      where: [],
-      remoteSync: {
-        googleSheet: {
-          // NB: leaving it open to accept sheet tabs as an user input as well
-          id: null,
-        },
-      },
-    };
-    setExtractionRules([...extractionRules, ruleConfig]);
+    setExtractionRules([...extractionRules, {}]);
   }
 
   async function handleFetchExtractDataFromPDF() {

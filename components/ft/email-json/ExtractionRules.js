@@ -60,6 +60,19 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
     );
   }
 
+  function onClickRemoveCell({ ruleId, cellId }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              cells: rule.cells.filter((_, cellIdx) => cellId !== cellIdx),
+            },
+      ),
+    );
+  }
+
   function setRuleProp({ ruleId, ...prop }) {
     const getUpdatedRule = (rule) => {
       const updatedRule = defaultsDeep(prop, rule);
@@ -111,6 +124,52 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
     });
   }
 
+  function onClickCell({ ruleId, ...clickedCellProps }) {
+    setRules(
+      rules.map((rule, idx) =>
+        ruleId !== idx
+          ? rule
+          : {
+              ...rule,
+              cells: [...rule.cells, clickedCellProps],
+            },
+      ),
+    );
+  }
+
+  function onSelectExtractionType({ ruleId, type }) {
+    let props = {};
+    switch (type) {
+      case RULE_TYPE.INCLUDE_ROWS: {
+        props = {
+          where: [],
+          remoteSync: {
+            googleSheet: {
+              // NB: leaving it open to accept sheet tabs as an user input as well
+              id: null,
+            },
+          },
+        };
+        break;
+      }
+      case RULE_TYPE.INCLUDE_CELLS: {
+        props = {
+          cells: [],
+        };
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
+    setRuleProp({
+      ruleId,
+      type,
+      ...props,
+    });
+  }
+
   return (
     <div className="mb-8">
       {rules.map((rule, ruleId) => {
@@ -142,21 +201,29 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
         return (
           <div key={`rule_${ruleId}`}>
             <p className="font-bold">Original Table:</p>{' '}
-            <div className="mb-4">
-              <Grid data={selectedTableData} />
-            </div>
-            <div className="mb-4">
-              <RulePreview rule={rules[ruleId]} data={selectedTableData} />
-            </div>
             <select
               className="border border-1 block"
               value={rule.type}
-              onChange={(e) => setRuleProp({ ruleId, type: e.target.value })}
+              onChange={(e) =>
+                onSelectExtractionType({ ruleId, type: e.target.value })
+              }
             >
-              <option value="">Select rule type...</option>
-              <option value={RULE_TYPE.INCLUDE_ROWS}>Include Rows</option>
-              <option value={RULE_TYPE.INCLUDE_CELLS}>Include Cells</option>
+              <option value="">Select extraction type...</option>
+              <option value={RULE_TYPE.INCLUDE_ROWS}>Extract Rows</option>
+              <option value={RULE_TYPE.INCLUDE_CELLS}>Extract Cells</option>
             </select>{' '}
+            <div className="mb-4">
+              <Grid
+                data={selectedTableData}
+                isCellClickable={rule.type === RULE_TYPE.INCLUDE_CELLS}
+                cellClickCb={(props) => onClickCell({ ruleId, ...props })}
+              />
+            </div>
+            {rule.type === RULE_TYPE.INCLUDE_ROWS ? (
+              <div className="mb-4">
+                <RulePreview rule={rules[ruleId]} data={selectedTableData} />
+              </div>
+            ) : null}
             {rule.type === RULE_TYPE.INCLUDE_ROWS ? (
               <div>
                 {rule.where.map((whereRule, whereId) => (
@@ -246,7 +313,27 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                 </label>
               </div>
             ) : rule.type === RULE_TYPE.INCLUDE_CELLS ? (
-              <div />
+              <div>
+                {rule.cells.map((cell, cellId) => {
+                  return (
+                    <div key={`cell_${cellId}`}>
+                      <div>
+                        {cell.value} at {cell.rowIdx}, {cell.colIdx}
+                      </div>
+                      <Button
+                        onClick={() =>
+                          onClickRemoveCell({
+                            ruleId,
+                            cellId,
+                          })
+                        }
+                      >
+                        x Remove Cell
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             ) : null}
           </div>
         );
