@@ -26,7 +26,6 @@ import ConfigOutputBar from './config-ui';
 import ExtractionRules from './ExtractionRules';
 
 import { Button, FlexEnds } from '~/components/common/Atoms';
-import { RULE_TYPE } from '../../../src/pdf/enums';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
