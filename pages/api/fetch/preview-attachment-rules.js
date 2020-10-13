@@ -7,8 +7,6 @@ require('~/src/queues');
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
-const GOOGLE_OAUTH_REDIRECT_URI =
-  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function handle(req, res, resolve) {
   const {
@@ -17,9 +15,7 @@ async function handle(req, res, resolve) {
     search_query: searchQuery,
     camelot_method: camelotMethod,
     camelot_scale: camelotScale,
-    // [TODO] accept these as user inputs
-    attachment_password: attachmentPassword = 'BCCPG2423G',
-    gsheet_id: gSheetId = '19ipD_wfVDaI0pCCasGYjBGHz0BQP6Mh7PrmM0jX2cXE',
+    attachment_password: attachmentPassword,
     rules,
     uid,
     token,
@@ -94,20 +90,20 @@ async function handle(req, res, resolve) {
           hasDataAtEndpoint: dataEndpoint,
         },
         notifications: [
-          {
-            type: 'webhook',
-            data: {
-              method: 'POST',
-              url: `${GOOGLE_OAUTH_REDIRECT_URI}/api/integrations/google-spreadsheet/preview`,
-              data: {
-                uid,
-                token,
-                refresh_token: refreshToken,
-                data_endpoint: dataEndpoint,
-                gsheet_id: gSheetId,
-              },
-            },
-          },
+          // {
+          //   type: 'webhook',
+          //   data: {
+          //     method: 'POST',
+          //     url: `${GOOGLE_OAUTH_REDIRECT_URI}/api/integrations/google-spreadsheet/preview`,
+          //     data: {
+          //       uid,
+          //       token,
+          //       refresh_token: refreshToken,
+          //       data_endpoint: dataEndpoint,
+          //       gsheet_id: gSheetId,
+          //     },
+          //   },
+          // },
           {
             type: 'webhook',
             data: {

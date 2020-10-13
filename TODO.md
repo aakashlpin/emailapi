@@ -39,3 +39,13 @@
     2.1.1. grab a row only if it contains a cell where cell's value `==` or `contains` some value
   2.2. or/and add blacklist rules
     2.2.1. reject rows if it contains a cell where cell's value `==` or `contains` some value
+
+# Last Notes 11th Oct 2020 8.35PM
+- UI: Added feature to allow posting to different Google Sheets for each `extraction rule`
+- Backend: stopped accepting gSheetId as a global prop and made it part of each rule object
+- Next steps:
+  1. Data extraction seems funky as one sheet contains results from both `rules`
+  2. Google Sheets API is rate limiting 429 - culprit being /preview endpoint which creates a new spreadsheet instance per API call
+  3. Options to solve #2 - Create a Sheets Factory with references stored on a per sheet id level (in redis to make it serverless?) and reuse them
+
+BCCPG2423G

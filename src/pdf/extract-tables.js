@@ -104,6 +104,9 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       if (options.scale) {
         command.push('-scale', options.scale);
       }
+    } else {
+      // command.push('--edge_tol', 500);
+      command.push('-r', 15);
     }
 
     command.push(unlockedPdfPath);
@@ -142,6 +145,14 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
       return null;
     }
 
+    // [TODO] merge tables with same headers
+    // (e.g. bank account statements where transactions are spread across several tables on multiple pages)
+
+    // const mergedTables = [];
+    // const tableHeaders = extractedTables.map((table) =>
+    //   Object.values(table[0]),
+    // );
+
     return extractedTables;
   } catch (e) {
     Sentry.captureException(e);
@@ -149,11 +160,3 @@ export default async function extractTableInJson(inputPdfPath, options = {}) {
     return null;
   }
 }
-
-// (async () => {
-//   const response = await extractTableInJson('/tmp/kotak-1.pdf', {
-//     stream: true,
-//     password: '50226488',
-//   });
-//   console.log(response);
-// })();

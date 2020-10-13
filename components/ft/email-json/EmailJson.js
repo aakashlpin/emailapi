@@ -3,7 +3,6 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'next/router';
-import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import 'react-responsive-modal/styles.css';
 import '~/css/react-responsive-modal-override.css';
@@ -24,11 +23,10 @@ import ActionBar from '~/components/service-creator/action-bar';
 import EmailPreview from '~/components/service-creator/email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
-import RulePreview from './rules-preview';
+import ExtractionRules from './ExtractionRules';
 
 import { Button, FlexEnds } from '~/components/common/Atoms';
-
-const Grid = dynamic(() => import('react-json-grid'), { ssr: false });
+import { RULE_TYPE } from '../../../src/pdf/enums';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -70,179 +68,6 @@ const Main = styled.main`
 const Aside = styled.aside`
   overflow-y: hidden;
 `;
-
-/**
- *
- * rule = {
- *  type: 'row_whitelist',
- *  name: 'Futures trading',
- *  camelot_method: 'lattice',
- *  probable_table_sequence: 4,
- *  table_column_count: 14,
- *  where: [{
- *    type: 'equals/startsWith/endsWith/contains',
- *    value: 'value',
- *    colIndex: 2
- *  }]
- * }
- */
-
-const ExtractionRules = ({ data, rules, setRules }) => {
-  function handleAddAnotherCellCheck({ ruleId }) {
-    setRules(
-      rules.map((rule, idx) =>
-        ruleId !== idx
-          ? rule
-          : {
-              ...rule,
-              where: [
-                ...rule.where,
-                {
-                  type: '',
-                  value: '',
-                  colIndex: null,
-                },
-              ],
-            },
-      ),
-    );
-  }
-
-  function onClickRemoveCheck({ ruleId, whereId }) {
-    setRules(
-      rules.map((rule, idx) =>
-        ruleId !== idx
-          ? rule
-          : {
-              ...rule,
-              where: rule.where.filter((_, whereIdx) => whereId !== whereIdx),
-            },
-      ),
-    );
-  }
-
-  function setRuleType({ ruleId, type }) {
-    setRules(
-      rules.map((rule, idx) =>
-        ruleId !== idx
-          ? rule
-          : {
-              ...rule,
-              type,
-            },
-      ),
-    );
-  }
-
-  function setKeyPairAtWhere({ ruleId, whereId, ...props }) {
-    setRules(
-      rules.map((rule, idx) =>
-        ruleId !== idx
-          ? rule
-          : {
-              ...rule,
-              where: rule.where.map((whereRule, whereIdx) =>
-                whereId !== whereIdx
-                  ? whereRule
-                  : {
-                      ...whereRule,
-                      ...props,
-                    },
-              ),
-            },
-      ),
-    );
-  }
-
-  function setColIndexOnWhereRule({ colIndex, ruleId, whereId }) {
-    setKeyPairAtWhere({ ruleId, whereId, colIndex });
-  }
-
-  function setWhereRuleType({ type, ruleId, whereId }) {
-    setKeyPairAtWhere({ ruleId, whereId, type });
-  }
-
-  function setWhereValue({ value, ruleId, whereId }) {
-    setKeyPairAtWhere({ value, whereId, ruleId });
-  }
-
-  return (
-    <div className="mb-8">
-      {rules.map((rule, ruleId) => (
-        <div key={`rule_${ruleId}`}>
-          <p className="font-bold">{ruleId + 1}. Rule Definition</p>{' '}
-          <select
-            className="border border-1 block"
-            value={rule.type}
-            onChange={(e) => setRuleType({ ruleId, type: e.target.value })}
-          >
-            <option value="row_whitelist">Include Rows</option>
-            <option value="row_blacklist">Exclude Rows</option>
-          </select>{' '}
-          {rule.where.map((whereRule, whereId) => (
-            <div key={`whererule_${whereId}`}>
-              <span>if a cell value at column index</span>{' '}
-              <input
-                type="text"
-                className="border border-1 w-8"
-                value={whereRule.colIndex}
-                onChange={(e) =>
-                  setColIndexOnWhereRule({
-                    colIndex: e.target.value,
-                    ruleId,
-                    whereId,
-                  })
-                }
-              />{' '}
-              <select
-                className="border border-1"
-                value={whereRule.type}
-                onChange={(e) =>
-                  setWhereRuleType({ ruleId, whereId, type: e.target.value })
-                }
-              >
-                <option value="cell_startsWith">starts with</option>
-                <option value="cell_endsWith">ends with</option>
-                <option value="cell_equals">is exactly</option>
-                <option value="cell_contains">contains</option>
-                {whereRule.colIndex ? (
-                  <option value="cell_notEmpty">is not empty</option>
-                ) : null}
-              </select>{' '}
-              {whereRule.type !== 'cell_notEmpty' ? (
-                <input
-                  type="text"
-                  className="border border-1"
-                  value={whereRule.value}
-                  onChange={(e) =>
-                    setWhereValue({ ruleId, whereId, value: e.target.value })
-                  }
-                />
-              ) : null}{' '}
-              <Button
-                onClick={() =>
-                  onClickRemoveCheck({
-                    ruleId,
-                    whereId,
-                  })
-                }
-              >
-                x Remove Check
-              </Button>
-            </div>
-          ))}
-          <Button
-            className="block mb-8"
-            onClick={() => handleAddAnotherCellCheck({ ruleId })}
-          >
-            + Add another cell check
-          </Button>
-          <RulePreview rule={rules[ruleId]} data={data} />
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const EmailJsonApp = ({ router, ...props }) => {
   const {
@@ -287,7 +112,55 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
-  const [extractionRules, setExtractionRules] = useState([]);
+  const [extractionRules, setExtractionRules] = useState([
+    // {
+    //   type: null,
+    //   selected
+    //   selectedTableData: null,
+    //   remoteSync: {
+    //     googleSheet: {
+    //       id: '1DGJ48YOtEX1KDoUE0ifL0_Wub2znlDiNHtB7wWLrI4Q',
+    //     },
+    //   },
+    //   where: [
+    //     {
+    //       type: 'cell_contains',
+    //       value: '/',
+    //       colIndex: '4',
+    //     },
+    //     {
+    //       type: 'cell_notEmpty',
+    //       value: '',
+    //       colIndex: '1',
+    //     },
+    //   ],
+    // },
+    // {
+    //   type: null,
+    //   selectedTableData: null,
+    //   remoteSync: {
+    //     googleSheet: {
+    //       id: '1bKG6zbfGltkPCfqwtdk0Uix-MMAw-fnerRechkFCmyQ',
+    //     },
+    //   },
+    //   where: [
+    //     {
+    //       type: 'cell_notEmpty',
+    //       value: '',
+    //       colIndex: '1',
+    //     },
+    //     {
+    //       type: 'cell_endsWith',
+    //       value: 'FUT',
+    //       colIndex: '4',
+    //     },
+    //   ],
+    // },
+  ]);
+
+  useEffect(() => {
+    console.log({ extractionRules });
+  }, [extractionRules]);
 
   function resetData() {
     setSearchResults([]);
@@ -746,22 +619,34 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
-  const [extractedDataFromPDF, setExtractedDataFromPDF] = useState(null);
-  const [tableDataForExtractionRule, setTableDataForExtractionRule] = useState(
-    null,
-  );
+  const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState(null);
   const [camelotMethod, setCamelotMethod] = useState('lattice');
-  const [camelotScale, setCamelotScale] = useState(null);
-  const [attachmentPassword, setAttachmentPassword] = useState(null);
+  const [camelotScale, setCamelotScale] = useState(60);
+  const [attachmentPassword, setAttachmentPassword] = useState('BCCPG2423G');
 
   async function onClosePDFPreview() {
-    setExtractedDataFromPDF(null);
-    setTableDataForExtractionRule(null);
+    setExtractedTablesFromPDF(null);
     setCamelotMethod('lattice');
     setCamelotScale(null);
     setAttachmentPassword(null);
     setExtractionRules([]);
     setOpen(false);
+  }
+
+  async function onCreateExtractionRule() {
+    const ruleConfig = {
+      type: RULE_TYPE.INCLUDE_ROWS,
+      selectedTableId: null,
+      selectedTableData: null,
+      where: [],
+      remoteSync: {
+        googleSheet: {
+          // NB: leaving it open to accept sheet tabs as an user input as well
+          id: null,
+        },
+      },
+    };
+    setExtractionRules([...extractionRules, ruleConfig]);
   }
 
   async function handleFetchExtractDataFromPDF() {
@@ -778,24 +663,8 @@ const EmailJsonApp = ({ router, ...props }) => {
       },
     );
 
-    setExtractedDataFromPDF(extractedData);
-  }
-
-  async function onCreateExtractionRule() {
-    const ruleConfig = {
-      type: null,
-      where: [],
-    };
-    setExtractionRules([...extractionRules, ruleConfig]);
-  }
-
-  const [selectedTableId, setSelectedTableId] = useState(null);
-
-  function onClickSelectTable({ id }) {
-    setSelectedTableId(id);
-    setTableDataForExtractionRule(
-      extractedDataFromPDF.filter((_, idx) => id === idx)[0],
-    );
+    setExtractedTablesFromPDF(extractedData);
+    onCreateExtractionRule();
   }
 
   function onClickSavePDFExtractionRules(e) {
@@ -811,12 +680,13 @@ const EmailJsonApp = ({ router, ...props }) => {
     } = await axios.post('/api/fetch/preview-attachment-rules', {
       uid,
       token,
-      on_previous_emails_count: 10,
       search_query: searchInput,
-      selected_table_data: extractedDataFromPDF[selectedTableId],
+      // NB: removing this
+      // selected_table_data: extractedTablesFromPDF[selectedTableId],
       camelot_method: camelotMethod,
       camelot_scale: camelotScale,
       rules: extractionRules,
+      attachment_password: attachmentPassword,
     });
 
     window.open(dataEndpoint, '_blank');
@@ -947,7 +817,7 @@ const EmailJsonApp = ({ router, ...props }) => {
               handleChangePreSyncWebhook={handleChangePreSyncWebhook}
               onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
               extractionRules={extractionRules}
-              extractedData={extractedDataFromPDF}
+              extractedData={extractedTablesFromPDF}
             />
           </Aside>
         </ContainerBody>
@@ -971,14 +841,8 @@ const EmailJsonApp = ({ router, ...props }) => {
                 {/* Is the PDF locked with password? */}
                 {/* on clicking reveal an input box to accept password */}
                 <div>
-                  <Button
-                    onClick={onClickPreviewExtractionRules}
-                    className="mr-4"
-                  >
-                    Preview API
-                  </Button>
                   <Button onClick={onClickSavePDFExtractionRules}>
-                    Close with Save
+                    Create API
                   </Button>
                 </div>
               </FlexEnds>
@@ -1021,64 +885,46 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </label>
               ) : null}
 
-              {camelotMethod === 'lattice' ? (
-                <label htmlFor="attachmentPassword">
-                  PDF Password
-                  <input
-                    id="attachmentPassword"
-                    type="text"
-                    value={attachmentPassword}
-                    onChange={(e) => setAttachmentPassword(e.target.value)}
-                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  />
-                </label>
+              <label htmlFor="attachmentPassword">
+                PDF Password:
+                <input
+                  id="attachmentPassword"
+                  type="text"
+                  value={attachmentPassword}
+                  onChange={(e) => setAttachmentPassword(e.target.value)}
+                  className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                />
+              </label>
+
+              {!extractedTablesFromPDF ? (
+                <Button
+                  onClick={handleFetchExtractDataFromPDF}
+                  className="block mb-4"
+                >
+                  Extract data
+                </Button>
               ) : null}
 
-              <Button
-                onClick={handleFetchExtractDataFromPDF}
-                disabled={!!tableDataForExtractionRule}
-                className="block mb-4"
-              >
-                Extract data
-              </Button>
-
-              {extractedDataFromPDF && !tableDataForExtractionRule
-                ? extractedDataFromPDF.map((table, idx) => {
-                    return (
-                      <div key={`table_${idx}`} className="mb-4">
-                        <p>
-                          Table #{idx + 1}{' '}
-                          <Button
-                            className="text-xs"
-                            onClick={() => onClickSelectTable({ id: idx })}
-                          >
-                            Select table
-                          </Button>
-                        </p>
-                        <Grid data={table} />
-                      </div>
-                    );
-                  })
-                : null}
-
-              {tableDataForExtractionRule ? (
-                <div className="mb-4">
-                  <p className="font-bold">Selected table</p>
-                  <Grid data={tableDataForExtractionRule} />
-                </div>
-              ) : null}
-
-              <Button onClick={onCreateExtractionRule} className="mb-8">
-                Create extraction rule
-              </Button>
-
-              {tableDataForExtractionRule ? (
+              {extractedTablesFromPDF ? (
                 <ExtractionRules
                   rules={extractionRules}
-                  data={tableDataForExtractionRule}
+                  extractedTablesFromPDF={extractedTablesFromPDF}
                   setRules={setExtractionRules}
                 />
               ) : null}
+
+              {extractedTablesFromPDF ? (
+                <Button onClick={onCreateExtractionRule} className="mb-4 block">
+                  Create extraction rule
+                </Button>
+              ) : null}
+
+              <Button
+                onClick={onClickPreviewExtractionRules}
+                className="mr-4 block"
+              >
+                Preview API
+              </Button>
             </div>
           </div>
         </Modal>

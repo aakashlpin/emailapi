@@ -117,7 +117,7 @@ async function processJob(job, done) {
     initNotifications,
     completionNotifications,
     pendingWebhookNotifications,
-    singlePageRun = false,
+    singlePageRun = true,
   } = jobData;
 
   try {

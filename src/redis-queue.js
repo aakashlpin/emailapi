@@ -48,6 +48,16 @@ const queues = [
       },
     },
   },
+  {
+    exportName: 'gSheetSyncQueue',
+    bullName: 'gsheet-sync',
+    bullOpts: {
+      limiter: {
+        max: 5,
+        duration: 60 * 1000,
+      },
+    },
+  },
 ];
 
 const exportQueues = {};

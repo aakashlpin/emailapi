@@ -5,8 +5,10 @@ import Sentry from '~/src/sentry';
 import queues from '../redis-queue';
 import { toArray, getRuleDataFromTable } from '~/src/pdf/utils';
 
+const GOOGLE_OAUTH_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
+
 async function processJob(jobData) {
-  console.log(jobData);
   try {
     const {
       email,
@@ -32,7 +34,7 @@ async function processJob(jobData) {
 
     const { id: attachmentId } = attachments[0];
     const { data: tablesFromAttachment } = await axios.post(
-      `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/tables-from-attachment`,
+      `${GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/tables-from-attachment`,
       {
         uid,
         token,
@@ -50,29 +52,47 @@ async function processJob(jobData) {
       (table) => toArray(table[0]).length === columnsInSelectedTableData,
     );
 
-    // [TODO] this is not working for jsonbox
-    // jsonbox expects keys to start with alphabets
-    // but we have numbers
-    // pivot on header can be done
-    // but it'll bloat the request/response size considerably
-    // and make the endpoint heavy
-    // if the endpoint is only to retain a source of truth
-    // when posting to excel sheet, then it's okay
-    // but if we need to query this endpoint, not sure
     const extractedData = possibleTables
       .map((table) =>
-        rules.map((rule, idx) => ({
-          [`rule_${idx}`]: getRuleDataFromTable({ data: table, rule }),
-        })),
+        rules
+          .map((rule, idx) => {
+            const ruleData = getRuleDataFromTable({ data: table, rule });
+            if (ruleData) {
+              return {
+                [`rule_${idx}`]: ruleData,
+              };
+            }
+            return null;
+          })
+          .filter((item) => item),
       )
       .reduce((accum, item) => [...accum, ...item], []);
 
-    console.log('extractedData', extractedData);
     if (!extractedData.length) {
-      console.log({ selectedTableData });
-      console.log({ possibleTables });
+      // console.log({ selectedTableData });
+      // console.log({ possibleTables });
     } else {
-      await axios.post(dataEndpoint, extractedData);
+      console.log({ extractedData });
+      try {
+        // NB: this is additive in nature
+        // so you can't keep syncing data against this endpoint
+        // over and over again for each iteration
+        await axios.post(dataEndpoint, extractedData);
+        rules.forEach((rule, idx) => {
+          const googleSheetId = rule.remoteSync?.googleSheet?.id;
+          const extractedDataForRule = extractedData.find(
+            (data) => data[`rule_${idx}`],
+          );
+          if (googleSheetId && extractedDataForRule) {
+            queues.gSheetSyncQueue.add({
+              googleSheetId,
+              dataToSync: [extractedDataForRule],
+            });
+          }
+        });
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     return Promise.resolve();
@@ -89,3 +109,6 @@ async function processJob(jobData) {
     await processJob(job.data);
   });
 })();
+
+// equity 1DGJ48YOtEX1KDoUE0ifL0_Wub2znlDiNHtB7wWLrI4Q
+// fno 1bKG6zbfGltkPCfqwtdk0Uix-MMAw-fnerRechkFCmyQ
