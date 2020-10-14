@@ -28,6 +28,7 @@ import ExtractionRules from './ExtractionRules';
 import { Button, FlexEnds } from '~/components/common/Atoms';
 import { RULE_TYPE } from '../../../src/pdf/enums';
 import ZerodhaCNTemplate from '../../../src/pdf/templates/zerodha-cn';
+import useLocalState from '~/src/hooks/useLocalState';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -113,11 +114,7 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
-  const [extractionRules, setExtractionRules] = useState(ZerodhaCNTemplate);
-
-  useEffect(() => {
-    console.log({ extractionRules });
-  }, [extractionRules]);
+  const [extractionRules, setExtractionRules] = useState([]);
 
   function resetData() {
     setSearchResults([]);
@@ -576,16 +573,31 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
-  const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState(null);
-  const [camelotMethod, setCamelotMethod] = useState('lattice');
-  const [camelotScale, setCamelotScale] = useState(60);
-  const [attachmentPassword, setAttachmentPassword] = useState('BCCPG2423G');
+  const TEMPLATE_TYPE = {
+    ZERODHA_CN: 'ZERODHA_CN',
+    CUSTOM: 'CUSTOM',
+  };
+
+  const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
+  const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState('');
+  const [camelotMethod, setCamelotMethod] = useState('');
+  const [camelotScale, setCamelotScale] = useState('');
+  const [attachmentPassword, setAttachmentPassword] = useLocalState(
+    'attachmentPassword',
+  );
+
+  useEffect(() => {
+    if (open && pdfTemplate === TEMPLATE_TYPE.ZERODHA_CN) {
+      setCamelotScale(60);
+      setCamelotMethod('lattice');
+      setExtractionRules(ZerodhaCNTemplate);
+    }
+  }, [open, pdfTemplate]);
 
   async function onClosePDFPreview() {
     setExtractedTablesFromPDF(null);
     setCamelotMethod('lattice');
     setCamelotScale(null);
-    setAttachmentPassword(null);
     setExtractionRules([]);
     setOpen(false);
   }
@@ -600,22 +612,34 @@ const EmailJsonApp = ({ router, ...props }) => {
     ]);
   }
 
-  async function handleFetchExtractDataFromPDF() {
-    const { data: extractedData } = await axios.post(
-      `/api/fetch/tables-from-attachment`,
-      {
-        uid,
-        token,
-        messageId: selectedMessageId,
-        attachmentId: selectedAttachmentId,
-        attachmentPassword,
-        camelotMethod,
-        camelotScale,
-      },
-    );
+  const [isExtractingPdfData, setIsExtractingPdfData] = useState(false);
 
-    setExtractedTablesFromPDF(extractedData);
-    if (!extractionRules.length) onCreateExtractionRule();
+  async function handleFetchExtractDataFromPDF() {
+    setIsExtractingPdfData(true);
+    try {
+      const { data: extractedData } = await axios.post(
+        `/api/fetch/tables-from-attachment`,
+        {
+          uid,
+          token,
+          messageId: selectedMessageId,
+          attachmentId: selectedAttachmentId,
+          attachmentPassword,
+          camelotMethod,
+          camelotScale,
+        },
+      );
+
+      setExtractedTablesFromPDF(extractedData);
+      if (!extractionRules.length) onCreateExtractionRule();
+    } catch (e) {
+      console.log(e);
+      new Noty({
+        theme: 'relax',
+        text: `Sorry! Something went wrong.`,
+      }).show();
+    }
+    setIsExtractingPdfData(false);
   }
 
   function onClickSavePDFExtractionRules(e) {
@@ -788,9 +812,6 @@ const EmailJsonApp = ({ router, ...props }) => {
             <div className="p-4">
               <FlexEnds className="pr-12">
                 <h3 className="text-xl mb-2">Extract data from PDF</h3>
-                {/* [TODO] add a helper question here asking */}
-                {/* Is the PDF locked with password? */}
-                {/* on clicking reveal an input box to accept password */}
                 <div>
                   <Button onClick={onClickSavePDFExtractionRules}>
                     Create API
@@ -798,18 +819,17 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </div>
               </FlexEnds>
 
-              <label htmlFor="camelotMethod">
-                Technique:
+              <label htmlFor="pdfTemplate">
+                Template:
                 <div className="relative">
                   <select
                     className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="camelotMethod"
-                    id="camelotMethod"
-                    value={camelotMethod}
-                    onChange={(e) => setCamelotMethod(e.target.value)}
+                    id="pdfTemplate"
+                    value={pdfTemplate}
+                    onChange={(e) => setPdfTemplate(e.target.value)}
                   >
-                    <option value="lattice">Lattice</option>
-                    <option value="stream">Stream</option>
+                    <option value="zerodhaCn">Zerodha Contract Note</option>
+                    <option value="custom">Custom</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <svg
@@ -823,7 +843,34 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </div>
               </label>
 
-              {camelotMethod === 'lattice' ? (
+              {pdfTemplate === 'custom' ? (
+                <label htmlFor="camelotMethod">
+                  Technique:
+                  <div className="relative">
+                    <select
+                      className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="camelotMethod"
+                      id="camelotMethod"
+                      value={camelotMethod}
+                      onChange={(e) => setCamelotMethod(e.target.value)}
+                    >
+                      <option value="lattice">Lattice</option>
+                      <option value="stream">Stream</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg
+                        className="fill-current h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                </label>
+              ) : null}
+
+              {pdfTemplate === 'custom' && camelotMethod === 'lattice' ? (
                 <label htmlFor="camelotScale">
                   Lattice Scale:
                   <input
@@ -851,6 +898,7 @@ const EmailJsonApp = ({ router, ...props }) => {
                 <Button
                   onClick={handleFetchExtractDataFromPDF}
                   className="block mb-4"
+                  disabled={isExtractingPdfData}
                 >
                   Extract data
                 </Button>
@@ -873,6 +921,7 @@ const EmailJsonApp = ({ router, ...props }) => {
               <Button
                 onClick={onClickPreviewExtractionRules}
                 className="mr-4 block"
+                disabled={!extractionRules.length}
               >
                 &gt; Preview API
               </Button>
