@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { Promise } from 'bluebird';
 import Sentry from '~/src/sentry';
-// import flatten from 'lodash/flatten';
 
 import queues from '../redis-queue';
-import { toArray, getRuleDataFromTable } from '~/src/pdf/utils';
+import { toArray, getRuleDataFromTable, getRuleKey } from '~/src/pdf/utils';
+import { RULE_TYPE } from '../pdf/enums';
 
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
@@ -19,7 +20,7 @@ async function processJob(jobData) {
     const {
       dataEndpoint,
       rules,
-      selectedTableData,
+      postProcessingEndpoint,
       camelotMethod,
       camelotScale,
       attachmentPassword,
@@ -33,7 +34,7 @@ async function processJob(jobData) {
     }
 
     const { id: attachmentId } = attachments[0];
-    const { data: tablesFromAttachment } = await axios.post(
+    const { data: attachmentTables } = await axios.post(
       `${GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/tables-from-attachment`,
       {
         uid,
@@ -46,55 +47,126 @@ async function processJob(jobData) {
       },
     );
 
-    // select possible tables basis same length of columns in table
-    const columnsInSelectedTableData = toArray(selectedTableData[0]).length;
-    const possibleTables = tablesFromAttachment.filter(
-      (table) => toArray(table[0]).length === columnsInSelectedTableData,
-    );
+    const rulesAppliedJson = rules
+      .map((rule) => {
+        const { selectedTableData, selectedTableId } = rule;
+        switch (rule.type) {
+          case RULE_TYPE.INCLUDE_ROWS: {
+            // select possible tables basis same length of columns in table
+            const colsInReferenceTable = toArray(selectedTableData[0]).length;
+            const possibleTables = attachmentTables.filter(
+              (table) => toArray(table[0]).length === colsInReferenceTable,
+            );
 
-    const extractedData = possibleTables
-      .map((table) =>
-        rules
-          .map((rule, idx) => {
-            // [TODO] this will need to be processed as per rule type
-            const ruleData = getRuleDataFromTable({ data: table, rule });
-            if (ruleData) {
+            // doing a .map instead of .filter ensures the following use case:
+            // if pdf contains repeating table structures with similar columns
+            const extractedData = possibleTables
+              .map((table) => getRuleDataFromTable({ data: table, rule })?.rows)
+              .filter((i) => i)
+              .reduce((accum, item) => [...accum, ...item], []);
+
+            if (!extractedData.length) {
+              return null;
+            }
+
+            return {
+              rule,
+              data: { [getRuleKey(rule)]: extractedData },
+            };
+          }
+          case RULE_TYPE.INCLUDE_CELLS: {
+            const extractedTable = attachmentTables[selectedTableId];
+            const colsInReferenceTable = toArray(selectedTableData[0]).length;
+            const colsInExtractedTable = toArray(extractedTable[0]).length;
+            if (colsInReferenceTable !== colsInExtractedTable) {
+              debugger;
+              console.log('incorrect mapping in RULE_TYPE.INCLUDE_CELLS');
+              Sentry.captureException(
+                'incorrect mapping in RULE_TYPE.INCLUDE_CELLS',
+              );
+              return null;
+            }
+
+            const { cells } = rule;
+            const extractedCells = cells
+              .map((cell) => {
+                const { key, rowIdx, colIdx } = cell;
+                try {
+                  const extractedCellValue = extractedTable[rowIdx][colIdx];
+                  return {
+                    [key]: extractedCellValue,
+                  };
+                } catch (e) {
+                  console.log('error in extracting cell value at location');
+                  Sentry.captureException(e);
+                  return null;
+                }
+              })
+              .filter((item) => item)
+              .reduce(
+                (accum, item) => ({
+                  ...accum,
+                  ...item,
+                }),
+                {},
+              );
+
+            if (toArray(extractedCells).length) {
               return {
-                [`rule_${idx}`]: ruleData.rows,
+                rule,
+                data: { [getRuleKey(rule)]: extractedCells },
               };
             }
             return null;
-          })
-          .filter((item) => item),
-      )
-      .reduce((accum, item) => [...accum, ...item], []);
-
-    if (!extractedData.length) {
-      // console.log({ selectedTableData });
-      // console.log({ possibleTables });
-    } else {
-      console.log({ extractedData });
-      try {
-        // NB: this is additive in nature
-        // so you can't keep syncing data against this endpoint
-        // over and over again for each iteration
-        await axios.post(dataEndpoint, extractedData);
-        rules.forEach((rule, idx) => {
-          const googleSheetId = rule.remoteSync?.googleSheet?.id;
-          const extractedDataForRule = extractedData.find(
-            (data) => data[`rule_${idx}`],
-          );
-          if (googleSheetId && extractedDataForRule) {
-            queues.gSheetSyncQueue.add({
-              googleSheetId,
-              dataToSync: [extractedDataForRule],
-            });
           }
-        });
+          default: {
+            return null;
+          }
+        }
+      })
+      .filter((i) => i);
+
+    let processedData = rulesAppliedJson;
+    if (postProcessingEndpoint) {
+      try {
+        const { data } = await axios.post(
+          postProcessingEndpoint,
+          rulesAppliedJson,
+        );
+        processedData = data;
       } catch (e) {
-        console.error(e);
+        console.log('postProcessingEndpoint failed', e);
+        Sentry.captureException(e);
       }
     }
+
+    const toSyncWithRemoteEndpoint = processedData.reduce(
+      (remoteSyncData, item) => {
+        const { data } = item;
+        return {
+          ...remoteSyncData,
+          ...data,
+        };
+      },
+      {},
+    );
+
+    try {
+      await axios.post(dataEndpoint, toSyncWithRemoteEndpoint);
+    } catch (e) {
+      Sentry.captureException(e);
+    }
+
+    processedData.forEach((item) => {
+      const { rule, data } = item;
+      const googleSheetId = rule.remoteSync?.googleSheet?.id;
+      if (googleSheetId) {
+        queues.gSheetSyncQueue.add({
+          googleSheetId,
+          dataToSync: [data],
+        });
+      }
+    });
 
     return Promise.resolve();
   } catch (e) {
@@ -110,6 +182,3 @@ async function processJob(jobData) {
     await processJob(job.data);
   });
 })();
-
-// equity 1DGJ48YOtEX1KDoUE0ifL0_Wub2znlDiNHtB7wWLrI4Q
-// fno 1bKG6zbfGltkPCfqwtdk0Uix-MMAw-fnerRechkFCmyQ

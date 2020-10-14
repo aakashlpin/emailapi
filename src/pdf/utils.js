@@ -1,7 +1,13 @@
 import { RULE_TYPE, CELL_MATCH_TYPE } from './enums';
 
+export const getRuleKey = (rule) =>
+  rule.name.trim().toLowerCase().replace(/\s+/g, ' ').replace(/\s/g, '_');
+
 export const toArray = (arrayLikeObj) =>
   Object.keys(arrayLikeObj).map((idx) => arrayLikeObj[idx]);
+
+export const toObject = (array) =>
+  array.reduce((accum, item, idx) => ({ ...accum, [idx]: item }), {});
 
 export const getRuleDataFromTable = ({ data: table, rule }) => {
   const [header, ...rows] = toArray(table);
@@ -59,10 +65,13 @@ export const getRuleDataFromTable = ({ data: table, rule }) => {
               }
               case CELL_MATCH_TYPE.REGEX: {
                 try {
+                  // NB: this is within try catch
+                  // to ensure an incorrect `whereValue`
+                  // while user is entering it in real time
+                  // doesn't cause runtime errors
                   const parsedRegex = new RegExp(whereValue, 'g');
-                  checkPassed = !!cellValue.match(parsedRegex).length;
+                  checkPassed = !!cellValue.match(parsedRegex)?.length;
                 } catch (e) {
-                  console.log(e);
                   checkPassed = false;
                 }
                 break;
@@ -77,7 +86,6 @@ export const getRuleDataFromTable = ({ data: table, rule }) => {
         });
         const matchingRow = cellChecks.every((check) => check);
         if (matchingRow) {
-          console.log({ row, rowIdx });
           return [row, rowIdx];
         }
         return null;

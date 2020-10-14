@@ -393,13 +393,13 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                               <input
                                 type="text"
                                 id={`rule_${ruleId}_cell_${cellId}`}
-                                value={cell.name}
+                                value={cell.key}
                                 className="border border-1 p-1"
                                 onChange={(e) =>
                                   setKeyPairAtCell({
                                     ruleId,
                                     cellId,
-                                    name: e.target.value,
+                                    key: e.target.value,
                                   })
                                 }
                               />

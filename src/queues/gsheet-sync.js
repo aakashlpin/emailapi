@@ -98,34 +98,17 @@ async function processJob(job) {
       })
       .reduce((accum, item) => [...accum, ...item], []);
 
-    await Promise.mapSeries(
-      toSyncData,
-      async (item, index, arrayLength) => {
-        console.log({ item, index, arrayLength });
-        async function fn() {
-          const { sheetHeader, sheetRows, sheetName } = item;
-          await updateSheet({
-            googleSheetId,
-            sheet,
-            sheetHeader,
-            sheetRows,
-            sheetName,
-          });
-        }
-
-        await fn();
-      },
-      // Promise.delay(
-      //   100,
-      //   updateSheet({
-      //     googleSheetId,
-      //     sheet,
-      //     sheetHeader,
-      //     sheetRows,
-      //     sheetName,
-      //   }),
-      // ),
-    );
+    await Promise.mapSeries(toSyncData, async (item, index, arrayLength) => {
+      console.log({ item, index, arrayLength });
+      const { sheetHeader, sheetRows, sheetName } = item;
+      await updateSheet({
+        googleSheetId,
+        sheet,
+        sheetHeader,
+        sheetRows,
+        sheetName,
+      });
+    });
 
     return page + 1;
   };

@@ -7,15 +7,16 @@ require('~/src/queues');
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
 const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
+const SELF_DOMAIN = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function handle(req, res, resolve) {
   const {
-    // on_previous_emails_count: previousEmailsCount = 10,
-    selected_table_data: selectedTableData,
+    // [TODO] accept post processing endpoint here
     search_query: searchQuery,
     camelot_method: camelotMethod,
     camelot_scale: camelotScale,
     attachment_password: attachmentPassword,
+    post_processing_endpoint: postProcessingEndpoint = `${SELF_DOMAIN}/api/webhooks/zerodha-cn`,
     rules,
     uid,
     token,
@@ -54,8 +55,8 @@ async function handle(req, res, resolve) {
     _nextQueue: 'pdfExtractionQueue',
     _nextQueueData: {
       dataEndpoint,
+      postProcessingEndpoint,
       rules,
-      selectedTableData,
       camelotMethod,
       camelotScale,
       attachmentPassword,
@@ -90,20 +91,6 @@ async function handle(req, res, resolve) {
           hasDataAtEndpoint: dataEndpoint,
         },
         notifications: [
-          // {
-          //   type: 'webhook',
-          //   data: {
-          //     method: 'POST',
-          //     url: `${GOOGLE_OAUTH_REDIRECT_URI}/api/integrations/google-spreadsheet/preview`,
-          //     data: {
-          //       uid,
-          //       token,
-          //       refresh_token: refreshToken,
-          //       data_endpoint: dataEndpoint,
-          //       gsheet_id: gSheetId,
-          //     },
-          //   },
-          // },
           {
             type: 'webhook',
             data: {
