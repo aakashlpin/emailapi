@@ -1,6 +1,6 @@
 import React from 'react';
 import { defaultsDeep } from 'lodash';
-import { RULE_TYPE } from '../../../src/pdf/enums';
+import { RULE_TYPE, CELL_MATCH_TYPE } from '../../../src/pdf/enums';
 import { Button, FlexEnds } from '~/components/common/Atoms';
 import { getRuleDataFromTable } from '../../../src/pdf/utils';
 import Grid from './Grid';
@@ -291,15 +291,28 @@ const ExtractionRules = ({ extractedTablesFromPDF, rules, setRules }) => {
                             })
                           }
                         >
-                          <option value="cell_startsWith">starts with</option>
-                          <option value="cell_endsWith">ends with</option>
-                          <option value="cell_equals">is exactly</option>
-                          <option value="cell_contains">contains</option>
+                          <option value={CELL_MATCH_TYPE.STARTS_WITH}>
+                            starts with
+                          </option>
+                          <option value={CELL_MATCH_TYPE.ENDS_WITH}>
+                            ends with
+                          </option>
+                          <option value={CELL_MATCH_TYPE.EQUALS}>
+                            is exactly
+                          </option>
+                          <option value={CELL_MATCH_TYPE.CONTAINS}>
+                            contains
+                          </option>
+                          <option value={CELL_MATCH_TYPE.REGEX}>
+                            matches regex
+                          </option>
                           {whereRule.colIndex ? (
-                            <option value="cell_notEmpty">is not empty</option>
+                            <option value={CELL_MATCH_TYPE.NOT_EMPTY}>
+                              is not empty
+                            </option>
                           ) : null}
                         </select>{' '}
-                        {whereRule.type !== 'cell_notEmpty' ? (
+                        {whereRule.type !== CELL_MATCH_TYPE.NOT_EMPTY ? (
                           <input
                             type="text"
                             className="border border-1 p-1 w-24"

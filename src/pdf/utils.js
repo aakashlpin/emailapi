@@ -1,4 +1,4 @@
-import { RULE_TYPE } from './enums';
+import { RULE_TYPE, CELL_MATCH_TYPE } from './enums';
 
 export const toArray = (arrayLikeObj) =>
   Object.keys(arrayLikeObj).map((idx) => arrayLikeObj[idx]);
@@ -37,24 +37,34 @@ export const getRuleDataFromTable = ({ data: table, rule }) => {
             }
 
             switch (whereType) {
-              case 'cell_notEmpty': {
+              case CELL_MATCH_TYPE.NOT_EMPTY: {
                 checkPassed = !!cellValue;
                 break;
               }
-              case 'cell_startsWith': {
+              case CELL_MATCH_TYPE.STARTS_WITH: {
                 checkPassed = cellValue.startsWith(whereValue);
                 break;
               }
-              case 'cell_endsWith': {
+              case CELL_MATCH_TYPE.ENDS_WITH: {
                 checkPassed = cellValue.endsWith(whereValue);
                 break;
               }
-              case 'cell_equals': {
+              case CELL_MATCH_TYPE.EQUALS: {
                 checkPassed = cellValue !== whereValue;
                 break;
               }
-              case 'cell_contains': {
+              case CELL_MATCH_TYPE.CONTAINS: {
                 checkPassed = cellValue.includes(whereValue);
+                break;
+              }
+              case CELL_MATCH_TYPE.REGEX: {
+                try {
+                  const parsedRegex = new RegExp(whereValue, 'g');
+                  checkPassed = !!cellValue.match(parsedRegex).length;
+                } catch (e) {
+                  console.log(e);
+                  checkPassed = false;
+                }
                 break;
               }
               default: {

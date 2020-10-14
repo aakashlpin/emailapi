@@ -27,6 +27,7 @@ import ExtractionRules from './ExtractionRules';
 
 import { Button, FlexEnds } from '~/components/common/Atoms';
 import { RULE_TYPE } from '../../../src/pdf/enums';
+import ZerodhaCNTemplate from '../../../src/pdf/templates/zerodha-cn';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -112,51 +113,7 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
-  const [extractionRules, setExtractionRules] = useState([
-    // {
-    //   type: null,
-    //   selected
-    //   selectedTableData: null,
-    //   remoteSync: {
-    //     googleSheet: {
-    //       id: '1DGJ48YOtEX1KDoUE0ifL0_Wub2znlDiNHtB7wWLrI4Q',
-    //     },
-    //   },
-    //   where: [
-    //     {
-    //       type: 'cell_contains',
-    //       value: '/',
-    //       colIndex: '4',
-    //     },
-    //     {
-    //       type: 'cell_notEmpty',
-    //       value: '',
-    //       colIndex: '1',
-    //     },
-    //   ],
-    // },
-    // {
-    //   type: null,
-    //   selectedTableData: null,
-    //   remoteSync: {
-    //     googleSheet: {
-    //       id: '1bKG6zbfGltkPCfqwtdk0Uix-MMAw-fnerRechkFCmyQ',
-    //     },
-    //   },
-    //   where: [
-    //     {
-    //       type: 'cell_notEmpty',
-    //       value: '',
-    //       colIndex: '1',
-    //     },
-    //     {
-    //       type: 'cell_endsWith',
-    //       value: 'FUT',
-    //       colIndex: '4',
-    //     },
-    //   ],
-    // },
-  ]);
+  const [extractionRules, setExtractionRules] = useState(ZerodhaCNTemplate);
 
   useEffect(() => {
     console.log({ extractionRules });
@@ -658,7 +615,7 @@ const EmailJsonApp = ({ router, ...props }) => {
     );
 
     setExtractedTablesFromPDF(extractedData);
-    onCreateExtractionRule();
+    if (!extractionRules.length) onCreateExtractionRule();
   }
 
   function onClickSavePDFExtractionRules(e) {
