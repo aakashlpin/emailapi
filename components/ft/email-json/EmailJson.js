@@ -587,10 +587,15 @@ const EmailJsonApp = ({ router, ...props }) => {
   );
 
   useEffect(() => {
-    if (open && pdfTemplate === TEMPLATE_TYPE.ZERODHA_CN) {
-      setCamelotScale(60);
+    if (open) {
       setCamelotMethod('lattice');
-      setExtractionRules(ZerodhaCNTemplate);
+      if (pdfTemplate === TEMPLATE_TYPE.ZERODHA_CN) {
+        setCamelotScale(60);
+        setExtractionRules(ZerodhaCNTemplate);
+      } else {
+        setCamelotScale(null);
+        setExtractionRules([]);
+      }
     }
   }, [open, pdfTemplate]);
 
@@ -828,8 +833,10 @@ const EmailJsonApp = ({ router, ...props }) => {
                     value={pdfTemplate}
                     onChange={(e) => setPdfTemplate(e.target.value)}
                   >
-                    <option value="zerodhaCn">Zerodha Contract Note</option>
-                    <option value="custom">Custom</option>
+                    <option value={TEMPLATE_TYPE.ZERODHA_CN}>
+                      Zerodha Contract Note
+                    </option>
+                    <option value={TEMPLATE_TYPE.CUSTOM}>Custom</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <svg
@@ -843,7 +850,7 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </div>
               </label>
 
-              {pdfTemplate === 'custom' ? (
+              {pdfTemplate === TEMPLATE_TYPE.CUSTOM ? (
                 <label htmlFor="camelotMethod">
                   Technique:
                   <div className="relative">
@@ -870,7 +877,8 @@ const EmailJsonApp = ({ router, ...props }) => {
                 </label>
               ) : null}
 
-              {pdfTemplate === 'custom' && camelotMethod === 'lattice' ? (
+              {pdfTemplate === TEMPLATE_TYPE.CUSTOM &&
+              camelotMethod === 'lattice' ? (
                 <label htmlFor="camelotScale">
                   Lattice Scale:
                   <input
