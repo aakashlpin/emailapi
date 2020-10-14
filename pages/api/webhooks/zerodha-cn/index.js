@@ -29,7 +29,12 @@ export default async function handle(req, res) {
       const modifiedOtherRows = otherRows.map((row) => {
         const rowArray = toArray(row);
         const modifiedRow = [tradeDate, ...rowArray];
-        return toObject(modifiedRow);
+        const objectifiedRow = toObject(modifiedRow);
+        if (item.rule.name !== 'Equity') {
+          return objectifiedRow;
+        }
+        objectifiedRow[5] = objectifiedRow[5].split('/')[0].trim();
+        return objectifiedRow;
       });
 
       return {

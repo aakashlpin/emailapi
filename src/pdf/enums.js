@@ -11,3 +11,8 @@ export const CELL_MATCH_TYPE = {
   CONTAINS: 'CONTAINS',
   REGEX: 'REGEX',
 };
+
+export const TEMPLATE_TYPE = {
+  ZERODHA_CN: 'ZERODHA_CN',
+  CUSTOM: 'CUSTOM',
+};

@@ -58,6 +58,10 @@ async function processJob(jobData) {
               (table) => toArray(table[0]).length === colsInReferenceTable,
             );
 
+            if (!possibleTables.length) {
+              return null;
+            }
+
             // doing a .map instead of .filter ensures the following use case:
             // if pdf contains repeating table structures with similar columns
             const extractedData = possibleTables
@@ -79,11 +83,11 @@ async function processJob(jobData) {
             const colsInReferenceTable = toArray(selectedTableData[0]).length;
             const colsInExtractedTable = toArray(extractedTable[0]).length;
             if (colsInReferenceTable !== colsInExtractedTable) {
-              debugger;
-              console.log('incorrect mapping in RULE_TYPE.INCLUDE_CELLS');
-              Sentry.captureException(
-                'incorrect mapping in RULE_TYPE.INCLUDE_CELLS',
-              );
+              // NB: CN has changed on/after 13th June 2019
+              console.log('cols mismatch', {
+                extractedTable,
+                referenceTable: selectedTableData,
+              });
               return null;
             }
 
@@ -125,6 +129,10 @@ async function processJob(jobData) {
         }
       })
       .filter((i) => i);
+
+    if (!rulesAppliedJson.length) {
+      return Promise.resolve();
+    }
 
     let processedData = rulesAppliedJson;
     if (postProcessingEndpoint) {

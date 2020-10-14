@@ -1,3 +1,7 @@
+// [TODO] camelot props should be part of template
+// it isn't the case right now.
+// camelotMethod: 'lattice',
+// camelotScale: 60,
 export default [
   {
     name: 'Options',

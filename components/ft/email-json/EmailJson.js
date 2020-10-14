@@ -26,7 +26,7 @@ import ConfigOutputBar from './config-ui';
 import ExtractionRules from './ExtractionRules';
 
 import { Button, FlexEnds } from '~/components/common/Atoms';
-import { RULE_TYPE } from '../../../src/pdf/enums';
+import { RULE_TYPE, TEMPLATE_TYPE } from '../../../src/pdf/enums';
 import ZerodhaCNTemplate from '../../../src/pdf/templates/zerodha-cn';
 import useLocalState from '~/src/hooks/useLocalState';
 
@@ -115,6 +115,10 @@ const EmailJsonApp = ({ router, ...props }) => {
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
   const [extractionRules, setExtractionRules] = useState([]);
+
+  useEffect(() => {
+    console.log({ extractionRules });
+  }, [extractionRules]);
 
   function resetData() {
     setSearchResults([]);
@@ -573,11 +577,6 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
-  const TEMPLATE_TYPE = {
-    ZERODHA_CN: 'ZERODHA_CN',
-    CUSTOM: 'CUSTOM',
-  };
-
   const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
   const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState('');
   const [camelotMethod, setCamelotMethod] = useState('');
@@ -661,12 +660,11 @@ const EmailJsonApp = ({ router, ...props }) => {
       uid,
       token,
       search_query: searchInput,
-      // NB: removing this
-      // selected_table_data: extractedTablesFromPDF[selectedTableId],
       camelot_method: camelotMethod,
       camelot_scale: camelotScale,
       rules: extractionRules,
       attachment_password: attachmentPassword,
+      template: pdfTemplate,
     });
 
     window.open(dataEndpoint, '_blank');

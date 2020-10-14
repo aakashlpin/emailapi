@@ -51,12 +51,12 @@ const queues = [
   {
     exportName: 'gSheetSyncQueue',
     bullName: 'gsheet-sync',
-    bullOpts: {
-      limiter: {
-        max: 5,
-        duration: 60 * 1000,
-      },
-    },
+    // bullOpts: {
+    //   limiter: {
+    //     max: 20,
+    //     duration: 60 * 1000,
+    //   },
+    // },
   },
 ];
 
