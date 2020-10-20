@@ -577,6 +577,27 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
+
+  async function onSubmitSyncWithSMS() {
+    await axios.post(`/api/apps/email-to-json/integrations/sms`, {
+      uid,
+      token,
+      service_id: serviceId,
+      phone_number: phoneNumber,
+      phone_verification_code: phoneVerificationCode,
+    });
+  }
+
+  async function handleChangePhoneNumber(val) {
+    setPhoneNumber(val);
+  }
+
+  async function handleChangePhoneVerificationCode(val) {
+    setPhoneVerificationCode(val);
+  }
+
   const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
   const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState('');
   const [camelotMethod, setCamelotMethod] = useState('');
@@ -794,8 +815,13 @@ const EmailJsonApp = ({ router, ...props }) => {
               preSyncWebhook={serviceIdData && serviceIdData.presync_webhook}
               handleChangePreSyncWebhook={handleChangePreSyncWebhook}
               onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
-              extractionRules={extractionRules}
-              extractedData={extractedTablesFromPDF}
+              onSubmitSyncWithSMS={onSubmitSyncWithSMS}
+              phoneNumber={phoneNumber}
+              phoneVerificationCode={phoneVerificationCode}
+              handleChangePhoneNumber={handleChangePhoneNumber}
+              handleChangePhoneVerificationCode={
+                handleChangePhoneVerificationCode
+              }
             />
           </Aside>
         </ContainerBody>

@@ -6,7 +6,6 @@ import cx from 'classnames';
 
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
 import ConfigurationEditor from '~/components/service-creator/configuration-editor';
-import RulePreview from './rules-preview';
 
 const AsideContainer = styled.div.attrs({
   className: 'bg-yellow-100',
@@ -61,14 +60,71 @@ const ConfigOutputBar = ({
   preSyncWebhook,
   handleChangePreSyncWebhook,
   onSubmitSyncToGoogleSheet,
-  extractionRules,
-  extractedData,
+  onSubmitSyncWithSMS,
+  phoneNumber,
+  handleChangePhoneNumber,
+  phoneVerificationCode,
+  handleChangePhoneVerificationCode,
 }) => {
   if (isSyncIntegrationSelected) {
     return (
       <AsideContainer>
         <div className="p-4">
           <h4 className="text-xl text-bold mb-4 underline">Integrations</h4>
+          <div className="">
+            <p className="text-2xl mb-1">Recieve SMS</p>
+            <p className="p-4 rounded bg-gray-100 mb-4">
+              Get an SMS containing extracted content
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSubmitSyncWithSMS();
+              }}
+            >
+              <div className="mb-4">
+                <label htmlFor="gsheetId">
+                  Enter your phone number: <br />
+                  <input
+                    type="text"
+                    id="phoneNumber"
+                    value={phoneNumber}
+                    className="border mb-1 p-2 w-full"
+                    onChange={(e) => handleChangePhoneNumber(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="mb-4">
+                <label htmlFor="gsheetId">
+                  Enter verification code: <br />
+                  <input
+                    type="text"
+                    id="phoneVerificationCode"
+                    value={phoneVerificationCode}
+                    className="border mb-1 p-2 w-full"
+                    onChange={(e) =>
+                      handleChangePhoneVerificationCode(e.target.value)
+                    }
+                  />
+                </label>
+              </div>
+              <div>
+                <p className="text-xs text-gray-700 mb-4 italic">
+                  You&apos;ll receive an SMS containing a verification code on
+                  the above number
+                </p>
+                <Button type="submit" className="mb-2">
+                  {!phoneVerificationCode
+                    ? 'Get verification code'
+                    : 'Save & sync'}
+                </Button>
+                <p className="italic text-gray-600">
+                  If you submit an incorrect verification code, clear the field
+                  to request it again
+                </p>
+              </div>
+            </form>
+          </div>
           <div className="">
             <p className="text-2xl mb-1">Google Spreadsheet</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
