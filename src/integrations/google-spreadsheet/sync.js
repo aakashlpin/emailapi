@@ -20,9 +20,11 @@ export default async function sync({
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id]
-    sheet.updateProperties({
-      title: sheetName,
-    });
+    if (sheetName) {
+      sheet.updateProperties({
+        title: sheetName,
+      });
+    }
 
     await sheet.setHeaderRow(sheetHeader);
     await sheet.addRows(sheetRows);
