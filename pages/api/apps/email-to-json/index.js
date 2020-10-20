@@ -84,7 +84,7 @@ async function handle(req, res, resolve) {
                 url: `${APP_HOST}/api/apps/email-to-json/webhook`,
                 data: {
                   uid: userProps.uid,
-                  refreshToken: userProps.refreshToken,
+                  refresh_token: userProps.refreshToken,
                   apiId,
                   serviceEndpoint,
                   success: true,
