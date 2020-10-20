@@ -3,6 +3,7 @@
 }
 
 .react-responsive-modal-modal {
-  max-width: 1024px;
+  width: 100%;
+  max-width: calc(100% - 4rem);
   padding: 0;
 }

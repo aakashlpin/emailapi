@@ -23,6 +23,12 @@ import ActionBar from '~/components/service-creator/action-bar';
 import EmailPreview from '~/components/service-creator/email-preview';
 import EmailResultsNav from '~/components/service-creator/email-results-nav';
 import ConfigOutputBar from './config-ui';
+import ExtractionRules from './ExtractionRules';
+
+import { Button, FlexEnds } from '~/components/common/Atoms';
+import { RULE_TYPE, TEMPLATE_TYPE } from '../../../src/pdf/enums';
+import ZerodhaCNTemplate from '../../../src/pdf/templates/zerodha-cn';
+import useLocalState from '~/src/hooks/useLocalState';
 
 const baseUri = (id) => `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${id}`;
 
@@ -108,6 +114,11 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   const [attachmentBase64, setAttachmentBase64] = useState('');
   const [open, setOpen] = useState(false);
+  const [extractionRules, setExtractionRules] = useState([]);
+
+  useEffect(() => {
+    console.log({ extractionRules });
+  }, [extractionRules]);
 
   function resetData() {
     setSearchResults([]);
@@ -233,6 +244,9 @@ const EmailJsonApp = ({ router, ...props }) => {
     );
   }
 
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+  const [selectedAttachmentId, setSelectedAttachmentId] = useState(null);
+
   async function handleClickAttachmentFilename({ messageId, attachmentId }) {
     const { data } = await axios.post(`/api/fetch/attachment`, {
       messageId,
@@ -242,6 +256,8 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
 
     setAttachmentBase64(`data:application/pdf;base64,${data.base64}`);
+    setSelectedMessageId(messageId);
+    setSelectedAttachmentId(attachmentId);
     setOpen(true);
   }
 
@@ -525,6 +541,160 @@ const EmailJsonApp = ({ router, ...props }) => {
     );
   }
 
+  const [isSyncIntegrationSelected, setIsSyncIntegrationSelected] = useState(
+    !!serviceId,
+  );
+  function handleClickSyncIntegrations() {
+    setIsSyncIntegrationSelected(true);
+  }
+
+  function handleChangeGSheetId(gSheetId) {
+    setServiceIdData({
+      ...serviceIdData,
+      gsheet_id: gSheetId,
+    });
+  }
+
+  function handleChangePreSyncWebhook(preSyncWebhook) {
+    setServiceIdData({
+      ...serviceIdData,
+      presync_webhook: preSyncWebhook,
+    });
+  }
+
+  async function onSubmitSyncToGoogleSheet() {
+    const {
+      gsheet_id: gSheetId,
+      presync_webhook: preSyncWebhook,
+    } = serviceIdData;
+
+    await axios.post(`/api/apps/email-to-json/integrations/google-sheet`, {
+      uid,
+      token,
+      service_id: serviceId,
+      gsheet_id: gSheetId,
+      presync_webhook: preSyncWebhook,
+    });
+  }
+
+  const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
+  const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState('');
+  const [camelotMethod, setCamelotMethod] = useState('');
+  const [camelotScale, setCamelotScale] = useState('');
+  const [attachmentPassword, setAttachmentPassword] = useLocalState(
+    'attachmentPassword',
+  );
+
+  useEffect(() => {
+    if (open) {
+      setCamelotMethod('lattice');
+      if (pdfTemplate === TEMPLATE_TYPE.ZERODHA_CN) {
+        setCamelotScale(60);
+        setExtractionRules(ZerodhaCNTemplate);
+      } else {
+        setCamelotScale(null);
+        setExtractionRules([]);
+      }
+    }
+  }, [open, pdfTemplate]);
+
+  async function onClosePDFPreview() {
+    setExtractedTablesFromPDF(null);
+    setCamelotMethod('lattice');
+    setCamelotScale(null);
+    setExtractionRules([]);
+    setOpen(false);
+  }
+
+  async function onCreateExtractionRule() {
+    setExtractionRules([
+      ...extractionRules,
+      {
+        type: RULE_TYPE.INCLUDE_ROWS,
+        where: [],
+      },
+    ]);
+  }
+
+  const [isExtractingPdfData, setIsExtractingPdfData] = useState(false);
+
+  async function handleFetchExtractDataFromPDF() {
+    setIsExtractingPdfData(true);
+    try {
+      const { data: extractedData } = await axios.post(
+        `/api/fetch/tables-from-attachment`,
+        {
+          uid,
+          token,
+          messageId: selectedMessageId,
+          attachmentId: selectedAttachmentId,
+          attachmentPassword,
+          camelotMethod,
+          camelotScale,
+        },
+      );
+
+      setExtractedTablesFromPDF(extractedData);
+      if (!extractionRules.length) onCreateExtractionRule();
+    } catch (e) {
+      console.log(e);
+      new Noty({
+        theme: 'relax',
+        text: `Sorry! Something went wrong.`,
+      }).show();
+    }
+    setIsExtractingPdfData(false);
+  }
+
+  function onClickSavePDFExtractionRules(e) {
+    e.preventDefault();
+    setOpen(false);
+  }
+
+  async function onClickPreviewExtractionRules(e) {
+    e.preventDefault();
+
+    const {
+      data: { dataEndpoint, statusCheckerEndpoint },
+    } = await axios.post('/api/fetch/preview-attachment-rules', {
+      uid,
+      token,
+      search_query: searchInput,
+      camelot_method: camelotMethod,
+      camelot_scale: camelotScale,
+      rules: extractionRules,
+      attachment_password: attachmentPassword,
+      template: pdfTemplate,
+    });
+
+    window.open(dataEndpoint, '_blank');
+
+    const statusCheckTimer = setInterval(() => {
+      async function check() {
+        const { data: statusData } = await axios(statusCheckerEndpoint);
+        if (statusData.success) {
+          clearInterval(statusCheckTimer);
+          return;
+        }
+        if (statusData.pending) {
+          const {
+            total_jobs: totalJobs,
+            completed_jobs: completedJobs,
+            pending_jobs: pendingJobs,
+          } = statusData;
+
+          if (totalJobs) {
+            console.log(
+              `${completedJobs}/${totalJobs} completed! ${pendingJobs} pending...`,
+            );
+          }
+        }
+      }
+
+      check();
+    }, 10 * 1000);
+  }
+
   return (
     <>
       <Head>
@@ -548,6 +718,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           uid={uid}
           token={token}
           isLoading={isLoading}
+          serviceId={serviceId}
           parsedData={parsedData}
           searchInput={searchInput}
           searchResults={searchResults}
@@ -557,6 +728,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           isCreateApiPending={isCreateApiPending}
           doPreviewParsedData={doPreviewParsedData}
           handleFetchMoreMails={handleFetchMoreMails}
+          handleClickSyncIntegrations={handleClickSyncIntegrations}
           matchedSearchResults={matchedSearchResults}
           GOOGLE_CLIENT_ID={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         />
@@ -603,6 +775,7 @@ const EmailJsonApp = ({ router, ...props }) => {
           </Main>
           <Aside>
             <ConfigOutputBar
+              isSyncIntegrationSelected={isSyncIntegrationSelected}
               isPreviewMode={isPreviewMode}
               searchInput={searchInput}
               parsedData={parsedData}
@@ -616,17 +789,150 @@ const EmailJsonApp = ({ router, ...props }) => {
               doPreviewParsedData={doPreviewParsedData}
               handleChangeSearchInput={handleChangeSearchInput}
               setTriggerSearch={setTriggerSearch}
+              gSheetId={serviceIdData && serviceIdData.gsheet_id}
+              handleChangeGSheetId={handleChangeGSheetId}
+              preSyncWebhook={serviceIdData && serviceIdData.presync_webhook}
+              handleChangePreSyncWebhook={handleChangePreSyncWebhook}
+              onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
+              extractionRules={extractionRules}
+              extractedData={extractedTablesFromPDF}
             />
           </Aside>
         </ContainerBody>
       </Container>
       <>
-        <Modal open={open} onClose={() => setOpen(false)}>
-          <iframe
-            src={attachmentBase64}
-            title="preview attachment"
-            style={{ height: '100vh', width: '1024px' }}
-          />
+        <Modal
+          open={open}
+          onClose={onClosePDFPreview}
+          style={{ width: '100vw' }}
+        >
+          <div className="grid" style={{ gridTemplateColumns: '50% 1fr' }}>
+            <iframe
+              src={attachmentBase64}
+              title="preview attachment"
+              style={{ height: '100vh', width: '100%' }}
+            />
+            <div className="p-4">
+              <FlexEnds className="pr-12">
+                <h3 className="text-xl mb-2">Extract data from PDF</h3>
+                <div>
+                  <Button onClick={onClickSavePDFExtractionRules}>
+                    Create API
+                  </Button>
+                </div>
+              </FlexEnds>
+
+              <label htmlFor="pdfTemplate">
+                Template:
+                <div className="relative">
+                  <select
+                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="pdfTemplate"
+                    value={pdfTemplate}
+                    onChange={(e) => setPdfTemplate(e.target.value)}
+                  >
+                    <option value={TEMPLATE_TYPE.ZERODHA_CN}>
+                      Zerodha Contract Note
+                    </option>
+                    <option value={TEMPLATE_TYPE.CUSTOM}>Custom</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </label>
+
+              {pdfTemplate === TEMPLATE_TYPE.CUSTOM ? (
+                <label htmlFor="camelotMethod">
+                  Technique:
+                  <div className="relative">
+                    <select
+                      className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="camelotMethod"
+                      id="camelotMethod"
+                      value={camelotMethod}
+                      onChange={(e) => setCamelotMethod(e.target.value)}
+                    >
+                      <option value="lattice">Lattice</option>
+                      <option value="stream">Stream</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg
+                        className="fill-current h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                </label>
+              ) : null}
+
+              {pdfTemplate === TEMPLATE_TYPE.CUSTOM &&
+              camelotMethod === 'lattice' ? (
+                <label htmlFor="camelotScale">
+                  Lattice Scale:
+                  <input
+                    id="camelotScale"
+                    type="text"
+                    value={camelotScale}
+                    onChange={(e) => setCamelotScale(e.target.value)}
+                    className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+                </label>
+              ) : null}
+
+              <label htmlFor="attachmentPassword">
+                PDF Password:
+                <input
+                  id="attachmentPassword"
+                  type="text"
+                  value={attachmentPassword}
+                  onChange={(e) => setAttachmentPassword(e.target.value)}
+                  className="mb-4 block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                />
+              </label>
+
+              {!extractedTablesFromPDF ? (
+                <Button
+                  onClick={handleFetchExtractDataFromPDF}
+                  className="block mb-4"
+                  disabled={isExtractingPdfData}
+                >
+                  Extract data
+                </Button>
+              ) : null}
+
+              {extractedTablesFromPDF ? (
+                <ExtractionRules
+                  rules={extractionRules}
+                  extractedTablesFromPDF={extractedTablesFromPDF}
+                  setRules={setExtractionRules}
+                />
+              ) : null}
+
+              {extractedTablesFromPDF ? (
+                <Button onClick={onCreateExtractionRule} className="mb-4 block">
+                  + Create new extraction rule
+                </Button>
+              ) : null}
+
+              <Button
+                onClick={onClickPreviewExtractionRules}
+                className="mr-4 block"
+                disabled={!extractionRules.length}
+              >
+                &gt; Preview API
+              </Button>
+            </div>
+          </div>
         </Modal>
       </>
     </>

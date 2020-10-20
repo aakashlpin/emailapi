@@ -2,12 +2,16 @@
 import axios from 'axios';
 import flatten from 'lodash/flatten';
 import Sentry from '~/src/sentry';
+import { fetchAttachment } from '~/src/gmail';
+import extractTableInJson from '~/src/pdf/extract-tables';
+import savePdfAttachmentToDisk from '~/src/pdf/create-file';
 
 import applyConfigOnEmail from '../isomorphic/applyConfigOnEmail';
 import ensureConfiguration from '../isomorphic/ensureConfiguration';
 import queues from '../redis-queue';
 
 const EMAILAPI_DOMAIN = process.env.JSONBOX_NETWORK_URL;
+const isLengthyArray = (arr) => Array.isArray(arr) && arr.length;
 
 async function processJob(jobData, done) {
   try {
@@ -15,7 +19,7 @@ async function processJob(jobData, done) {
 
     const {
       endpoint,
-      userProps: { uid },
+      userProps: { uid, refreshToken },
       serviceEndpoint,
     } = queueData;
 
@@ -40,6 +44,46 @@ async function processJob(jobData, done) {
           .filter((extactedData) => ensureConfiguration(extactedData, config)),
       ),
     );
+
+    const {
+      extract_table_pdf: extractTablePdf,
+      extract_settings: extractSettings = {},
+    } = serviceData;
+
+    let extractedTables = null;
+
+    if (
+      extractTablePdf &&
+      isLengthyArray(email.attachments) &&
+      // NB: only supporting single attachment extraction for now
+      // 😕 about different password/attachment, different file formats etc
+      email.attachments.length === 1
+    ) {
+      const {
+        password: camelotPdfPassword,
+        scale: camelotScale,
+        method: camelotMethod = 'lattice',
+      } = extractSettings;
+
+      const attachmentB64 = await fetchAttachment({
+        messageId: email.messageId,
+        attachmentId: email.attachments[0].id,
+        refreshToken,
+      });
+
+      const pdfDiskPath = await savePdfAttachmentToDisk(attachmentB64);
+      extractedTables = await extractTableInJson(pdfDiskPath, {
+        stream: camelotMethod === 'stream',
+        scale: camelotScale,
+        password: camelotPdfPassword,
+      });
+
+      console.log({ extractedTables });
+    }
+
+    // if (!emailapi.length && !extractedTables) {
+
+    // }
 
     try {
       if (emailapi.length) {

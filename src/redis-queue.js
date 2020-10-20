@@ -32,16 +32,31 @@ const queues = [
     childQueue: true,
   },
   {
+    exportName: 'pdfExtractionQueue',
+    bullName: 'pdf-extraction',
+    childQueue: true,
+  },
+  {
     exportName: 'sendEmailQueue',
     bullName: 'send-email',
     bullOpts: {
       // limit to sending 100 emails/hour
       // as supported in free mailgun plan
       limiter: {
-        max: 100,
-        duration: 60 * 1000,
+        max: 95,
+        duration: 60 * 60 * 1000,
       },
     },
+  },
+  {
+    exportName: 'gSheetSyncQueue',
+    bullName: 'gsheet-sync',
+    // bullOpts: {
+    //   limiter: {
+    //     max: 20,
+    //     duration: 60 * 1000,
+    //   },
+    // },
   },
 ];
 

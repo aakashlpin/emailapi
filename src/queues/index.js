@@ -1,3 +1,5 @@
+require('~/src/queues/gsheet-sync');
+require('~/src/queues/pdf-to-json');
 require('~/src/queues/send-email');
 require('~/src/queues/notifications');
 require('~/src/queues/auto-unlock');

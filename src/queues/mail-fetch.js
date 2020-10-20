@@ -46,6 +46,7 @@ async function iterable({
   _nextQueue,
   _nextQueueData,
   parentJobId,
+  singlePageRun,
 }) {
   const { uid, token, refreshToken } = userProps;
   let emails;
@@ -76,6 +77,7 @@ async function iterable({
     queues[_nextQueue].add({
       email,
       queueData: _nextQueueData,
+      userProps,
       parentJobId,
     }),
   );
@@ -89,7 +91,7 @@ async function iterable({
     );
   }
 
-  if (nextPageToken) {
+  if (nextPageToken && !singlePageRun) {
     return iterable({
       apiOnly,
       userProps,
@@ -114,6 +116,8 @@ async function processJob(job, done) {
     _nextQueueData,
     initNotifications,
     completionNotifications,
+    pendingWebhookNotifications,
+    singlePageRun,
   } = jobData;
 
   try {
@@ -124,6 +128,7 @@ async function processJob(job, done) {
       _nextQueue,
       _nextQueueData,
       parentJobId: id,
+      singlePageRun,
     });
 
     if (isLengthyArray(initNotifications)) {
@@ -136,6 +141,7 @@ async function processJob(job, done) {
       {
         taskId: id,
         completionNotifications,
+        pendingWebhookNotifications,
       },
       {
         attempts: 30,
@@ -143,7 +149,7 @@ async function processJob(job, done) {
         delay: 15 * 1000,
         backoff: {
           type: 'exponential',
-          delay: 30 * 1000,
+          delay: 15 * 1000,
         },
       },
     );

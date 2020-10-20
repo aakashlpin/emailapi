@@ -49,9 +49,13 @@ function processMessageBody(message) {
     const htmlPart = findPartOfType(parts, 'text/html');
     const isHtmlContent = !!htmlPart;
 
-    const bodyData = isHtmlContent ? htmlPart.body.data : body.data;
+    let bodyData = isHtmlContent ? htmlPart.body.data : body.data;
     if (!bodyData) {
-      return null;
+      const plainTextPart = findPartOfType(parts, 'text/plain');
+      if (!plainTextPart) {
+        return null;
+      }
+      bodyData = plainTextPart.body.data;
     }
     const messageBody = decodeURIComponent(
       escape(b64Decode(bodyData.replace(/-/g, '+').replace(/_/g, '/'))),
@@ -161,7 +165,7 @@ async function fetchEmails(
       userId: 'me',
       q: query,
       // keep per page size low
-      maxResults: 10,
+      maxResults: 20,
       ...gmailSearchProps, // https://developers.google.com/gmail/api/v1/reference/users/messages/list
     };
 
