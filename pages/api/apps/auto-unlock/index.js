@@ -69,6 +69,8 @@ async function handle(req, res, resolve) {
                 method: 'POST',
                 url: `${APP_HOST}/api/apps/auto-unlock/webhook`,
                 data: {
+                  uid: userProps.uid,
+                  refresh_token: userProps.refreshToken,
                   apiId,
                   serviceEndpoint,
                   success: true,
