@@ -578,6 +578,10 @@ const EmailJsonApp = ({ router, ...props }) => {
   }
 
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [waPhoneNumber, setWaPhoneNumber] = useState('');
+  const [isWhatsappNumberValidated, setIsWhatsappNumberValidated] = useState(
+    null,
+  );
   const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
 
   async function onSubmitSyncWithSMS() {
@@ -596,6 +600,52 @@ const EmailJsonApp = ({ router, ...props }) => {
 
   async function handleChangePhoneVerificationCode(val) {
     setPhoneVerificationCode(val);
+  }
+
+  function handleChangeWhatsappPhoneNumber(val) {
+    setWaPhoneNumber(val);
+  }
+
+  async function handleValidateWhatsappNumber(number) {
+    return new Promise((resolve, reject) => {
+      const timer = setInterval(() => {
+        async function fn() {
+          try {
+            const { data: records } = await axios.post(
+              '/api/integrations/whatsapp/checker',
+              {
+                uid,
+                token,
+                waPhoneNumber: number,
+              },
+            );
+
+            if (records.length) {
+              const [whatsAppUser] = records;
+              clearInterval(timer);
+              setIsWhatsappNumberValidated(true);
+              resolve(whatsAppUser.sender);
+            } else {
+              resolve(null);
+            }
+          } catch (e) {
+            console.error(e);
+            reject(e);
+          }
+        }
+
+        fn();
+      }, 5000);
+    });
+  }
+
+  async function onSubmitSyncWithWhatsapp() {
+    await axios.post(`/api/apps/email-to-json/integrations/whatsapp`, {
+      uid,
+      token,
+      service_id: serviceId,
+      wa_phone_number: waPhoneNumber,
+    });
   }
 
   const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
@@ -822,6 +872,11 @@ const EmailJsonApp = ({ router, ...props }) => {
               handleChangePhoneVerificationCode={
                 handleChangePhoneVerificationCode
               }
+              waPhoneNumber={waPhoneNumber}
+              handleChangeWhatsappPhoneNumber={handleChangeWhatsappPhoneNumber}
+              handleValidateWhatsappNumber={handleValidateWhatsappNumber}
+              isWhatsappNumberValidated={isWhatsappNumberValidated}
+              onSubmitSyncWithWhatsapp={onSubmitSyncWithWhatsapp}
             />
           </Aside>
         </ContainerBody>

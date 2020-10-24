@@ -72,7 +72,13 @@ export default (handler) => (req, res) => {
         userRefreshToken = userCreds.refreshToken;
       }
 
-      req.user = userCreds.profile;
+      req.user = {
+        email: userCreds.profile.email,
+        whatsapp: {
+          phoneNumber: userCreds.whatsapp?.phoneNumber,
+          sendingId: userCreds.whatsapp?.sender?.id,
+        },
+      };
       if (!req.refresh_token) {
         req.refresh_token = userRefreshToken;
       }

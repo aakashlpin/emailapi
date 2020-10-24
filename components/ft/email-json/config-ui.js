@@ -60,11 +60,16 @@ const ConfigOutputBar = ({
   preSyncWebhook,
   handleChangePreSyncWebhook,
   onSubmitSyncToGoogleSheet,
-  onSubmitSyncWithSMS,
-  phoneNumber,
-  handleChangePhoneNumber,
-  phoneVerificationCode,
-  handleChangePhoneVerificationCode,
+  waPhoneNumber,
+  handleChangeWhatsappPhoneNumber,
+  handleValidateWhatsappNumber,
+  isWhatsappNumberValidated,
+  onSubmitSyncWithWhatsapp,
+  // onSubmitSyncWithSMS,
+  // phoneNumber,
+  // handleChangePhoneNumber,
+  // phoneVerificationCode,
+  // handleChangePhoneVerificationCode,
 }) => {
   if (isSyncIntegrationSelected) {
     return (
@@ -72,6 +77,57 @@ const ConfigOutputBar = ({
         <div className="p-4">
           <h4 className="text-xl text-bold mb-4 underline">Integrations</h4>
           <div className="">
+            <p className="text-2xl mb-1">WhatsApp</p>
+            <p className="p-4 rounded bg-gray-100 mb-4">
+              Get this content on WhatsApp
+            </p>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!isWhatsappNumberValidated) {
+                  const isPreVerified = handleValidateWhatsappNumber(
+                    waPhoneNumber,
+                  );
+                  if (!isPreVerified) {
+                    window.open(`https://wa.me/918296911202?text=Hi!`);
+                  }
+                } else {
+                  onSubmitSyncWithWhatsapp(waPhoneNumber);
+                }
+              }}
+            >
+              <div className="mb-4">
+                <label htmlFor="waPhoneNumber">
+                  Enter your WhatsApp number: <br />
+                  <input
+                    type="text"
+                    id="waPhoneNumber"
+                    value={waPhoneNumber}
+                    className="border mb-1 p-2 w-full"
+                    onChange={(e) =>
+                      handleChangeWhatsappPhoneNumber(e.target.value)
+                    }
+                  />
+                </label>
+              </div>
+              <div>
+                <p className="text-xs text-gray-700 mb-4 italic">
+                  Verify your WhatsApp number by sending us message from that
+                  number. It&apos;s really simple!
+                </p>
+                {!isWhatsappNumberValidated ? (
+                  <Button type="submit" className="mb-2">
+                    Verify number
+                  </Button>
+                ) : (
+                  <Button type="submit" className="mb-2">
+                    Save &apos; Sync!
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
+          {/* <div className="">
             <p className="text-2xl mb-1">Recieve SMS</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
               Get an SMS containing extracted content
@@ -124,7 +180,7 @@ const ConfigOutputBar = ({
                 </p>
               </div>
             </form>
-          </div>
+          </div> */}
           <div className="">
             <p className="text-2xl mb-1">Google Spreadsheet</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
