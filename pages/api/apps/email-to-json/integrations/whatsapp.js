@@ -2,7 +2,7 @@ import axios from 'axios';
 import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
 
-const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
+const { JSONBOX_NETWORK_URL } = process.env;
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
@@ -16,10 +16,10 @@ async function handle(req, res, resolve) {
 
   try {
     const { data: existingServiceData } = await axios(
-      `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`,
+      `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`,
     );
 
-    await axios.put(`${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`, {
+    await axios.put(`${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`, {
       ...existingServiceData,
       wa_phone_number: phoneNumber,
     });
@@ -27,7 +27,7 @@ async function handle(req, res, resolve) {
     // setup a task per pre-existing data endpoint to sync to gSheet
     const dataEndpoints = existingServiceData.data
       .filter((item) => item.is_successful)
-      .map(({ id }) => `${EMAILAPI_DOMAIN}/${uid}/${id}`)
+      .map(({ id }) => `${JSONBOX_NETWORK_URL}/${uid}/${id}`)
       .map((endpoint) =>
         axios.post(`${GOOGLE_OAUTH_REDIRECT_URI}/api/integrations/whatsapp`, {
           uid,

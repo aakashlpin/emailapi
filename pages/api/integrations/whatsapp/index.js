@@ -2,8 +2,13 @@ import axios from 'axios';
 import { Promise } from 'bluebird';
 import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
+import queues from '~/src/redis-queue';
 
-const { GOOGLE_OAUTH_REDIRECT_URI, EMAILAPI_DOMAIN, WA_API_URI } = process.env;
+require('~/src/queues');
+
+const { https } = require('follow-redirects');
+
+const { GOOGLE_OAUTH_REDIRECT_URI, JSONBOX_NETWORK_URL } = process.env;
 
 const dataExists = (data) => Array.isArray(data) && data.length;
 
@@ -11,8 +16,17 @@ const dataExists = (data) => Array.isArray(data) && data.length;
 const getPageRecords = async ({ page, dataEndpoint, size = 1 }) =>
   axios(`${dataEndpoint}?limit=${size}&skip=${page * size}`);
 
+const resolveUrl = (url) => {
+  return new Promise((resolve) => {
+    const request = https.get(url, (response) => {
+      console.log(response.responseUrl);
+      resolve(response.responseUrl);
+    });
+    request.end();
+  });
+};
+
 async function handle(req, res, resolve) {
-  debugger;
   const {
     uid,
     token,
@@ -20,7 +34,7 @@ async function handle(req, res, resolve) {
     data_endpoint: dataEndpoint,
   } = req.body;
 
-  const serviceEndpoint = `${EMAILAPI_DOMAIN}/${uid}/services/${serviceId}`;
+  const serviceEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`;
   const { data: serviceData } = await axios(serviceEndpoint);
 
   const { configurations, wa_phone_number: waPhoneNumber } = serviceData;
@@ -48,7 +62,7 @@ async function handle(req, res, resolve) {
 
   const [configurationId] = configurations;
   const { data: configurationData } = await axios(
-    `${EMAILAPI_DOMAIN}/${uid}/configurations/${configurationId}`,
+    `${JSONBOX_NETWORK_URL}/${uid}/configurations/${configurationId}`,
   );
 
   const { fields = [] } = configurationData;
@@ -75,37 +89,58 @@ async function handle(req, res, resolve) {
       return false;
     }
 
-    const SMSes = recordsOnPage
+    recordsOnPage
       .map((record) =>
         Object.keys(record)
-          .filter((recordKey) => recordKey in fieldKeyToNameMap)
+          .filter(
+            (recordKey) =>
+              recordKey in fieldKeyToNameMap &&
+              !(`${recordKey}_link` in record) &&
+              !Array.isArray(record[recordKey]),
+          )
           .reduce(
             (accum, recordKey) => ({
               ...accum,
-              [fieldKeyToNameMap[recordKey]]: record[recordKey],
+              [recordKey]: record[recordKey],
             }),
             {},
           ),
       )
-      .map((obj) =>
-        Object.keys(obj).reduce(
-          (accum, item, idx) => `${accum}${idx !== 0 ? '\n' : ''}${obj[item]}`,
+      .forEach((obj) => {
+        const toSendMessage = Object.keys(obj).reduce(
+          (accum, item, idx) =>
+            `${accum}${idx !== 0 ? '\n' : ''}${fieldKeyToNameMap[item]} — ${
+              obj[item]
+            }`,
           '',
-        ),
-      );
+        );
 
-    await Promise.mapSeries(SMSes, async (item) => {
-      console.log({ message: item, waUser: waUserRecord.from });
-      try {
-        const waResponse = await axios.post(`${WA_API_URI}/sendText`, {
-          args: [waUserRecord.from, item],
+        queues.sendWhatsAppQueue.add({
+          path: '/sendText',
+          args: [waUserRecord.from, toSendMessage],
         });
-        return waResponse.data;
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
-    });
+      });
+
+    recordsOnPage
+      .map((record) => ({
+        record,
+        linkKeysInRecord: Object.keys(fieldKeyToNameMap).filter(
+          (fieldKey) => `${fieldKey}_link` in record,
+        ),
+      }))
+      .forEach(({ linkKeysInRecord, record }) => {
+        console.log({ record, linkKeysInRecord });
+        linkKeysInRecord.forEach(async (linkKeyInRecord) =>
+          queues.sendWhatsAppQueue.add({
+            path: '/sendLinkWithAutoPreview',
+            args: [
+              waUserRecord.from,
+              await resolveUrl(record[`${linkKeyInRecord}_link`]),
+              record[linkKeyInRecord],
+            ],
+          }),
+        );
+      });
 
     return true;
   };
@@ -124,13 +159,12 @@ async function handle(req, res, resolve) {
     }
   };
 
+  res.json({ status: 'ok' });
   try {
     // kickoff sync
     await syncData();
-    res.json({ status: 'ok' });
   } catch (e) {
     console.error(e);
-    res.status(500).send(e);
   }
 
   return resolve();

@@ -49,6 +49,17 @@ const queues = [
     },
   },
   {
+    exportName: 'sendWhatsAppQueue',
+    bullName: 'send-whatsapp',
+    bullOpts: {
+      // limit to sending 1 message/2 mins
+      limiter: {
+        max: 1,
+        duration: 2 * 60 * 1000,
+      },
+    },
+  },
+  {
     exportName: 'gSheetSyncQueue',
     bullName: 'gsheet-sync',
     // bullOpts: {

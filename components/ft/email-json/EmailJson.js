@@ -269,6 +269,8 @@ const EmailJsonApp = ({ router, ...props }) => {
       }),
     );
 
+    console.log({ dataFromSearchResults });
+
     return dataFromSearchResults.filter((item) =>
       ensureConfiguration(item, config),
     );
@@ -283,6 +285,8 @@ const EmailJsonApp = ({ router, ...props }) => {
         )
         .flat(Infinity),
     );
+
+    console.log({ extractedData });
 
     setParsedData(extractedData);
     if (!isFirstMatchSelectedOnLoad) {
@@ -606,37 +610,44 @@ const EmailJsonApp = ({ router, ...props }) => {
     setWaPhoneNumber(val);
   }
 
+  async function getWhatsAppUserAtNumber(number) {
+    try {
+      const { data: records } = await axios.post(
+        '/api/integrations/whatsapp/checker',
+        {
+          uid,
+          token,
+          waPhoneNumber: number,
+        },
+      );
+
+      if (records.length) {
+        const [whatsAppUser] = records;
+        return whatsAppUser;
+      }
+
+      return null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
   async function handleValidateWhatsappNumber(number) {
-    return new Promise((resolve, reject) => {
-      const timer = setInterval(() => {
-        async function fn() {
-          try {
-            const { data: records } = await axios.post(
-              '/api/integrations/whatsapp/checker',
-              {
-                uid,
-                token,
-                waPhoneNumber: number,
-              },
-            );
+    const whatsAppUserAtNumber = await getWhatsAppUserAtNumber(number);
+    if (whatsAppUserAtNumber) {
+      setIsWhatsappNumberValidated(true);
+      return whatsAppUserAtNumber;
+    }
 
-            if (records.length) {
-              const [whatsAppUser] = records;
-              clearInterval(timer);
-              setIsWhatsappNumberValidated(true);
-              resolve(whatsAppUser.sender);
-            } else {
-              resolve(null);
-            }
-          } catch (e) {
-            console.error(e);
-            reject(e);
-          }
-        }
+    const timer = setInterval(async () => {
+      if (await getWhatsAppUserAtNumber(number)) {
+        setIsWhatsappNumberValidated(true);
+        clearInterval(timer);
+      }
+    }, 5000);
 
-        fn();
-      }, 5000);
-    });
+    return null;
   }
 
   async function onSubmitSyncWithWhatsapp() {
@@ -842,6 +853,7 @@ const EmailJsonApp = ({ router, ...props }) => {
               }
               handleClickAttachmentFilename={handleClickAttachmentFilename}
               configuration={configurations[selectedConfigurationIndex]}
+              parsedData={parsedData}
             />
           </Main>
           <Aside>

@@ -25,6 +25,8 @@
     "date-fns": "^2.15.0",
     "firebase": "^7.18.0",
     "firebase-admin": "^9.1.0",
+    "follow-redirects": "^1.13.0",
+    "get-urls": "^10.0.0",
     "google-spreadsheet": "^3.0.13",
     "googleapis": "^59.0.0",
     "ioredis": "^4.17.3",

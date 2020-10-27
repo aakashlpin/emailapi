@@ -1,6 +1,12 @@
 version: '2'
 
 services:
+  whatsapp:
+    container_name: whatsapp
+    build: ~/projects/whatsapp-cloud/.
+    env_file:
+      - ~/projects/whatsapp-cloud/.env
+
   jsonbox:
     container_name: jsonbox
     build: ~/clones/jsonbox/.
@@ -11,8 +17,6 @@ services:
 
   redis:
     image: 'bitnami/redis:latest'
-    volumes:
-      - /tmp/redis/data:/bitnami/redis/data
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
 
@@ -25,3 +29,4 @@ services:
     depends_on:
       - jsonbox
       - redis
+      - whatsapp

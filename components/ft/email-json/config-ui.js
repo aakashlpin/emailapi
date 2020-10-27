@@ -76,7 +76,7 @@ const ConfigOutputBar = ({
       <AsideContainer>
         <div className="p-4">
           <h4 className="text-xl text-bold mb-4 underline">Integrations</h4>
-          <div className="">
+          <div>
             <p className="text-2xl mb-1">WhatsApp</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
               Get this content on WhatsApp
@@ -121,7 +121,7 @@ const ConfigOutputBar = ({
                   </Button>
                 ) : (
                   <Button type="submit" className="mb-2">
-                    Save &apos; Sync!
+                    Save &amp; Sync!
                   </Button>
                 )}
               </div>
@@ -181,6 +181,7 @@ const ConfigOutputBar = ({
               </div>
             </form>
           </div> */}
+          <hr className="hr mb-6 mt-6" />
           <div className="">
             <p className="text-2xl mb-1">Google Spreadsheet</p>
             <p className="p-4 rounded bg-gray-100 mb-4">

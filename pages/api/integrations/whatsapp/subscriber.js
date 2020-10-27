@@ -4,11 +4,13 @@ const { WA_DATABASE_URI } = process.env;
 
 export default async function handle(req, res) {
   const { event, data } = req.body;
+  console.log(data);
   if (event !== 'message') {
     return res.json({});
   }
 
   const { from, sender, body } = data;
+  console.log({ from });
   try {
     const { data: userFromDb } = await axios(
       `${WA_DATABASE_URI}/senders?q=from:${from}`,
