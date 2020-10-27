@@ -73,7 +73,7 @@ export default (handler) => (req, res) => {
       }
 
       req.user = {
-        email: userCreds.profile.email,
+        ...userCreds.profile,
         whatsapp: {
           phoneNumber: userCreds.whatsapp?.phoneNumber,
           sendingId: userCreds.whatsapp?.sender?.id,
