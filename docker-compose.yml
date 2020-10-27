@@ -1,12 +1,6 @@
 version: '2'
 
 services:
-  whatsapp:
-    container_name: whatsapp
-    image: 'docker.pkg.github.com/aakashlpin/whatsapp/whatsapp:latest'
-    env_file:
-      - ~/apps/whatsapp/.env
-
   jsonbox:
     container_name: jsonbox
     image: 'docker.pkg.github.com/aakashlpin/jsonbox/jsonbox:latest'
@@ -35,4 +29,3 @@ services:
     depends_on:
       - jsonbox
       - redis
-      - whatsapp

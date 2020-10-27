@@ -15,14 +15,18 @@ async function handle(req, res, resolve) {
   }
 
   try {
-    const { data: existingServiceData } = await axios(
-      `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`,
-    );
+    const serviceEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`;
+    const { data: existingServiceData } = await axios(serviceEndpoint);
 
     await axios.put(`${JSONBOX_NETWORK_URL}/${uid}/services/${serviceId}`, {
       ...existingServiceData,
       wa_phone_number: phoneNumber,
     });
+
+    if (!Array.isArray(existingServiceData.data)) {
+      res.json({ error: 'Please wait... data not synced yet!' });
+      return resolve();
+    }
 
     // setup a task per pre-existing data endpoint to sync to gSheet
     const dataEndpoints = existingServiceData.data

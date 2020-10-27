@@ -9,6 +9,7 @@ const {
   FIREBASE_SHORLINK_DOMAIN,
   WA_API_URI,
   WA_SELF_NUMBER,
+  WA_API_KEY,
 } = process.env;
 
 const jsdom = require('jsdom');
@@ -205,9 +206,17 @@ function mergeDataKeys(dataItem, keys) {
 }
 
 async function sendWhatsApp(content) {
-  return axios.post(`${WA_API_URI}/sendLinkWithAutoPreview`, {
-    args: [WA_SELF_NUMBER, content],
-  });
+  return axios.post(
+    `${WA_API_URI}/sendLinkWithAutoPreview`,
+    {
+      args: [WA_SELF_NUMBER, content],
+    },
+    {
+      headers: {
+        key: WA_API_KEY,
+      },
+    },
+  );
 }
 
 const contentFooter = [

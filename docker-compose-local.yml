@@ -1,12 +1,6 @@
 version: '2'
 
 services:
-  whatsapp:
-    container_name: whatsapp
-    build: ~/projects/whatsapp-cloud/.
-    env_file:
-      - ~/projects/whatsapp-cloud/.env
-
   jsonbox:
     container_name: jsonbox
     build: ~/clones/jsonbox/.
@@ -29,4 +23,3 @@ services:
     depends_on:
       - jsonbox
       - redis
-      - whatsapp
