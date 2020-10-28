@@ -34,6 +34,7 @@ const EmailPreview = ({
   onDeleteFieldFromConfiguration,
   configuration,
   isNotClickable,
+  parsedData,
 }) => {
   function removeClassname(classname) {
     [...document.querySelectorAll(`.${classname}`)].forEach(
@@ -94,6 +95,9 @@ const EmailPreview = ({
     configuration.fields
       .filter((field) => field)
       .forEach((field) => {
+        if (field.groupByParent) {
+          console.log({ field, parsedData });
+        }
         const documentSel = document.querySelector(`${field.selector}`);
         if (!documentSel) {
           return;

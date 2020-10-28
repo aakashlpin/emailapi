@@ -269,6 +269,8 @@ const EmailJsonApp = ({ router, ...props }) => {
       }),
     );
 
+    console.log({ dataFromSearchResults });
+
     return dataFromSearchResults.filter((item) =>
       ensureConfiguration(item, config),
     );
@@ -283,6 +285,8 @@ const EmailJsonApp = ({ router, ...props }) => {
         )
         .flat(Infinity),
     );
+
+    console.log({ extractedData });
 
     setParsedData(extractedData);
     if (!isFirstMatchSelectedOnLoad) {
@@ -577,6 +581,84 @@ const EmailJsonApp = ({ router, ...props }) => {
     });
   }
 
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [waPhoneNumber, setWaPhoneNumber] = useState('');
+  const [isWhatsappNumberValidated, setIsWhatsappNumberValidated] = useState(
+    null,
+  );
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
+
+  async function onSubmitSyncWithSMS() {
+    await axios.post(`/api/apps/email-to-json/integrations/sms`, {
+      uid,
+      token,
+      service_id: serviceId,
+      phone_number: phoneNumber,
+      phone_verification_code: phoneVerificationCode,
+    });
+  }
+
+  async function handleChangePhoneNumber(val) {
+    setPhoneNumber(val);
+  }
+
+  async function handleChangePhoneVerificationCode(val) {
+    setPhoneVerificationCode(val);
+  }
+
+  function handleChangeWhatsappPhoneNumber(val) {
+    setWaPhoneNumber(val);
+  }
+
+  async function getWhatsAppUserAtNumber(number) {
+    try {
+      const { data: records } = await axios.post(
+        '/api/integrations/whatsapp/checker',
+        {
+          uid,
+          token,
+          waPhoneNumber: number,
+        },
+      );
+
+      if (records.length) {
+        const [whatsAppUser] = records;
+        return whatsAppUser;
+      }
+
+      return null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  async function handleValidateWhatsappNumber(number) {
+    const whatsAppUserAtNumber = await getWhatsAppUserAtNumber(number);
+    if (whatsAppUserAtNumber) {
+      setIsWhatsappNumberValidated(true);
+      return whatsAppUserAtNumber;
+    }
+
+    const timer = setInterval(async () => {
+      if (await getWhatsAppUserAtNumber(number)) {
+        setIsWhatsappNumberValidated(true);
+        clearInterval(timer);
+      }
+    }, 5000);
+
+    return null;
+  }
+
+  async function onSubmitSyncWithWhatsapp() {
+    await axios.post(`/api/apps/email-to-json/integrations/whatsapp`, {
+      uid,
+      token,
+      service_id: serviceId,
+      wa_phone_number: waPhoneNumber,
+    });
+  }
+
   const [pdfTemplate, setPdfTemplate] = useState(TEMPLATE_TYPE.ZERODHA_CN);
   const [extractedTablesFromPDF, setExtractedTablesFromPDF] = useState('');
   const [camelotMethod, setCamelotMethod] = useState('');
@@ -771,6 +853,7 @@ const EmailJsonApp = ({ router, ...props }) => {
               }
               handleClickAttachmentFilename={handleClickAttachmentFilename}
               configuration={configurations[selectedConfigurationIndex]}
+              parsedData={parsedData}
             />
           </Main>
           <Aside>
@@ -794,8 +877,18 @@ const EmailJsonApp = ({ router, ...props }) => {
               preSyncWebhook={serviceIdData && serviceIdData.presync_webhook}
               handleChangePreSyncWebhook={handleChangePreSyncWebhook}
               onSubmitSyncToGoogleSheet={onSubmitSyncToGoogleSheet}
-              extractionRules={extractionRules}
-              extractedData={extractedTablesFromPDF}
+              onSubmitSyncWithSMS={onSubmitSyncWithSMS}
+              phoneNumber={phoneNumber}
+              phoneVerificationCode={phoneVerificationCode}
+              handleChangePhoneNumber={handleChangePhoneNumber}
+              handleChangePhoneVerificationCode={
+                handleChangePhoneVerificationCode
+              }
+              waPhoneNumber={waPhoneNumber}
+              handleChangeWhatsappPhoneNumber={handleChangeWhatsappPhoneNumber}
+              handleValidateWhatsappNumber={handleValidateWhatsappNumber}
+              isWhatsappNumberValidated={isWhatsappNumberValidated}
+              onSubmitSyncWithWhatsapp={onSubmitSyncWithWhatsapp}
             />
           </Aside>
         </ContainerBody>

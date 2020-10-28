@@ -76,6 +76,23 @@ const ConfigurationEditor = ({
     );
   }
 
+  function handleChangeGroupByParent(groupByParent, fieldKey) {
+    onChangeConfiguration(
+      {
+        ...configuration,
+        fields: configuration.fields.map((field) =>
+          field && field.fieldKey === fieldKey
+            ? {
+                ...field,
+                groupByParent,
+              }
+            : field,
+        ),
+      },
+      true,
+    );
+  }
+
   function onChangeFieldName({ value, fieldKey }) {
     setLocalFieldName({
       ...localFieldNames,
@@ -93,13 +110,17 @@ const ConfigurationEditor = ({
       {configuration.fields
         .filter((field) => field)
         .map((field) => {
-          const { fieldKey, fieldName } = field;
+          const { fieldKey, fieldName, selector, groupByParent } = field;
           const hasLocalName = typeof localFieldNames[fieldKey] === 'string';
           return (
             <FieldItem key={`editor_${fieldKey}`}>
               <div>
                 <Label>Extracted Value</Label>
-                <ExtractedValue>{sampleData[fieldKey]}</ExtractedValue>
+                <ExtractedValue>
+                  {Array.isArray(sampleData[fieldKey])
+                    ? 'Values are grouped'
+                    : sampleData[fieldKey]}
+                </ExtractedValue>
               </div>
               <Actions>
                 <div>
@@ -125,15 +146,24 @@ const ConfigurationEditor = ({
                   </NameInputForm>
                 </div>
                 <div>
-                  <Label>Format Extracted Value</Label>
+                  <Label>Group similar values</Label>
                   <select
-                    value={field.formatter}
+                    value={groupByParent}
                     onChange={(e) =>
-                      handleAssignFormatterOnValue(e.target.value, fieldKey)
+                      handleChangeGroupByParent(e.target.value, fieldKey)
                     }
                   >
-                    <option value="">None</option>
-                    <option value="number">Extract Numbers</option>
+                    <option value="">Select nearest parent</option>
+                    {selector
+                      .split('>')
+                      .reverse()
+                      .map((item, idx) => {
+                        return (
+                          <option key={idx} value={idx}>
+                            {item}
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
               </Actions>
