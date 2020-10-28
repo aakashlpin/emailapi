@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { Button, Label, FlexEnds } from '~/components/common/Atoms';
 
 const Nudges = styled.div.attrs({
-  className: '',
+  className: 'border-b',
 })`
   display: grid;
   grid-template-columns: 400px 1fr 600px;
