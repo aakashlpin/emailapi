@@ -277,7 +277,7 @@ async function getProductHuntDigest(dataItem, humanDate) {
           originalData.ph_product_name_link
         }`,
         `👍 ${originalData.ph_upvotes} | 💬 ${originalData.ph_comments}`,
-        previewData.socialDescription
+        previewData?.socialDescription
           ? `\n➡️ ${previewData.socialDescription.trim()}`
           : null,
       ]
@@ -329,7 +329,7 @@ async function getHackerNewsDigest(dataItem, humanDate) {
           shortLinksRef.hn_comments_link_shortlink ||
           originalData.hn_comments_link
         }`,
-        previewData.socialDescription
+        previewData?.socialDescription
           ? `\n➡️ ${previewData.socialDescription.trim()}`
           : null,
       ]
