@@ -60,11 +60,11 @@ const ConfigOutputBar = ({
   preSyncWebhook,
   handleChangePreSyncWebhook,
   onSubmitSyncToGoogleSheet,
-  waPhoneNumber,
-  handleChangeWhatsappPhoneNumber,
-  handleValidateWhatsappNumber,
-  isWhatsappNumberValidated,
-  onSubmitSyncWithWhatsapp,
+  // waPhoneNumber,
+  // handleChangeWhatsappPhoneNumber,
+  // handleValidateWhatsappNumber,
+  // isWhatsappNumberValidated,
+  // onSubmitSyncWithWhatsapp,
   // onSubmitSyncWithSMS,
   // phoneNumber,
   // handleChangePhoneNumber,
@@ -76,7 +76,7 @@ const ConfigOutputBar = ({
       <AsideContainer>
         <div className="p-4">
           <h4 className="text-xl text-bold mb-4 underline">Integrations</h4>
-          <div>
+          {/* <div>
             <p className="text-2xl mb-1">WhatsApp</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
               Get this content on WhatsApp
@@ -126,7 +126,7 @@ const ConfigOutputBar = ({
                 )}
               </div>
             </form>
-          </div>
+          </div> */}
           {/* <div className="">
             <p className="text-2xl mb-1">Recieve SMS</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
@@ -181,7 +181,7 @@ const ConfigOutputBar = ({
               </div>
             </form>
           </div> */}
-          <hr className="hr mb-6 mt-6" />
+          {/* <hr className="hr mb-6 mt-6" /> */}
           <div className="">
             <p className="text-2xl mb-1">Google Spreadsheet</p>
             <p className="p-4 rounded bg-gray-100 mb-4">
