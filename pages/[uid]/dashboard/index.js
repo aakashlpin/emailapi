@@ -4,7 +4,7 @@ import { withRouter } from 'next/router';
 import Head from 'next/head';
 import styled from 'styled-components';
 import axios from 'axios';
-import { ExternalLink } from 'react-feather';
+import { ExternalLink, Trash2, Code } from 'react-feather';
 import CommonHeader from '~/components/common/common-header';
 import withAuthUser from '~/components/pageWrappers/withAuthUser';
 import withAuthUserInfo from '~/components/pageWrappers/withAuthUserInfo';
@@ -83,6 +83,14 @@ const Dashboard = ({ router, ...props }) => {
                       <Label>
                         <span className="inline-block mr-2">Search Query</span>
                         <a
+                          href={`${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/services/${service._id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block mr-4"
+                        >
+                          <Code size={16} />
+                        </a>
+                        <a
                           href={`/${uid}/ft/${
                             service.app === 'AUTO_UNLOCK'
                               ? 'attachment-unlocker'
@@ -90,10 +98,30 @@ const Dashboard = ({ router, ...props }) => {
                           }/${service._id}?q=`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-block"
+                          className="inline-block mr-4"
                         >
                           <ExternalLink size={16} />
                         </a>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            // eslint-disable-next-line no-alert
+                            const proceed = window.confirm(
+                              'This will permanently delete this service and all associated data endpoints. Proceed?',
+                            );
+                            if (!proceed) {
+                              return;
+                            }
+
+                            await axios.delete(
+                              `${process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${service._id}`,
+                            );
+                            window.location.reload();
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </Label>
                       <div>&ldquo;{service.search_query}&rdquo;</div>
                       <div>
