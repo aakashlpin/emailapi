@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Promise } from 'bluebird';
 import { format } from 'date-fns';
+import queues from '~/src/redis-queue';
 
 const getUrls = require('get-urls');
 
@@ -15,6 +16,8 @@ const {
 const jsdom = require('jsdom');
 
 const { JSDOM } = jsdom;
+
+require('~/src/queues');
 
 function mergeDataKeys(dataItem, keys) {
   const mergedData = [...new Array(dataItem[keys[0]].length)].map(() => ({}));
@@ -236,18 +239,11 @@ const getLinkPreviewData = async (array, linkPreviewKey, longUrlKeys) => {
   return props.filter((item) => item);
 };
 
-async function sendWhatsApp(content) {
-  return axios.post(
-    `${WA_API_URI}/sendLinkWithAutoPreview`,
-    {
-      args: [WA_SELF_NUMBER, content],
-    },
-    {
-      headers: {
-        key: WA_API_KEY,
-      },
-    },
-  );
+function sendWhatsApp(content) {
+  queues.sendWhatsAppQueue.add({
+    path: '/sendLinkWithAutoPreview',
+    args: [WA_SELF_NUMBER, content],
+  });
 }
 
 const contentFooter = [
@@ -261,6 +257,7 @@ async function getProductHuntDigest(dataItem, humanDate) {
     console.log('sending getProductHuntDigest failed!');
     return;
   }
+
   const productHunt = mergeDataKeys(dataItem, keys);
   const props = await getLinkPreviewData(productHunt, 'ph_product_name_link', [
     'ph_product_name_link',
@@ -296,7 +293,9 @@ async function getProductHuntDigest(dataItem, humanDate) {
     contentFooter,
   ].join('\n\n');
 
-  await sendWhatsApp(productHuntPost);
+  console.log({ productHuntPost });
+
+  sendWhatsApp(productHuntPost);
 }
 
 async function getHackerNewsDigest(dataItem, humanDate) {
@@ -315,6 +314,10 @@ async function getHackerNewsDigest(dataItem, humanDate) {
     'hn_title_link',
     ['hn_title_link', 'hn_comments_link'],
   );
+
+  console.log({
+    hackerNewsDigestLinksPreviewData: JSON.stringify(props, null, 2),
+  });
 
   const hackerNewsContentBody = props
     .map(({ previewData, shortLinksRef, originalData }, idx) => {
@@ -349,18 +352,35 @@ async function getHackerNewsDigest(dataItem, humanDate) {
     contentFooter,
   ].join('\n\n');
 
-  await sendWhatsApp(hackerNewsPost);
+  console.log({ hackerNewsPost });
+
+  sendWhatsApp(hackerNewsPost);
 }
 
 export default async function handle(req, res) {
   const { endpoint } = req.body;
+  console.log('inloopwith tech processing for endpoint', endpoint);
+  if (!endpoint) {
+    res.status(400).json({ error: 'expected `endpoint`' });
+    return;
+  }
   const { data } = await axios(endpoint);
+  if (!Array.isArray(data) && !data.length) {
+    res.status(400).json({ error: 'endpoint not populated' });
+    return;
+  }
   const [dataItem] = data;
   const date = dataItem.email_date;
   const humanDate = format(new Date(date), 'dd MMM yy');
+  // return early as the processing below can take > network timeout seconds
   res.json({});
-  await Promise.all([
-    getProductHuntDigest(dataItem, humanDate),
-    getHackerNewsDigest(dataItem, humanDate),
-  ]);
+
+  try {
+    await Promise.all([
+      getProductHuntDigest(dataItem, humanDate),
+      getHackerNewsDigest(dataItem, humanDate),
+    ]);
+  } catch (e) {
+    console.log('error in global catch of inloopwith tech', e);
+  }
 }
