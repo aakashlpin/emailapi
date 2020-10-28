@@ -269,12 +269,14 @@ async function getProductHuntDigest(dataItem, humanDate) {
   const productHuntContentBody = props
     .map(({ previewData, shortLinksRef, originalData }, idx) => {
       return [
-        `${idx + 1}. ${
-          shortLinksRef[originalData.ph_product_name_link_shortlink] ||
+        `${idx + 1}. *${originalData.ph_product_name}* — ${
+          originalData.ph_title
+        }`,
+        `🔗 ${
+          shortLinksRef.ph_product_name_link_shortlink ||
           originalData.ph_product_name_link
-        } — *${originalData.ph_product_name}*`,
+        }`,
         `👍 ${originalData.ph_upvotes} | 💬 ${originalData.ph_comments}`,
-        `✨ ${originalData.ph_title}`,
         previewData.socialDescription
           ? `\n➡️ ${previewData.socialDescription.trim()}`
           : null,
@@ -318,8 +320,7 @@ async function getHackerNewsDigest(dataItem, humanDate) {
     .map(({ previewData, shortLinksRef, originalData }, idx) => {
       return [
         `${idx + 1}. *${originalData.hn_title}*`,
-        ``,
-        `🔗 Original Link:  ${
+        `🔗 Source:  ${
           shortLinksRef.hn_title_link_shortlink || originalData.hn_title_link
         }`,
         `🔗 HackerNews: 👍 ${originalData.hn_upvotes} | 💬 ${
