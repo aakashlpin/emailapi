@@ -8,9 +8,7 @@ const getUrls = require('get-urls');
 const {
   FIREBASE_WEB_API_KEY,
   FIREBASE_SHORLINK_DOMAIN,
-  WA_API_URI,
   WA_SELF_NUMBER,
-  WA_API_KEY,
 } = process.env;
 
 const jsdom = require('jsdom');
@@ -158,7 +156,9 @@ const getImg = async (htmlString, uri) => {
 
 async function linkPreviewGenerator(url) {
   try {
-    const { data } = await axios(url);
+    const { data } = await axios(url, {
+      timeout: 10 * 1000,
+    });
     const title = await getTitle(data);
     const description = await getDescription(data);
     const image = await getImg(data, url);
@@ -202,7 +202,7 @@ const generateShortLink = async (longUrl, longUrlSocialProps = {}) => {
 };
 
 const getLinkPreviewData = async (array, linkPreviewKey, longUrlKeys) => {
-  const props = await Promise.mapSeries(array, async (article) => {
+  const props = await Promise.map(array, async (article) => {
     const originalLink = article[linkPreviewKey];
     const originalUrl = originalLink.includes('?')
       ? originalLink.split('?')[0]
@@ -305,10 +305,14 @@ async function getHackerNewsDigest(dataItem, humanDate) {
     return;
   }
 
+  console.log('processing hackerNewsDigest');
+
   const hackerNews = mergeDataKeys(dataItem, keys);
+  console.log({ hackerNews });
   const itemsWithVotesGreaterThan = (items, votes) =>
     items.filter((item) => Number(item.hn_upvotes) >= votes);
 
+  console.log({ itemsWithVotesGreaterThan });
   const props = await getLinkPreviewData(
     itemsWithVotesGreaterThan(hackerNews, 100),
     'hn_title_link',
@@ -377,8 +381,8 @@ export default async function handle(req, res) {
 
   try {
     await Promise.all([
-      getProductHuntDigest(dataItem, humanDate),
       getHackerNewsDigest(dataItem, humanDate),
+      getProductHuntDigest(dataItem, humanDate),
     ]);
   } catch (e) {
     console.log('error in global catch of inloopwith tech', e);
