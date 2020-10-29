@@ -156,9 +156,21 @@ const getImg = async (htmlString, uri) => {
 
 async function linkPreviewGenerator(url) {
   try {
-    const { data } = await axios(url, {
-      timeout: 10 * 1000,
+    const source = axios.CancelToken.source();
+    setTimeout(() => {
+      source.cancel();
+    }, 5 * 1000);
+
+    const { data } = await axios({
+      method: 'GET',
+      url,
+      timeout: 5 * 1000,
+      cancelToken: source.token,
     });
+
+    if (!data) {
+      return null;
+    }
     const title = await getTitle(data);
     const description = await getDescription(data);
     const image = await getImg(data, url);
@@ -269,14 +281,13 @@ async function getProductHuntDigest(dataItem, humanDate) {
         `${idx + 1}. *${originalData.ph_product_name}* — ${
           originalData.ph_title
         }`,
-        `🔗 ${
+        previewData?.socialDescription
+          ? `\n_"${previewData.socialDescription.trim()}"_`
+          : null,
+        `👍 ${originalData.ph_upvotes} | 💬 ${originalData.ph_comments} | ${
           shortLinksRef.ph_product_name_link_shortlink ||
           originalData.ph_product_name_link
         }`,
-        `👍 ${originalData.ph_upvotes} | 💬 ${originalData.ph_comments}`,
-        previewData?.socialDescription
-          ? `\n➡️ ${previewData.socialDescription.trim()}`
-          : null,
       ]
         .filter((i) => i)
         .join('\n');
@@ -305,40 +316,27 @@ async function getHackerNewsDigest(dataItem, humanDate) {
     return;
   }
 
-  console.log('processing hackerNewsDigest');
-
   const hackerNews = mergeDataKeys(dataItem, keys);
-  console.log({ hackerNews });
   const itemsWithVotesGreaterThan = (items, votes) =>
     items.filter((item) => Number(item.hn_upvotes) >= votes);
 
-  console.log({ itemsWithVotesGreaterThan });
   const props = await getLinkPreviewData(
     itemsWithVotesGreaterThan(hackerNews, 100),
     'hn_title_link',
     ['hn_title_link', 'hn_comments_link'],
   );
 
-  console.log({
-    hackerNewsDigestLinksPreviewData: JSON.stringify(props, null, 2),
-  });
-
   const hackerNewsContentBody = props
     .map(({ previewData, shortLinksRef, originalData }, idx) => {
       return [
         `${idx + 1}. *${originalData.hn_title}*`,
-        `🔗 Source:  ${
-          shortLinksRef.hn_title_link_shortlink || originalData.hn_title_link
-        }`,
-        `🔗 HackerNews: 👍 ${originalData.hn_upvotes} | 💬 ${
-          originalData.hn_comments
-        } | ${
+        previewData?.socialDescription
+          ? `\n_"${previewData.socialDescription.trim()}"_`
+          : null,
+        `👍 ${originalData.hn_upvotes} | 💬 ${originalData.hn_comments} | ${
           shortLinksRef.hn_comments_link_shortlink ||
           originalData.hn_comments_link
         }`,
-        previewData?.socialDescription
-          ? `\n➡️ ${previewData.socialDescription.trim()}`
-          : null,
       ]
         .filter((i) => i)
         .join('\n');
@@ -357,7 +355,6 @@ async function getHackerNewsDigest(dataItem, humanDate) {
   ].join('\n\n');
 
   console.log({ hackerNewsPost });
-
   sendWhatsApp(hackerNewsPost);
 }
 
