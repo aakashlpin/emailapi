@@ -159,12 +159,12 @@ async function linkPreviewGenerator(url) {
     const source = axios.CancelToken.source();
     setTimeout(() => {
       source.cancel();
-    }, 5 * 1000);
+    }, 60 * 1000);
 
     const { data } = await axios({
       method: 'GET',
       url,
-      timeout: 5 * 1000,
+      timeout: 60 * 1000,
       cancelToken: source.token,
     });
 
