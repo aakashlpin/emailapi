@@ -3,15 +3,18 @@ import { Promise } from 'bluebird';
 import { format } from 'date-fns';
 import queues from '~/src/redis-queue';
 
-const getUrls = require('get-urls');
+const { BitlyClient, isBitlyErrResponse } = require('bitly');
+const jsdom = require('jsdom');
+// const getUrls = require('get-urls');
 
 const {
-  FIREBASE_WEB_API_KEY,
-  FIREBASE_SHORLINK_DOMAIN,
+  // FIREBASE_WEB_API_KEY,
+  // FIREBASE_SHORLINK_DOMAIN,
   WA_SELF_NUMBER,
+  BITLY_ACCESS_TOKEN,
 } = process.env;
 
-const jsdom = require('jsdom');
+const bitly = new BitlyClient(BITLY_ACCESS_TOKEN);
 
 const { JSDOM } = jsdom;
 
@@ -39,46 +42,46 @@ function mergeDataKeys(dataItem, keys) {
   return mergedData;
 }
 
-const urlImageIsAccessible = async (url) => {
-  const correctedUrls = getUrls(url);
-  if (correctedUrls.size !== 0) {
-    const urlResponse = await axios(correctedUrls.values().next().value);
-    const contentType = urlResponse.headers['content-type'];
-    return new RegExp('image/*').test(contentType);
-  }
-  return false;
-};
+// const urlImageIsAccessible = async (url) => {
+//   const correctedUrls = getUrls(url);
+//   if (correctedUrls.size !== 0) {
+//     const urlResponse = await axios(correctedUrls.values().next().value);
+//     const contentType = urlResponse.headers['content-type'];
+//     return new RegExp('image/*').test(contentType);
+//   }
+//   return false;
+// };
 
-const getTitle = async (htmlString) => {
-  try {
-    const dom = new JSDOM(htmlString);
-    const { document } = dom.window;
+// const getTitle = async (htmlString) => {
+//   try {
+//     const dom = new JSDOM(htmlString);
+//     const { document } = dom.window;
 
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle != null && ogTitle.content.length > 0) {
-      return ogTitle.content;
-    }
-    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-    if (twitterTitle != null && twitterTitle.content.length > 0) {
-      return twitterTitle.content;
-    }
-    const docTitle = document.title;
-    if (docTitle != null && docTitle.length > 0) {
-      return docTitle;
-    }
-    const h1 = document.querySelector('h1').innerHTML;
-    if (h1 != null && h1.length > 0) {
-      return h1;
-    }
-    const h2 = document.querySelector('h1').innerHTML;
-    if (h2 != null && h2.length > 0) {
-      return h2;
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
+//     const ogTitle = document.querySelector('meta[property="og:title"]');
+//     if (ogTitle != null && ogTitle.content.length > 0) {
+//       return ogTitle.content;
+//     }
+//     const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+//     if (twitterTitle != null && twitterTitle.content.length > 0) {
+//       return twitterTitle.content;
+//     }
+//     const docTitle = document.title;
+//     if (docTitle != null && docTitle.length > 0) {
+//       return docTitle;
+//     }
+//     const h1 = document.querySelector('h1').innerHTML;
+//     if (h1 != null && h1.length > 0) {
+//       return h1;
+//     }
+//     const h2 = document.querySelector('h1').innerHTML;
+//     if (h2 != null && h2.length > 0) {
+//       return h2;
+//     }
+//     return null;
+//   } catch (e) {
+//     return null;
+//   }
+// };
 
 const getDescription = async (htmlString) => {
   try {
@@ -107,52 +110,52 @@ const getDescription = async (htmlString) => {
   }
 };
 
-const getImg = async (htmlString, uri) => {
-  try {
-    const dom = new JSDOM(htmlString);
-    const { document } = dom.window;
+// const getImg = async (htmlString, uri) => {
+//   try {
+//     const dom = new JSDOM(htmlString);
+//     const { document } = dom.window;
 
-    const ogImg = document.querySelector('meta[property="og:image"]');
-    if (
-      ogImg != null &&
-      ogImg.content.length > 0 &&
-      (await urlImageIsAccessible(ogImg.content))
-    ) {
-      return ogImg.content;
-    }
-    const imgRelLink = document.querySelector('link[rel="image_src"]');
-    if (
-      imgRelLink != null &&
-      imgRelLink.href.length > 0 &&
-      (await urlImageIsAccessible(imgRelLink.href))
-    ) {
-      return imgRelLink.href;
-    }
-    const twitterImg = document.querySelector('meta[name="twitter:image"]');
-    if (
-      twitterImg != null &&
-      twitterImg.content.length > 0 &&
-      (await urlImageIsAccessible(twitterImg.content))
-    ) {
-      return twitterImg.content;
-    }
-    const imgs = Array.from(document.getElementsByTagName('img'));
-    if (imgs.length > 0) {
-      // eslint-disable-next-line no-return-assign
-      imgs.forEach((img) =>
-        img.src.indexOf('//') === -1
-          ? // eslint-disable-next-line no-param-reassign
-            (img.src = `${new URL(uri).origin}/${img.src}`)
-          : img.src,
-      );
-      return imgs[0].src;
-    }
+//     const ogImg = document.querySelector('meta[property="og:image"]');
+//     if (
+//       ogImg != null &&
+//       ogImg.content.length > 0 &&
+//       (await urlImageIsAccessible(ogImg.content))
+//     ) {
+//       return ogImg.content;
+//     }
+//     const imgRelLink = document.querySelector('link[rel="image_src"]');
+//     if (
+//       imgRelLink != null &&
+//       imgRelLink.href.length > 0 &&
+//       (await urlImageIsAccessible(imgRelLink.href))
+//     ) {
+//       return imgRelLink.href;
+//     }
+//     const twitterImg = document.querySelector('meta[name="twitter:image"]');
+//     if (
+//       twitterImg != null &&
+//       twitterImg.content.length > 0 &&
+//       (await urlImageIsAccessible(twitterImg.content))
+//     ) {
+//       return twitterImg.content;
+//     }
+//     const imgs = Array.from(document.getElementsByTagName('img'));
+//     if (imgs.length > 0) {
+//       // eslint-disable-next-line no-return-assign
+//       imgs.forEach((img) =>
+//         img.src.indexOf('//') === -1
+//           ? // eslint-disable-next-line no-param-reassign
+//             (img.src = `${new URL(uri).origin}/${img.src}`)
+//           : img.src,
+//       );
+//       return imgs[0].src;
+//     }
 
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
+//     return null;
+//   } catch (e) {
+//     return null;
+//   }
+// };
 
 async function linkPreviewGenerator(url) {
   try {
@@ -171,12 +174,12 @@ async function linkPreviewGenerator(url) {
     if (!data) {
       return null;
     }
-    const title = await getTitle(data);
+    // const title = await getTitle(data);
     const description = await getDescription(data);
-    const image = await getImg(data, url);
+    // const image = await getImg(data, url);
     return {
-      socialTitle: title,
-      socialImageLink: image,
+      // socialTitle: title,
+      // socialImageLink: image,
       socialDescription: description,
     };
   } catch (e) {
@@ -185,30 +188,40 @@ async function linkPreviewGenerator(url) {
   }
 }
 
-const generateShortLink = async (longUrl, longUrlSocialProps = {}) => {
+const generateShortLink = async (longUrl) => {
   try {
-    const {
-      data: { shortLink },
-    } = await axios.post(
-      `https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${FIREBASE_WEB_API_KEY}`,
-      {
-        dynamicLinkInfo: {
-          domainUriPrefix: FIREBASE_SHORLINK_DOMAIN,
-          link: longUrl,
-          socialMetaTagInfo: longUrlSocialProps,
-          navigationInfo: {
-            enableForcedRedirect: true,
-          },
-        },
-        suffix: {
-          option: 'SHORT',
-        },
-      },
-    );
+    const response = await bitly.shorten(longUrl);
+    const shortLink = response.link;
+    // const {
+    //   data: { shortLink },
+    // } = await axios.post(
+    //   `https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${FIREBASE_WEB_API_KEY}`,
+    //   {
+    //     dynamicLinkInfo: {
+    //       domainUriPrefix: FIREBASE_SHORLINK_DOMAIN,
+    //       link: longUrl,
+    //       socialMetaTagInfo: longUrlSocialProps,
+    //       navigationInfo: {
+    //         enableForcedRedirect: true,
+    //       },
+    //     },
+    //     suffix: {
+    //       option: 'SHORT',
+    //     },
+    //   },
+    // );
 
     return shortLink;
-  } catch (e) {
-    console.log('generateShortLink error', e);
+  } catch (error) {
+    if (isBitlyErrResponse(error)) {
+      // Inferred type by TS is `BitlyErrorResponse`
+      console.log(`Bitly error: ${error.description}`);
+    } else if (error.isAxiosError) {
+      // Infererred type is `any`, but you can cast to AxiosError safely
+      const axiosError = error;
+      console.log(`AxiosError:`, axiosError.toJSON());
+    }
+    // console.log('generateShortLink error', e);
     return null;
   }
 };
