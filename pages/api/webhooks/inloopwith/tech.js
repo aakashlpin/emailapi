@@ -266,7 +266,7 @@ const getLinkPreviewData = async (array, linkPreviewKey, longUrlKeys) => {
 
 function sendWhatsApp(content) {
   queues.sendWhatsAppQueue.add({
-    path: '/sendLinkWithAutoPreview',
+    path: '/sendText',
     args: [WA_SELF_NUMBER, content],
   });
 }
