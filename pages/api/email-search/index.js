@@ -1,8 +1,7 @@
 /* eslint-disable consistent-return */
-import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
-
-const { fetchEmails, processMessageBody } = require('~/src/gmail');
+import { genericErrorHandler } from '~/src/utils';
+import { fetchEmails, processMessageBody } from '~/src/gmail';
 
 async function handle(req, res, resolve) {
   const {
@@ -13,23 +12,27 @@ async function handle(req, res, resolve) {
   } = req.body;
 
   try {
-    const { emails, nextPageToken: resPageToken } = await fetchEmails(
+    const fetchEmailsRes = await fetchEmails(
       query,
       req.refresh_token,
       nextPageToken,
       gmailSearchProps,
       hasAttachment,
     );
-    const items = emails
-      .map((response) => processMessageBody(response.data))
-      .filter((item) => item)
-      .filter((item) => item.date);
+    const { emails, nextPageToken: resPageToken } = fetchEmailsRes || {};
+    if (Array.isArray(emails) && emails.length) {
+      const items = emails
+        .map((response) => processMessageBody(response.data))
+        .filter((item) => item)
+        .filter((item) => item.date);
 
-    res.json({ emails: items, nextPageToken: resPageToken });
+      res.json({ emails: items, nextPageToken: resPageToken });
+    } else {
+      res.json({ emails: [] });
+    }
   } catch (e) {
-    Sentry.captureException(e);
-    console.log(e);
-    res.status(500).send(e);
+    genericErrorHandler(e);
+    res.status(500).json({});
   }
   resolve();
 }

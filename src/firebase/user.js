@@ -1,5 +1,3 @@
-import { get, has } from 'lodash/object';
-
 /**
  * Take the user object from Firebase (from either the Firebase admin SDK or
  * or the client-side Firebase JS SDK) and return a consistent AuthUser object.

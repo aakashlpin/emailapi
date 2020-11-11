@@ -1,6 +1,5 @@
 import ensureAuth from '~/src/middleware/ensureAuth';
-
-const { fetchAttachment } = require('~/src/gmail');
+import { fetchAttachment } from '~/src/gmail';
 
 async function handle(req, res, resolve) {
   const { attachmentId, messageId } = req.body;

@@ -3,18 +3,14 @@ import commonMiddleware from '~/src/middleware/commonMiddleware';
 import { verifyIdToken } from '~/src/firebase/firebaseAdmin';
 import { userExists } from './user';
 
-// const { log } = require('~/src/integrations/utils');
-
-const handler = (req, res, resolve) => {
+const handler = async (req, res) => {
   if (!req.body) {
-    res.status(400);
-    return resolve();
+    return res.status(400);
   }
 
   const { token, uid } = req.body;
   if (!token) {
-    res.status(500).json({ error: 'token not found' });
-    return resolve();
+    return res.status(500).json({ error: 'token not found' });
   }
 
   // Here, we decode the user's Firebase token and store it in a cookie. Use
@@ -29,33 +25,20 @@ const handler = (req, res, resolve) => {
   // However, in a serverless environment, we shouldn't rely on caching, so
   // it's possible Firebase's `verifySessionCookie` will make frequent network
   // requests in a serverless context.
-  return verifyIdToken(token)
-    .then(async (decodedToken) => {
-      let _id;
-      if (uid) {
-        try {
-          const dbUser = await userExists(uid);
-          _id = dbUser._id;
-        } catch (e) {
-          res.status(500).send(e);
-        }
-      }
-      req.session.decodedToken = decodedToken;
-      req.session.token = token;
-      req.session.uid = _id;
-      if (_id) {
-        return { decodedToken, uid: _id };
-      }
-      return { decodedToken };
-    })
-    .then((props) => {
-      res.status(200).json({ status: true, ...props });
-      resolve();
-    })
-    .catch((error) => {
-      res.status(500).json({ error });
-      resolve();
-    });
+  const decodedToken = await verifyIdToken(token);
+  let _id;
+  if (uid) {
+    try {
+      const dbUser = await userExists(uid);
+      _id = dbUser._id;
+    } catch (e) {
+      return res.status(500).send(e);
+    }
+  }
+  req.session.decodedToken = decodedToken;
+  req.session.token = token;
+  req.session.uid = _id;
+  return res.json({ status: true, decodedToken, uid: _id });
 };
 
 export default commonMiddleware(handler);

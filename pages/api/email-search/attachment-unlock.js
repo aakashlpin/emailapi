@@ -2,10 +2,10 @@ import axios from 'axios';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import queues from '~/src/redis-queue';
 
+import { fetchEmailByMessageId, processMessageBody } from '~/src/gmail';
+
 const base64 = require('base64topdf');
 const removePdfPassword = require('remove-pdf-password');
-
-const { fetchEmailByMessageId, processMessageBody } = require('~/src/gmail');
 const { getAfterTs } = require('~/src/apps/utils');
 
 require('~/src/queues');
