@@ -1,6 +1,5 @@
 import ensureAuth from '~/src/middleware/ensureAuth';
-
-const { fetchEmailByMessageId } = require('~/src/gmail');
+import { fetchEmailByMessageId } from '~/src/gmail';
 
 async function handle(req, res, resolve) {
   const { messageId } = req.body;

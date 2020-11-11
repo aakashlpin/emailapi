@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Promise } from 'bluebird';
 import { format } from 'date-fns';
 import queues from '~/src/redis-queue';
+import { genericErrorHandler } from '../../../../src/utils';
 
 const { BitlyClient, isBitlyErrResponse } = require('bitly');
 const jsdom = require('jsdom');
@@ -191,37 +192,14 @@ async function linkPreviewGenerator(url) {
 const generateShortLink = async (longUrl) => {
   try {
     const response = await bitly.shorten(longUrl);
-    const shortLink = response.link;
-    // const {
-    //   data: { shortLink },
-    // } = await axios.post(
-    //   `https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${FIREBASE_WEB_API_KEY}`,
-    //   {
-    //     dynamicLinkInfo: {
-    //       domainUriPrefix: FIREBASE_SHORLINK_DOMAIN,
-    //       link: longUrl,
-    //       socialMetaTagInfo: longUrlSocialProps,
-    //       navigationInfo: {
-    //         enableForcedRedirect: true,
-    //       },
-    //     },
-    //     suffix: {
-    //       option: 'SHORT',
-    //     },
-    //   },
-    // );
-
-    return shortLink;
+    return response.link;
   } catch (error) {
     if (isBitlyErrResponse(error)) {
       // Inferred type by TS is `BitlyErrorResponse`
       console.log(`Bitly error: ${error.description}`);
-    } else if (error.isAxiosError) {
-      // Infererred type is `any`, but you can cast to AxiosError safely
-      const axiosError = error;
-      console.log(`AxiosError:`, axiosError.toJSON());
+    } else {
+      genericErrorHandler(error);
     }
-    // console.log('generateShortLink error', e);
     return null;
   }
 };
@@ -395,6 +373,6 @@ export default async function handle(req, res) {
       getProductHuntDigest(dataItem, humanDate),
     ]);
   } catch (e) {
-    console.log('error in global catch of inloopwith tech', e);
+    genericErrorHandler(e);
   }
 }

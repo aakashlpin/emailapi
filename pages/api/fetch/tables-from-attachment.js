@@ -1,8 +1,7 @@
 import ensureAuth from '~/src/middleware/ensureAuth';
 import extractTableInJson from '~/src/pdf/extract-tables';
 import savePdfAttachmentToDisk from '~/src/pdf/create-file';
-
-const { fetchAttachment } = require('~/src/gmail');
+import { fetchAttachment } from '~/src/gmail';
 
 async function handle(req, res, resolve) {
   try {

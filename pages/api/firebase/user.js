@@ -14,7 +14,6 @@ export async function userExists(firebaseUid) {
   let userProfile;
   try {
     const endpoint = `${EMAILAPI_BASE_URI}/users?q=uid:${firebaseUid}`;
-    console.log('sending request to...', endpoint);
     const response = await axios.get(endpoint);
     userProfile =
       Array.isArray(response.data) && !response.data.length

@@ -1,6 +1,4 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable no-await-in-loop */
-import Sentry from '~/src/sentry';
+import { genericErrorHandler } from '~/src/utils';
 
 const { google } = require('googleapis');
 const format = require('date-fns/format');
@@ -40,7 +38,7 @@ function findPartOfType(parts, type) {
   return null;
 }
 
-function processMessageBody(message) {
+export function processMessageBody(message) {
   const {
     id: messageId,
     payload: { body, parts, headers },
@@ -94,8 +92,7 @@ function processMessageBody(message) {
 
     return parsedData;
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 }
@@ -126,13 +123,12 @@ async function getEmailsFromRemote(gmail, reqParams) {
       messages,
     };
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 }
 
-async function fetchEmailByMessageId({ messageId, refreshToken }) {
+export async function fetchEmailByMessageId({ messageId, refreshToken }) {
   try {
     const auth = await authHandler(refreshToken);
     const gmail = google.gmail({ version: 'v1', auth });
@@ -144,13 +140,12 @@ async function fetchEmailByMessageId({ messageId, refreshToken }) {
 
     return data;
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 }
 
-async function fetchEmails(
+export async function fetchEmails(
   query,
   refreshToken,
   pageToken,
@@ -178,16 +173,19 @@ async function fetchEmails(
     }
 
     const emailsFromRemote = await getEmailsFromRemote(gmail, reqParams);
-    const emails = emailsFromRemote.messages;
-    return { emails, nextPageToken: emailsFromRemote.nextPageToken };
+    const { messages: emails, nextPageToken } = emailsFromRemote;
+    return { emails, nextPageToken };
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 }
 
-const fetchAttachment = async ({ attachmentId, messageId, refreshToken }) => {
+export const fetchAttachment = async ({
+  attachmentId,
+  messageId,
+  refreshToken,
+}) => {
   try {
     const auth = await authHandler(refreshToken);
     const gmail = google.gmail({ version: 'v1', auth });
@@ -207,13 +205,12 @@ const fetchAttachment = async ({ attachmentId, messageId, refreshToken }) => {
 
     return pdfRemoteResponse;
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 };
 
-const fetchAttachments = async (attachmentParams) => {
+export const fetchAttachments = async (attachmentParams) => {
   try {
     const auth = await authHandler();
     const gmail = google.gmail({ version: 'v1', auth });
@@ -237,6 +234,7 @@ const fetchAttachments = async (attachmentParams) => {
         }),
       );
 
+      // eslint-disable-next-line no-await-in-loop
       const pdfResponses = await Promise.all(pdfRemotes);
       responses = [...responses, ...pdfResponses];
       iter += 1;
@@ -244,20 +242,10 @@ const fetchAttachments = async (attachmentParams) => {
 
     return responses;
   } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
+    genericErrorHandler(e);
     return null;
   }
 };
 
-const attachAfterDatePropToQuery = (q, afterDateInMilliseconds) =>
+export const attachAfterDatePropToQuery = (q, afterDateInMilliseconds) =>
   `${q} after:${format(new Date(afterDateInMilliseconds), 'MM/dd/yyyy')}`;
-
-module.exports = {
-  fetchEmails,
-  fetchEmailByMessageId,
-  fetchAttachment,
-  fetchAttachments,
-  attachAfterDatePropToQuery,
-  processMessageBody,
-};
