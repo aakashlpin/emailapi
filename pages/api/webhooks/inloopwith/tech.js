@@ -157,20 +157,18 @@ async function linkPreviewGenerator(url) {
 }
 
 const generateShortLink = async (longUrl) => {
-  // [TODO] bring this back
-  return null;
-  // try {
-  //   const response = await bitly.shorten(longUrl);
-  //   return response.link;
-  // } catch (error) {
-  //   if (isBitlyErrResponse(error)) {
-  //     // Inferred type by TS is `BitlyErrorResponse`
-  //     console.log(`Bitly error: ${error.description}`);
-  //   } else {
-  //     genericErrorHandler(error);
-  //   }
-  //   return null;
-  // }
+  try {
+    const response = await bitly.shorten(longUrl);
+    return response.link;
+  } catch (error) {
+    if (isBitlyErrResponse(error)) {
+      // Inferred type by TS is `BitlyErrorResponse`
+      console.log(`Bitly error: ${error.description}`);
+    } else {
+      genericErrorHandler(error);
+    }
+    return null;
+  }
 };
 
 const getLinkPreviewData = async (array, linkPreviewKey, longUrlKeys) => {
