@@ -20,6 +20,7 @@ async function processJob(jobData, done) {
     const {
       endpoint,
       userProps: { uid, refreshToken },
+      publicEndpoint,
       serviceEndpoint,
     } = queueData;
 
@@ -93,7 +94,7 @@ async function processJob(jobData, done) {
           try {
             await axios.post(serviceData.webhook_url, {
               data: emailapi,
-              endpoint,
+              endpoint: publicEndpoint,
             });
           } catch (e) {
             Sentry.captureException(e);

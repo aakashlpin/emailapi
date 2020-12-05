@@ -51,6 +51,7 @@ async function handle(req, res, resolve) {
       _nextQueueData: {
         endpoint,
         userProps,
+        publicEndpoint,
         serviceEndpoint,
       },
       initNotifications: [],
