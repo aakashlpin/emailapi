@@ -37,4 +37,5 @@ COPY yarn.lock ./
 COPY . ./
 RUN yarn
 EXPOSE 3000
-CMD ["yarn", "build_start"]
+RUN yarn build
+CMD ["yarn", "start"]
