@@ -35,7 +35,6 @@ WORKDIR /codebase
 COPY package.json ./
 COPY yarn.lock ./
 COPY . ./
-COPY .env.docker.local ./.env.local
-RUN yarn && yarn build
+RUN yarn
 EXPOSE 3000
-CMD ["yarn", "start"]
+CMD ["yarn", "build_start"]

@@ -29,7 +29,6 @@ jobs:
         registry: docker.pkg.github.com
         username: ${{ secrets.GITBUH_USERNAME }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        dockerfile: Dockerfile-prod
         tags: latest
 
     - name: Remote Pull docker image of emailapi
