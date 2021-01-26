@@ -14,4 +14,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withPlugins([nextEnv(), withCSS()], nextConfig);
+module.exports = withPlugins([nextEnv(), withCSS], nextConfig);
