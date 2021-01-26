@@ -34,8 +34,8 @@ RUN pip3 install "camelot-py[cv]"
 WORKDIR /codebase
 COPY package.json ./
 COPY yarn.lock ./
-COPY . ./
 RUN yarn
-EXPOSE 3000
+COPY . ./
 RUN yarn build
+EXPOSE 3000
 CMD ["yarn", "start"]
