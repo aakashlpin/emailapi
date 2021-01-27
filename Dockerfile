@@ -1,4 +1,3 @@
-ARG NEXT_PUBLIC_FIREBASE_PUBLIC_API_KEY
 FROM ubuntu:18.04
 # https://rtfm.co.ua/en/docker-configure-tzdata-and-timezone-during-build/
 ENV TZ=Asia/Kolkata
@@ -37,6 +36,7 @@ COPY package.json ./
 COPY yarn.lock ./
 RUN yarn
 COPY . ./
+ARG NEXT_PUBLIC_FIREBASE_PUBLIC_API_KEY
 RUN yarn build
 EXPOSE 3000
 CMD ["yarn", "start"]
