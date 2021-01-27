@@ -36,3 +36,4 @@ yarn-error.log*
 google-service-account.json
 
 .vscode
+.do
