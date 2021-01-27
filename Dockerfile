@@ -1,3 +1,4 @@
+ARG NEXT_PUBLIC_FIREBASE_PUBLIC_API_KEY
 FROM ubuntu:18.04
 # https://rtfm.co.ua/en/docker-configure-tzdata-and-timezone-during-build/
 ENV TZ=Asia/Kolkata
