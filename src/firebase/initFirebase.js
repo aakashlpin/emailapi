@@ -10,8 +10,6 @@ export default function initFirebase() {
   };
 
   if (!firebase.apps.length) {
-    console.log('firebase config object via nextjs');
-    console.log(config);
     firebase.initializeApp(config);
   }
 }
