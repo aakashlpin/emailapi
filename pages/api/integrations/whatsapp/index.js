@@ -8,7 +8,10 @@ require('~/src/queues');
 
 const { https } = require('follow-redirects');
 
-const { GOOGLE_OAUTH_REDIRECT_URI, JSONBOX_NETWORK_URL } = process.env;
+const {
+  NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI: GOOGLE_OAUTH_REDIRECT_URI,
+  JSONBOX_NETWORK_URL,
+} = process.env;
 
 const dataExists = (data) => Array.isArray(data) && data.length;
 

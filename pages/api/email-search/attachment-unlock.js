@@ -22,7 +22,7 @@ async function handle(req, res, resolve) {
 
   try {
     const { data } = await axios.post(
-      `${process.env.GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/attachment`,
+      `${process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI}/api/fetch/attachment`,
       {
         messageId,
         attachmentId,

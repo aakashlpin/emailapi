@@ -5,7 +5,9 @@ import flatten from 'lodash/flatten';
 import applyConfigOnEmail from '~/src/isomorphic/applyConfigOnEmail';
 import ensureConfiguration from '~/src/isomorphic/ensureConfiguration';
 
-const { GOOGLE_OAUTH_REDIRECT_URI } = process.env;
+const {
+  NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI: GOOGLE_OAUTH_REDIRECT_URI,
+} = process.env;
 const { OTP_EMAILAPI_USER_ID } = process.env;
 
 function isValidEmail(email) {
