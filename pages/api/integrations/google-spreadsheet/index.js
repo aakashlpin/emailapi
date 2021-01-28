@@ -3,7 +3,7 @@ import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
 import gSheetSync from '~/src/integrations/google-spreadsheet/sync';
 
-const { EMAILAPI_DOMAIN } = process.env;
+const { NEXT_PUBLIC_EMAILAPI_DOMAIN: EMAILAPI_DOMAIN } = process.env;
 
 const dataExists = (data) => Array.isArray(data) && data.length;
 

@@ -3,7 +3,10 @@ import Airtable from 'airtable';
 import Sentry from '~/src/sentry';
 import ensureAuth from '~/src/middleware/ensureAuth';
 
-const { EMAILAPI_DOMAIN, AIRTABLE_APIKEY } = process.env;
+const {
+  NEXT_PUBLIC_EMAILAPI_DOMAIN: EMAILAPI_DOMAIN,
+  AIRTABLE_APIKEY,
+} = process.env;
 
 const dataExists = (data) => Array.isArray(data) && data.length;
 

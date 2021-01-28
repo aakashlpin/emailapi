@@ -7,7 +7,7 @@ require('~/src/queues');
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
-const { JSONBOX_NETWORK_URL, EMAILAPI_DOMAIN } = process.env;
+const { JSONBOX_NETWORK_URL, NEXT_PUBLIC_EMAILAPI_DOMAIN } = process.env;
 const SELF_DOMAIN = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function handle(req, res, resolve) {
@@ -38,7 +38,7 @@ async function handle(req, res, resolve) {
 
   const dataEndpointId = generateUniqueId();
   const dataEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/${dataEndpointId}`;
-  const dataPublicEndpoint = `${EMAILAPI_DOMAIN}/${uid}/${dataEndpointId}`;
+  const dataPublicEndpoint = `${NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${dataEndpointId}`;
 
   const statusCheckerHostEndpointId = generateUniqueId();
   const statusCheckerHostEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/${statusCheckerHostEndpointId}`;
@@ -53,7 +53,7 @@ async function handle(req, res, resolve) {
 
   const { _id: statusCheckerEndpointId } = statusCheckerHostCollection;
   const statusCheckerEndpoint = `${JSONBOX_NETWORK_URL}/${uid}/${statusCheckerEndpointId}`;
-  const statusCheckerPublicEndpoint = `${EMAILAPI_DOMAIN}/${uid}/${statusCheckerEndpointId}`;
+  const statusCheckerPublicEndpoint = `${NEXT_PUBLIC_EMAILAPI_DOMAIN}/${uid}/${statusCheckerEndpointId}`;
 
   res.json({
     dataEndpoint: dataPublicEndpoint,

@@ -8,7 +8,8 @@ require('~/src/queues');
 
 const generateUniqueId = require('~/components/admin/email/fns/generateUniqueId');
 
-const { JSONBOX_NETWORK_URL, EMAILAPI_DOMAIN } = process.env;
+const EMAILAPI_DOMAIN = process.env.NEXT_PUBLIC_EMAILAPI_DOMAIN;
+const { JSONBOX_NETWORK_URL } = process.env;
 const APP_HOST = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI;
 
 async function handle(req, res, resolve) {
